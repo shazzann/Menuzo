@@ -7,7 +7,7 @@ import { CategoryTabs } from '@/components/shared/CategoryTabs';
 import { SpecialOffersCarousel } from '@/components/shared/SpecialOffersCarousel';
 import { FoodCard } from '@/components/shared/FoodCard';
 import { BottomNav } from '@/components/shared/BottomNav';
-import type { FoodItem, AdminTab } from '@/types';
+import type {AdminTab } from '@/types';
 
 export function AdminPreviewPage() {
   const { state, dispatch } = useApp();
