@@ -1,4 +1,4 @@
-import { ArrowLeft, Clock, ChefHat, Tag, Sparkles } from 'lucide-react';
+import { ArrowLeft, Clock, ChefHat, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useApp } from '@/store';
 import { cn } from '@/lib/utils';
@@ -99,23 +99,7 @@ export function FoodDetailPage() {
             </div>
           </div>
 
-          {/* Ingredients */}
-          <div className="mb-6">
-            <h3 className="font-semibold text-sm mb-3 flex items-center gap-2">
-              <Tag className="w-4 h-4" />
-              Ingredients
-            </h3>
-            <div className="flex flex-wrap gap-2">
-              {item.ingredients.map((ingredient, index) => (
-                <span
-                  key={index}
-                  className="px-3 py-1.5 text-xs bg-muted rounded-full text-muted-foreground"
-                >
-                  {ingredient}
-                </span>
-              ))}
-            </div>
-          </div>
+
 
           {/* Shop Info */}
           <div className="p-4 rounded-xl bg-muted/50 mb-6">

@@ -3,11 +3,11 @@ export interface FoodItem {
   name: string;
   description: string;
   tagline: string;
-  ingredients: string[];
   category: string;
   image: string;
   originalPrice: number;
   discount?: number;
+  discountedPrice?: number;
   finalPrice: number;
   isSpecialOffer: boolean;
   isAvailable: boolean;
@@ -24,6 +24,8 @@ export interface Shop {
   openingHours: {
     day: string;
     hours: string;
+    isSpecialDay?: boolean;
+    date?: string;
   }[];
   contactNumber: string;
   email: string;
@@ -63,9 +65,10 @@ export type View =
   | 'admin-shop-details'
   | 'admin-add-food'
   | 'admin-edit-food'
-  | 'admin-profile';
+  | 'admin-analytics'
+  | 'admin-settings';
 
-export type AdminTab = 'menu-preview' | 'shop-details' | 'add-food' | 'profile';
+export type AdminTab = 'menu-preview' | 'shop-details' | 'add-food' | 'analytics';
 
 export interface AppState {
   currentView: View;

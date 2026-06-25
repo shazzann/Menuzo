@@ -1,6 +1,7 @@
 import { ArrowRight, QrCode, Zap, Globe, ChevronRight, Star, Quote } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useApp } from '@/store';
+import { ThemeToggle } from '@/components/shared/ThemeToggle';
 
 export function LandingPage() {
   const { dispatch } = useApp();
@@ -21,6 +22,7 @@ export function LandingPage() {
             <span className="font-bold text-lg">Menuzo</span>
           </div>
           <div className="flex items-center gap-2">
+            <ThemeToggle />
             <Button
               variant="ghost"
               size="sm"

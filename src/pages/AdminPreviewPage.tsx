@@ -1,5 +1,5 @@
-import { useMemo } from 'react';
-import { LogOut, QrCode } from 'lucide-react';
+import { useMemo, useState, useEffect } from 'react';
+import { LogOut, QrCode, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useApp } from '@/store';
 import { SearchBar } from '@/components/shared/SearchBar';
@@ -12,6 +12,8 @@ import type {AdminTab } from '@/types';
 export function AdminPreviewPage() {
   const { state, dispatch } = useApp();
   const { shop, foodItems, categories, searchQuery, selectedCategory } = state;
+  const [viewMode, setViewMode] = useState<'rows' | 'list'>('rows');
+  const [activeTabId, setActiveTabId] = useState('all');
 
   const specialOffers = useMemo(
     () => foodItems.filter((item) => item.isSpecialOffer && item.isAvailable),
@@ -21,7 +23,7 @@ export function AdminPreviewPage() {
   const filteredItems = useMemo(() => {
     let items = foodItems;
 
-    if (selectedCategory !== 'all') {
+    if (viewMode === 'list' && selectedCategory !== 'all') {
       items = items.filter((item) => item.category === selectedCategory);
     }
 
@@ -30,13 +32,46 @@ export function AdminPreviewPage() {
       items = items.filter(
         (item) =>
           item.name.toLowerCase().includes(query) ||
-          item.description.toLowerCase().includes(query) ||
-          item.ingredients.some((ing) => ing.toLowerCase().includes(query))
+          item.description.toLowerCase().includes(query)
       );
     }
 
     return items;
-  }, [foodItems, selectedCategory, searchQuery]);
+  }, [foodItems, selectedCategory, searchQuery, viewMode]);
+
+  useEffect(() => {
+    if (viewMode === 'list') return;
+
+    const handleScroll = () => {
+      if (window.scrollY < 100) {
+        if (activeTabId !== 'all') setActiveTabId('all');
+        return;
+      }
+
+      const sections = categories
+        .filter(c => c.id !== 'all')
+        .map(c => document.getElementById(`category-section-${c.id}`))
+        .filter(Boolean) as HTMLElement[];
+
+      let currentSection = sections[0];
+      for (const section of sections) {
+        const rect = section.getBoundingClientRect();
+        if (rect.top <= 180) { // Adjust offset for admin header
+          currentSection = section;
+        }
+      }
+
+      if (currentSection) {
+        const id = currentSection.id.replace('category-section-', '');
+        if (activeTabId !== id) {
+          setActiveTabId(id);
+        }
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [categories, viewMode, activeTabId]);
 
   const handleFoodClick = () => {
     // Handled by the FoodCard onClick
@@ -51,8 +86,8 @@ export function AdminPreviewPage() {
       case 'add-food':
         dispatch({ type: 'SET_VIEW', payload: 'admin-add-food' });
         break;
-      case 'profile':
-        dispatch({ type: 'SET_VIEW', payload: 'admin-profile' });
+      case 'analytics':
+        dispatch({ type: 'SET_VIEW', payload: 'admin-analytics' });
         break;
     }
   };
@@ -143,40 +178,119 @@ export function AdminPreviewPage() {
 
       {/* Categories */}
       <CategoryTabs
+        className="top-[65px]"
         categories={categories}
-        selectedCategory={selectedCategory}
-        onSelectCategory={(categoryId) =>
-          dispatch({ type: 'SET_SELECTED_CATEGORY', payload: categoryId })
-        }
+        selectedCategory={viewMode === 'rows' ? activeTabId : selectedCategory}
+        onSelectCategory={(categoryId) => {
+          if (viewMode === 'list') {
+            if (categoryId === 'all') {
+              setViewMode('rows');
+            } else {
+              dispatch({ type: 'SET_SELECTED_CATEGORY', payload: categoryId });
+            }
+          } else {
+            if (categoryId === 'all') {
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            } else {
+              const el = document.getElementById(`category-section-${categoryId}`);
+              if (el) {
+                const headerOffset = 130;
+                const elementPosition = el.getBoundingClientRect().top + window.scrollY;
+                window.scrollTo({ top: elementPosition - headerOffset, behavior: 'smooth' });
+              }
+            }
+          }
+        }}
+        onAddCategory={() => {
+          const name = prompt('Enter new category name:');
+          if (name) {
+            dispatch({ 
+              type: 'ADD_CATEGORY', 
+              payload: { id: name.toLowerCase().replace(/\s+/g, '-'), name } 
+            });
+          }
+        }}
       />
 
-      {/* Menu Grid */}
-      <div className="px-4 py-4">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="font-semibold text-sm">
-            {selectedCategory === 'all' ? 'All Items' : categories.find(c => c.id === selectedCategory)?.name}
-          </h3>
-          <span className="text-xs text-muted-foreground">
-            {filteredItems.length} items
-          </span>
-        </div>
-        
-        {filteredItems.length > 0 ? (
-          <div className="grid grid-cols-2 gap-3">
-            {filteredItems.map((item) => (
-              <FoodCard
-                key={item.id}
-                item={item}
-                onClick={handleFoodClick}
-              />
-            ))}
+      {/* Menu Area */}
+      <div className="py-4">
+        {viewMode === 'rows' ? (
+          <div className="space-y-6">
+            {categories.filter(c => c.id !== 'all').map(category => {
+              const categoryItems = filteredItems.filter(item => item.category === category.id);
+              if (categoryItems.length === 0) return null;
+
+              return (
+                <div key={category.id} id={`category-section-${category.id}`}>
+                  <div className="px-4 flex items-center justify-between mb-3">
+                    <h3 className="font-semibold text-sm">{category.name}</h3>
+                    <button
+                      onClick={() => {
+                        dispatch({ type: 'SET_SELECTED_CATEGORY', payload: category.id });
+                        setViewMode('list');
+                        window.scrollTo({ top: 0 });
+                      }}
+                      className="text-xs text-primary hover:underline font-medium"
+                    >
+                      More
+                    </button>
+                  </div>
+                  <div className="flex overflow-x-auto gap-4 px-4 pb-4 snap-x hide-scrollbar">
+                    {categoryItems.map((item) => (
+                      <div key={item.id} className="w-[200px] flex-shrink-0 snap-start first:ml-2">
+                        <FoodCard
+                          item={item}
+                          onClick={handleFoodClick}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+            {filteredItems.length === 0 && (
+              <div className="text-center py-12 px-4">
+                <p className="text-muted-foreground text-sm">No items found</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Try adjusting your search
+                </p>
+              </div>
+            )}
           </div>
         ) : (
-          <div className="text-center py-12">
-            <p className="text-muted-foreground text-sm">No items found</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Try adjusting your search or add new items
-            </p>
+          <div className="px-4">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <button onClick={() => setViewMode('rows')} className="p-1 rounded-full bg-muted text-muted-foreground hover:text-foreground">
+                  <ArrowLeft className="w-4 h-4" />
+                </button>
+                <h3 className="font-semibold text-sm">
+                  {categories.find(c => c.id === selectedCategory)?.name}
+                </h3>
+              </div>
+              <span className="text-xs text-muted-foreground">
+                {filteredItems.length} items
+              </span>
+            </div>
+            
+            {filteredItems.length > 0 ? (
+              <div className="grid grid-cols-2 gap-3">
+                {filteredItems.map((item) => (
+                  <FoodCard
+                    key={item.id}
+                    item={item}
+                    onClick={handleFoodClick}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground text-sm">No items found</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Try adjusting your search
+                </p>
+              </div>
+            )}
           </div>
         )}
       </div>

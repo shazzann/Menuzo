@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { LogOut, Camera, Save, Plus, X, Clock } from 'lucide-react';
+import { LogOut, Camera, Save, Plus, X, Clock, Edit3, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,6 +14,7 @@ export function AdminShopDetailsPage() {
   const { shop } = state;
   const [isSaving, setIsSaving] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
 
   const [formData, setFormData] = useState({
     name: shop.name,
@@ -30,7 +31,7 @@ export function AdminShopDetailsPage() {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleHoursChange = (index: number, field: string, value: string) => {
+  const handleHoursChange = (index: number, field: string, value: string | boolean) => {
     const newHours = [...formData.openingHours];
     newHours[index] = { ...newHours[index], [field]: value };
     setFormData((prev) => ({ ...prev, openingHours: newHours }));
@@ -39,7 +40,7 @@ export function AdminShopDetailsPage() {
   const addHoursRow = () => {
     setFormData((prev) => ({
       ...prev,
-      openingHours: [...prev.openingHours, { day: '', hours: '' }],
+      openingHours: [...prev.openingHours, { day: '', hours: '', isSpecialDay: false, date: '' }],
     }));
   };
 
@@ -58,6 +59,7 @@ export function AdminShopDetailsPage() {
     setTimeout(() => {
       dispatch({ type: 'UPDATE_SHOP', payload: formData });
       setIsSaving(false);
+      setIsEditing(false);
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 3000);
     }, 1000);
@@ -72,8 +74,8 @@ export function AdminShopDetailsPage() {
       case 'add-food':
         dispatch({ type: 'SET_VIEW', payload: 'admin-add-food' });
         break;
-      case 'profile':
-        dispatch({ type: 'SET_VIEW', payload: 'admin-profile' });
+      case 'analytics':
+        dispatch({ type: 'SET_VIEW', payload: 'admin-analytics' });
         break;
     }
   };
@@ -92,14 +94,25 @@ export function AdminShopDetailsPage() {
               <p className="text-xs text-muted-foreground">Edit your shop info</p>
             </div>
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => dispatch({ type: 'LOGOUT' })}
-            className="text-muted-foreground"
-          >
-            <LogOut className="w-4 h-4" />
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsEditing(!isEditing)}
+              className="gap-2"
+            >
+              {isEditing ? <X className="w-4 h-4" /> : <Edit3 className="w-4 h-4" />}
+              {isEditing ? 'Cancel' : 'Edit'}
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => dispatch({ type: 'LOGOUT' })}
+              className="text-muted-foreground"
+            >
+              <LogOut className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -115,7 +128,8 @@ export function AdminShopDetailsPage() {
             />
             <button
               type="button"
-              className="absolute inset-0 flex items-center justify-center bg-background/50 opacity-0 hover:opacity-100 transition-opacity"
+              disabled={!isEditing}
+              className={`absolute inset-0 flex items-center justify-center bg-background/50 transition-opacity ${isEditing ? 'opacity-0 hover:opacity-100' : 'opacity-0'}`}
             >
               <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-background">
                 <Camera className="w-4 h-4" />
@@ -132,7 +146,8 @@ export function AdminShopDetailsPage() {
               />
               <button
                 type="button"
-                className="absolute inset-0 flex items-center justify-center bg-background/50 opacity-0 hover:opacity-100 transition-opacity"
+                disabled={!isEditing}
+                className={`absolute inset-0 flex items-center justify-center bg-background/50 transition-opacity ${isEditing ? 'opacity-0 hover:opacity-100' : 'opacity-0'}`}
               >
                 <Camera className="w-5 h-5" />
               </button>
@@ -149,6 +164,7 @@ export function AdminShopDetailsPage() {
               value={formData.name}
               onChange={(e) => handleChange('name', e.target.value)}
               placeholder="Your restaurant name"
+              disabled={!isEditing}
             />
           </div>
 
@@ -159,6 +175,7 @@ export function AdminShopDetailsPage() {
               value={formData.tagline}
               onChange={(e) => handleChange('tagline', e.target.value)}
               placeholder="A short catchy phrase"
+              disabled={!isEditing}
             />
           </div>
 
@@ -170,6 +187,7 @@ export function AdminShopDetailsPage() {
               onChange={(e) => handleChange('description', e.target.value)}
               placeholder="Tell customers about your restaurant"
               rows={3}
+              disabled={!isEditing}
             />
           </div>
         </div>
@@ -180,12 +198,34 @@ export function AdminShopDetailsPage() {
           
           <div className="space-y-2">
             <Label htmlFor="location">Location</Label>
-            <Input
-              id="location"
-              value={formData.location}
-              onChange={(e) => handleChange('location', e.target.value)}
-              placeholder="Full address"
-            />
+            <div className="flex items-center gap-2">
+              <Input
+                id="location"
+                value={formData.location}
+                onChange={(e) => handleChange('location', e.target.value)}
+                placeholder="Full address"
+                disabled={!isEditing}
+                className="flex-1"
+              />
+              {!isEditing && (
+                <a href={`https://maps.google.com/?q=${encodeURIComponent(formData.location)}`} target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-muted text-primary hover:bg-muted/80 flex-shrink-0">
+                  <MapPin className="w-5 h-5" />
+                </a>
+              )}
+            </div>
+            {formData.location && (
+              <div className="mt-2 w-full h-48 rounded-xl overflow-hidden border border-border">
+                <iframe
+                  width="100%"
+                  height="100%"
+                  style={{ border: 0 }}
+                  loading="lazy"
+                  allowFullScreen
+                  referrerPolicy="no-referrer-when-downgrade"
+                  src={`https://maps.google.com/maps?q=${encodeURIComponent(formData.location)}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
+                ></iframe>
+              </div>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -195,6 +235,7 @@ export function AdminShopDetailsPage() {
               value={formData.contactNumber}
               onChange={(e) => handleChange('contactNumber', e.target.value)}
               placeholder="+1 (555) 000-0000"
+              disabled={!isEditing}
             />
           </div>
 
@@ -206,6 +247,7 @@ export function AdminShopDetailsPage() {
               value={formData.email}
               onChange={(e) => handleChange('email', e.target.value)}
               placeholder="hello@yourrestaurant.com"
+              disabled={!isEditing}
             />
           </div>
         </div>
@@ -221,6 +263,7 @@ export function AdminShopDetailsPage() {
           <Switch
             checked={formData.isOpen}
             onCheckedChange={(checked) => handleChange('isOpen', checked)}
+            disabled={!isEditing}
           />
         </div>
 
@@ -237,36 +280,63 @@ export function AdminShopDetailsPage() {
               size="sm"
               onClick={addHoursRow}
               className="gap-1"
+              disabled={!isEditing}
             >
               <Plus className="w-3 h-3" />
               Add
             </Button>
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-3">
             {formData.openingHours.map((schedule, index) => (
-              <div key={index} className="flex items-center gap-2">
-                <Input
-                  value={schedule.day}
-                  onChange={(e) => handleHoursChange(index, 'day', e.target.value)}
-                  placeholder="Mon - Fri"
-                  className="flex-1"
-                />
-                <Input
-                  value={schedule.hours}
-                  onChange={(e) => handleHoursChange(index, 'hours', e.target.value)}
-                  placeholder="9:00 AM - 10:00 PM"
-                  className="flex-1"
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => removeHoursRow(index)}
-                  className="text-muted-foreground hover:text-destructive"
-                >
-                  <X className="w-4 h-4" />
-                </Button>
+              <div key={index} className="space-y-2 p-3 border rounded-xl bg-card">
+                <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      checked={schedule.isSpecialDay}
+                      onCheckedChange={(checked) => handleHoursChange(index, 'isSpecialDay', checked)}
+                      disabled={!isEditing}
+                    />
+                    <Label className="text-xs">Special Day/Date</Label>
+                  </div>
+                  {isEditing && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removeHoursRow(index)}
+                      className="text-muted-foreground hover:text-destructive h-6 w-6"
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  {schedule.isSpecialDay ? (
+                    <Input
+                      type="date"
+                      value={schedule.date || ''}
+                      onChange={(e) => handleHoursChange(index, 'date', e.target.value)}
+                      disabled={!isEditing}
+                      className="flex-1"
+                    />
+                  ) : (
+                    <Input
+                      value={schedule.day}
+                      onChange={(e) => handleHoursChange(index, 'day', e.target.value)}
+                      placeholder="Mon - Fri"
+                      disabled={!isEditing}
+                      className="flex-1"
+                    />
+                  )}
+                  <Input
+                    value={schedule.hours}
+                    onChange={(e) => handleHoursChange(index, 'hours', e.target.value)}
+                    placeholder="9:00 AM - 10:00 PM"
+                    disabled={!isEditing}
+                    className="flex-1"
+                  />
+                </div>
               </div>
             ))}
           </div>
@@ -280,20 +350,22 @@ export function AdminShopDetailsPage() {
         )}
 
         {/* Submit Button */}
-        <Button
-          type="submit"
-          disabled={isSaving}
-          className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
-        >
-          {isSaving ? (
-            'Saving...'
-          ) : (
-            <>
-              <Save className="w-4 h-4 mr-2" />
-              Save Changes
-            </>
-          )}
-        </Button>
+        {isEditing && (
+          <Button
+            type="submit"
+            disabled={isSaving}
+            className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
+          >
+            {isSaving ? (
+              'Saving...'
+            ) : (
+              <>
+                <Save className="w-4 h-4 mr-2" />
+                Save Changes
+              </>
+            )}
+          </Button>
+        )}
       </form>
 
       {/* Bottom Navigation */}

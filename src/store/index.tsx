@@ -30,7 +30,6 @@ const initialFoodItems: FoodItem[] = [
     name: 'Signature Burger',
     description: 'Juicy beef patty with caramelized onions, melted cheddar, and our secret sauce on a brioche bun.',
     tagline: 'Our bestseller since day one',
-    ingredients: ['Beef patty', 'Brioche bun', 'Cheddar cheese', 'Caramelized onions', 'Secret sauce', 'Lettuce', 'Tomato'],
     category: 'mains',
     image: '/food-burger.jpg',
     originalPrice: 18.99,
@@ -44,7 +43,6 @@ const initialFoodItems: FoodItem[] = [
     name: 'Street Tacos',
     description: 'Three authentic tacos with your choice of protein, topped with fresh cilantro and onions.',
     tagline: 'Taste of Mexico City',
-    ingredients: ['Corn tortillas', 'Choice of protein', 'Cilantro', 'Onions', 'Lime', 'Salsa verde'],
     category: 'mains',
     image: '/food-taco.jpg',
     originalPrice: 14.99,
@@ -57,7 +55,6 @@ const initialFoodItems: FoodItem[] = [
     name: 'Fresh Poke Bowl',
     description: 'Hawaiian-inspired bowl with sushi-grade fish, avocado, and fresh vegetables.',
     tagline: 'Ocean fresh, always',
-    ingredients: ['Sushi-grade tuna', 'Sushi rice', 'Avocado', 'Edamame', 'Cucumber', 'Seaweed', 'Sesame seeds'],
     category: 'bowls',
     image: '/food-poke.jpg',
     originalPrice: 19.99,
@@ -70,7 +67,6 @@ const initialFoodItems: FoodItem[] = [
     name: 'Chocolate Decadence',
     description: 'Rich chocolate mousse cake with a glossy ganache finish.',
     tagline: 'For the true chocolate lover',
-    ingredients: ['Dark chocolate', 'Heavy cream', 'Butter', 'Eggs', 'Sugar', 'Cocoa powder'],
     category: 'desserts',
     image: '/food-dessert.jpg',
     originalPrice: 12.99,
@@ -84,7 +80,6 @@ const initialFoodItems: FoodItem[] = [
     name: 'Crispy Wings',
     description: 'Double-fried chicken wings with your choice of sauce.',
     tagline: 'Crispy outside, juicy inside',
-    ingredients: ['Chicken wings', 'Secret spice blend', 'Choice of sauce'],
     category: 'starters',
     image: '/food-chicken.jpg',
     originalPrice: 13.99,
@@ -97,7 +92,6 @@ const initialFoodItems: FoodItem[] = [
     name: 'Sushi Platter',
     description: 'Assorted fresh sushi rolls with wasabi and pickled ginger.',
     tagline: 'Chef\'s selection',
-    ingredients: ['Sushi rice', 'Fresh fish', 'Nori', 'Avocado', 'Cucumber', 'Wasabi', 'Pickled ginger'],
     category: 'mains',
     image: '/food-sushi.jpg',
     originalPrice: 24.99,
@@ -110,7 +104,6 @@ const initialFoodItems: FoodItem[] = [
     name: 'Truffle Pasta',
     description: 'Creamy pasta with black truffle shavings and parmesan.',
     tagline: 'Italian elegance',
-    ingredients: ['Fresh pasta', 'Black truffle', 'Heavy cream', 'Parmesan', 'Butter', 'Garlic'],
     category: 'mains',
     image: '/food-pasta.jpg',
     originalPrice: 22.99,
@@ -123,7 +116,6 @@ const initialFoodItems: FoodItem[] = [
     name: 'Garden Salad',
     description: 'Fresh seasonal greens with house-made vinaigrette.',
     tagline: 'Fresh from the garden',
-    ingredients: ['Mixed greens', 'Cherry tomatoes', 'Cucumber', 'Carrots', 'House vinaigrette'],
     category: 'starters',
     image: '/food-salad.jpg',
     originalPrice: 9.99,
@@ -136,7 +128,6 @@ const initialFoodItems: FoodItem[] = [
     name: 'Prime Ribeye',
     description: 'Perfectly seared ribeye steak with roasted vegetables.',
     tagline: 'The carnivore\'s dream',
-    ingredients: ['Ribeye steak', 'Brussels sprouts', 'Asparagus', 'Herb butter', 'Sea salt'],
     category: 'mains',
     image: '/food-steak.jpg',
     originalPrice: 34.99,
@@ -178,6 +169,7 @@ type Action =
   | { type: 'DELETE_FOOD_ITEM'; payload: string }
   | { type: 'SET_SEARCH_QUERY'; payload: string }
   | { type: 'SET_SELECTED_CATEGORY'; payload: string }
+  | { type: 'ADD_CATEGORY'; payload: Category }
   | { type: 'LOGIN'; payload: User }
   | { type: 'LOGOUT' };
 
@@ -211,6 +203,8 @@ function appReducer(state: AppState, action: Action): AppState {
       return { ...state, searchQuery: action.payload };
     case 'SET_SELECTED_CATEGORY':
       return { ...state, selectedCategory: action.payload };
+    case 'ADD_CATEGORY':
+      return { ...state, categories: [...state.categories, action.payload] };
     case 'LOGIN':
       return { ...state, user: action.payload, currentView: 'admin-preview' };
     case 'LOGOUT':

@@ -1,4 +1,4 @@
-import { UtensilsCrossed, Store, PlusCircle, User } from 'lucide-react';
+import { UtensilsCrossed, Store, PlusCircle, BarChart2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { AdminTab } from '@/types';
 
@@ -17,7 +17,7 @@ const adminTabs = [
   { id: 'menu-preview' as AdminTab, label: 'Menu Card', icon: UtensilsCrossed },
   { id: 'shop-details' as AdminTab, label: 'Shop Details', icon: Store },
   { id: 'add-food' as AdminTab, label: 'Add Food', icon: PlusCircle },
-  { id: 'profile' as AdminTab, label: 'Profile', icon: User },
+  { id: 'analytics' as AdminTab, label: 'Analytics', icon: BarChart2 },
 ];
 
 export function BottomNav({ activeTab, onTabChange, isAdmin = false }: BottomNavProps) {

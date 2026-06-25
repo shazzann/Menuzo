@@ -1,4 +1,5 @@
 import { AppProvider, useApp } from '@/store';
+import { ThemeProvider } from '@/components/shared/ThemeProvider';
 import { LandingPage } from '@/pages/LandingPage';
 import { LoginPage } from '@/pages/LoginPage';
 import { CustomerMenuPage } from '@/pages/CustomerMenuPage';
@@ -7,7 +8,8 @@ import { ShopDetailPage } from '@/pages/ShopDetailPage';
 import { AdminPreviewPage } from '@/pages/AdminPreviewPage';
 import { AdminShopDetailsPage } from '@/pages/AdminShopDetailsPage';
 import { AdminAddFoodPage } from '@/pages/AdminAddFoodPage';
-import { AdminProfilePage } from '@/pages/AdminProfilePage';
+import { AdminAnalyticsPage } from '@/pages/AdminAnalyticsPage';
+import { AdminSettingsPage } from '@/pages/AdminSettingsPage';
 
 function AppContent() {
   const { state } = useApp();
@@ -30,8 +32,10 @@ function AppContent() {
       return <AdminShopDetailsPage />;
     case 'admin-add-food':
       return <AdminAddFoodPage />;
-    case 'admin-profile':
-      return <AdminProfilePage />;
+    case 'admin-analytics':
+      return <AdminAnalyticsPage />;
+    case 'admin-settings':
+      return <AdminSettingsPage />;
     default:
       return <LandingPage />;
   }
@@ -39,9 +43,11 @@ function AppContent() {
 
 function App() {
   return (
-    <AppProvider>
-      <AppContent />
-    </AppProvider>
+    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+      <AppProvider>
+        <AppContent />
+      </AppProvider>
+    </ThemeProvider>
   );
 }
 

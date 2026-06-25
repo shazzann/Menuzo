@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { LogOut, Plus, Search, MoreVertical, Edit2, Trash2, Star, Check, X } from 'lucide-react';
+import { LogOut, Plus, Search, MoreVertical, Edit2, Trash2, Star, Check, X, Camera } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -33,17 +33,14 @@ export function AdminAddFoodPage() {
     name: '',
     description: '',
     tagline: '',
-    ingredients: [],
     category: 'mains',
     image: '/food-burger.jpg',
     originalPrice: 0,
-    discount: 0,
+    discountedPrice: 0,
     finalPrice: 0,
     isSpecialOffer: false,
     isAvailable: true,
   });
-
-  const [ingredientInput, setIngredientInput] = useState('');
 
   const filteredItems = foodItems.filter(
     (item) =>
@@ -61,11 +58,10 @@ export function AdminAddFoodPage() {
         name: '',
         description: '',
         tagline: '',
-        ingredients: [],
         category: 'mains',
         image: '/food-burger.jpg',
         originalPrice: 0,
-        discount: 0,
+        discountedPrice: 0,
         finalPrice: 0,
         isSpecialOffer: false,
         isAvailable: true,
@@ -77,20 +73,19 @@ export function AdminAddFoodPage() {
   const handleSave = () => {
     if (!formData.name || !formData.originalPrice) return;
 
-    const finalPrice = formData.discount
-      ? formData.originalPrice * (1 - formData.discount / 100)
-      : formData.originalPrice;
+    const finalPrice = formData.discountedPrice ? formData.discountedPrice : formData.originalPrice;
+    const discount = formData.discountedPrice ? Math.round(((formData.originalPrice - formData.discountedPrice) / formData.originalPrice) * 100) : 0;
 
     const itemData: FoodItem = {
       id: editingItem?.id || `item-${Date.now()}`,
       name: formData.name || '',
       description: formData.description || '',
       tagline: formData.tagline || '',
-      ingredients: formData.ingredients || [],
       category: formData.category || 'mains',
       image: formData.image || '/food-burger.jpg',
       originalPrice: formData.originalPrice || 0,
-      discount: formData.discount || 0,
+      discountedPrice: formData.discountedPrice || 0,
+      discount: discount,
       finalPrice: Number(finalPrice.toFixed(2)),
       isSpecialOffer: formData.isSpecialOffer || false,
       isAvailable: formData.isAvailable ?? true,
@@ -110,23 +105,6 @@ export function AdminAddFoodPage() {
     dispatch({ type: 'DELETE_FOOD_ITEM', payload: id });
   };
 
-  const addIngredient = () => {
-    if (ingredientInput.trim()) {
-      setFormData((prev) => ({
-        ...prev,
-        ingredients: [...(prev.ingredients || []), ingredientInput.trim()],
-      }));
-      setIngredientInput('');
-    }
-  };
-
-  const removeIngredient = (index: number) => {
-    setFormData((prev) => ({
-      ...prev,
-      ingredients: prev.ingredients?.filter((_, i) => i !== index) || [],
-    }));
-  };
-
   const handleTabChange = (tab: AdminTab) => {
     dispatch({ type: 'SET_ADMIN_TAB', payload: tab });
     switch (tab) {
@@ -136,8 +114,8 @@ export function AdminAddFoodPage() {
       case 'shop-details':
         dispatch({ type: 'SET_VIEW', payload: 'admin-shop-details' });
         break;
-      case 'profile':
-        dispatch({ type: 'SET_VIEW', payload: 'admin-profile' });
+      case 'analytics':
+        dispatch({ type: 'SET_VIEW', payload: 'admin-analytics' });
         break;
     }
   };
@@ -238,9 +216,9 @@ export function AdminAddFoodPage() {
               </p>
               <div className="flex items-center gap-2 mt-1">
                 <span className="text-sm font-bold">${item.finalPrice.toFixed(2)}</span>
-                {(item.discount ?? 0) > 0 && (
+                {(item.discountedPrice ?? 0) > 0 && (
                   <span className="text-[10px] px-1.5 py-0.5 bg-destructive/20 text-destructive rounded-full">
-                    -{item.discount}%
+                    Sale
                   </span>
                 )}
               </div>
@@ -309,12 +287,29 @@ export function AdminAddFoodPage() {
 
           <div className="space-y-4 pt-4">
             {/* Image */}
-            <div className="relative h-40 rounded-xl overflow-hidden bg-muted">
+            <div className="relative h-40 rounded-xl overflow-hidden bg-muted group">
               <img
                 src={formData.image}
                 alt="Preview"
                 className="w-full h-full object-cover"
               />
+              <label className="absolute inset-0 flex items-center justify-center bg-background/50 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-background">
+                  <Camera className="w-4 h-4" />
+                  <span className="text-sm">Upload Photo</span>
+                </div>
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  className="hidden" 
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      setFormData({ ...formData, image: URL.createObjectURL(file) });
+                    }
+                  }}
+                />
+              </label>
             </div>
 
             {/* Basic Info */}
@@ -364,38 +359,6 @@ export function AdminAddFoodPage() {
               </select>
             </div>
 
-            {/* Ingredients */}
-            <div className="space-y-2">
-              <Label>Ingredients</Label>
-              <div className="flex gap-2">
-                <Input
-                  value={ingredientInput}
-                  onChange={(e) => setIngredientInput(e.target.value)}
-                  placeholder="Add ingredient"
-                  onKeyPress={(e) => e.key === 'Enter' && addIngredient()}
-                />
-                <Button type="button" onClick={addIngredient} variant="outline">
-                  <Plus className="w-4 h-4" />
-                </Button>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {formData.ingredients?.map((ing, index) => (
-                  <span
-                    key={index}
-                    className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-muted rounded-full"
-                  >
-                    {ing}
-                    <button
-                      onClick={() => removeIngredient(index)}
-                      className="text-muted-foreground hover:text-foreground"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </span>
-                ))}
-              </div>
-            </div>
-
             {/* Pricing */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -403,7 +366,7 @@ export function AdminAddFoodPage() {
                 <Input
                   type="number"
                   step="0.01"
-                  value={formData.originalPrice}
+                  value={formData.originalPrice || ''}
                   onChange={(e) =>
                     setFormData({ ...formData, originalPrice: parseFloat(e.target.value) || 0 })
                   }
@@ -411,16 +374,15 @@ export function AdminAddFoodPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>Discount (%)</Label>
+                <Label>Discounted Price ($)</Label>
                 <Input
                   type="number"
-                  min="0"
-                  max="100"
-                  value={formData.discount}
+                  step="0.01"
+                  value={formData.discountedPrice || ''}
                   onChange={(e) =>
-                    setFormData({ ...formData, discount: parseInt(e.target.value) || 0 })
+                    setFormData({ ...formData, discountedPrice: parseFloat(e.target.value) || 0 })
                   }
-                  placeholder="0"
+                  placeholder="0.00 (Optional)"
                 />
               </div>
             </div>

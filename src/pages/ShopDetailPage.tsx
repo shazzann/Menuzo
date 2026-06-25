@@ -66,12 +66,27 @@ export function ShopDetailPage() {
 
           {/* Contact Info */}
           <div className="space-y-3 mb-6">
-            <div className="flex items-start gap-3 p-3 rounded-xl bg-muted">
-              <MapPin className="w-5 h-5 text-muted-foreground flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="font-medium text-sm">Location</p>
-                <p className="text-sm text-muted-foreground">{shop.location}</p>
-              </div>
+            <div>
+              <a href={`https://maps.google.com/?q=${encodeURIComponent(shop.location)}`} target="_blank" rel="noopener noreferrer" className="flex items-start gap-3 p-3 rounded-xl bg-muted hover:bg-muted/80 transition-colors mb-2">
+                <MapPin className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-medium text-sm text-foreground">Location</p>
+                  <p className="text-sm text-primary hover:underline">{shop.location}</p>
+                </div>
+              </a>
+              {shop.location && (
+                <div className="w-full h-48 rounded-xl overflow-hidden border border-border">
+                  <iframe
+                    width="100%"
+                    height="100%"
+                    style={{ border: 0 }}
+                    loading="lazy"
+                    allowFullScreen
+                    referrerPolicy="no-referrer-when-downgrade"
+                    src={`https://maps.google.com/maps?q=${encodeURIComponent(shop.location)}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
+                  ></iframe>
+                </div>
+              )}
             </div>
 
             <div className="flex items-start gap-3 p-3 rounded-xl bg-muted">
@@ -101,10 +116,12 @@ export function ShopDetailPage() {
               {shop.openingHours.map((schedule, index) => (
                 <div
                   key={index}
-                  className="flex items-center justify-between py-2 px-3 rounded-lg bg-muted"
+                  className={`flex items-center justify-between py-2 px-3 rounded-lg ${schedule.isSpecialDay ? 'bg-primary/10 border border-primary/20' : 'bg-muted'}`}
                 >
-                  <span className="text-sm">{schedule.day}</span>
-                  <span className="text-sm text-muted-foreground font-mono">
+                  <span className={`text-sm ${schedule.isSpecialDay ? 'font-medium text-primary' : ''}`}>
+                    {schedule.isSpecialDay ? (schedule.date || 'Special Day') : schedule.day}
+                  </span>
+                  <span className={`text-sm font-mono ${schedule.isSpecialDay ? 'text-primary' : 'text-muted-foreground'}`}>
                     {schedule.hours}
                   </span>
                 </div>
@@ -116,7 +133,7 @@ export function ShopDetailPage() {
           {shop.socialLinks && (
             <div>
               <h3 className="font-semibold text-sm mb-3">Follow Us</h3>
-              <div className="flex gap-3">
+              <div className="flex flex-wrap gap-3">
                 {shop.socialLinks.instagram && (
                   <a
                     href={`https://instagram.com/${shop.socialLinks.instagram.replace('@', '')}`}

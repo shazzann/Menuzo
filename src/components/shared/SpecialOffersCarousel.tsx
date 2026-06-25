@@ -60,7 +60,7 @@ export function SpecialOffersCarousel({ items, onItemClick }: SpecialOffersCarou
               key={item.id}
               onClick={() => onItemClick?.(item)}
               className={cn(
-                'flex-shrink-0 w-64 rounded-2xl bg-card card-border card-shadow overflow-hidden',
+                'flex-shrink-0 w-64 rounded-2xl bg-card card-border card-shadow overflow-hidden first:ml-1',
                 'cursor-pointer transition-all duration-200 hover:scale-[1.02] hover:border-primary/30'
               )}
             >
