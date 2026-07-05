@@ -15,12 +15,16 @@ export function ShopDetailPage() {
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* Header */}
-      <div className="relative h-48 overflow-hidden">
-        <img
-          src={shop.banner}
-          alt={shop.name}
-          className="w-full h-full object-cover"
-        />
+      <div className="relative h-48 overflow-hidden bg-muted flex items-center justify-center">
+        {shop.banner ? (
+          <img
+            src={shop.banner}
+            alt={shop.name}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <span className="text-muted-foreground text-sm z-10 relative">No banner available</span>
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
         <button
           onClick={() => dispatch({ type: 'SET_VIEW', payload: 'customer-menu' })}
@@ -35,12 +39,18 @@ export function ShopDetailPage() {
         <div className="bg-card rounded-3xl card-border card-shadow p-5">
           {/* Logo & Name */}
           <div className="flex items-start gap-4 mb-4">
-            <div className="w-20 h-20 rounded-2xl overflow-hidden border-2 border-border bg-muted flex-shrink-0">
-              <img
-                src={shop.logo}
-                alt={shop.name}
-                className="w-full h-full object-cover"
-              />
+            <div className="w-20 h-20 rounded-2xl overflow-hidden border-2 border-border bg-muted flex-shrink-0 flex items-center justify-center">
+              {shop.logo ? (
+                <img
+                  src={shop.logo}
+                  alt={shop.name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <span className="text-3xl font-bold text-muted-foreground">
+                  {shop.name ? shop.name.charAt(0).toUpperCase() : 'S'}
+                </span>
+              )}
             </div>
             <div className="flex-1 pt-1">
               <div className="flex items-center gap-2">

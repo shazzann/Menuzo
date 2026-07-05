@@ -1,10 +1,12 @@
 import { useState } from 'react';
-import { Eye, EyeOff, Mail, Lock, ArrowLeft, Utensils } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useApp } from '@/store';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/lib/supabase';
+import { toast } from 'sonner';
 
 export function LoginPage() {
   const { dispatch } = useApp();
@@ -12,35 +14,59 @@ export function LoginPage() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(false);
   const [error, setError] = useState('');
+
+  const handleGoogleLogin = async () => {
+    try {
+      setError('');
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin + '/',
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
+        },
+      });
+      if (error) throw error;
+    } catch (err: any) {
+      setError(err.message || 'Failed to authenticate with Google');
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!email || !password) {
+      setError('Please enter both email and password');
+      return;
+    }
+
     setError('');
     setIsLoading(true);
 
-    // Simulate login
-    setTimeout(() => {
-      if (email && password) {
-        dispatch({
-          type: 'LOGIN',
-          payload: {
-            id: 'user-1',
-            email,
-            shopName: 'Nocturne Kitchen',
-            shopId: 'shop-1',
-            subscription: {
-              plan: 'pro',
-              expiresAt: new Date('2025-12-31'),
-              status: 'active',
-            },
-          },
+    try {
+      if (isSignUp) {
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
         });
+        if (error) throw error;
+        toast.success('Registration successful! If you have email confirmations enabled in Supabase, please check your inbox.');
       } else {
-        setError('Please enter both email and password');
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        if (error) throw error;
+        // Note: App.tsx has a global listener that will catch the login and redirect to the dashboard automatically!
       }
+    } catch (err: any) {
+      setError(err.message || 'Authentication failed');
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   return (
@@ -61,12 +87,14 @@ export function LoginPage() {
         <div className="w-full max-w-md">
           {/* Logo */}
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary mb-4">
-              <Utensils className="w-8 h-8 text-primary-foreground" />
+            <div className="inline-flex items-center justify-center mb-4">
+              <img src="/logo/Logo favicon.png" alt="Menuzo Logo" className="w-16 h-16" />
             </div>
-            <h1 className="text-2xl font-bold mb-1">Welcome back</h1>
+            <h1 className="text-2xl font-bold mb-1">
+              {isSignUp ? 'Create an account' : 'Welcome back'}
+            </h1>
             <p className="text-sm text-muted-foreground">
-              Sign in to manage your menu
+              {isSignUp ? 'Sign up to start building your menu' : 'Sign in to manage your menu'}
             </p>
           </div>
 
@@ -140,7 +168,9 @@ export function LoginPage() {
                 isLoading && 'opacity-70 cursor-not-allowed'
               )}
             >
-              {isLoading ? 'Signing in...' : 'Sign in'}
+              {isLoading 
+                ? (isSignUp ? 'Creating account...' : 'Signing in...') 
+                : (isSignUp ? 'Sign up' : 'Sign in')}
             </Button>
           </form>
 
@@ -157,8 +187,8 @@ export function LoginPage() {
           </div>
 
           {/* Social Login */}
-          <div className="grid grid-cols-2 gap-3">
-            <Button variant="outline" className="w-full">
+          <div className="grid gap-3">
+            <Button variant="outline" className="w-full" onClick={handleGoogleLogin} type="button">
               <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
                 <path
                   fill="currentColor"
@@ -177,28 +207,19 @@ export function LoginPage() {
                   d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                 />
               </svg>
-              Google
-            </Button>
-            <Button variant="outline" className="w-full">
-              <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
-                <path
-                  fill="currentColor"
-                  d="M16.365 1.43c0 1.14-.493 2.27-1.177 3.08-.684.81-1.768 1.35-2.784 1.35-1.08 0-2.024-.607-2.668-1.5-.644-.893-.966-2.093-.966-3.23 0 1.137-.322 2.337-.966 3.23-.644.893-1.588 1.5-2.668 1.5-1.016 0-2.1-.54-2.784-1.35C1.128 3.7.635 2.57.635 1.43.635.29 1.128-.84 1.812-1.65c.684-.81 1.768-1.35 2.784-1.35 1.08 0 2.024.607 2.668 1.5.644.893.966 2.093.966 3.23 0-1.137.322-2.337.966-3.23.644-.893 1.588-1.5 2.668-1.5 1.016 0 2.1.54 2.784 1.35.684.81 1.177 1.94 1.177 3.08z"
-                />
-              </svg>
-              Apple
+              Continue with Google
             </Button>
           </div>
 
           {/* Sign Up Link */}
           <p className="text-center text-sm text-muted-foreground mt-6">
-            Don't have an account?{' '}
+            {isSignUp ? 'Already have an account?' : "Don't have an account?"}{' '}
             <button
               type="button"
-              onClick={() => dispatch({ type: 'SET_VIEW', payload: 'landing' })}
+              onClick={() => setIsSignUp(!isSignUp)}
               className="text-primary hover:underline"
             >
-              Get started
+              {isSignUp ? 'Sign in' : 'Sign up'}
             </button>
           </p>
         </div>

@@ -1,4 +1,4 @@
-import { ArrowRight, QrCode, Zap, Globe, ChevronRight, Star, Quote } from 'lucide-react';
+import { ArrowRight, QrCode, Zap, Globe, ChevronRight, Star, Quote, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useApp } from '@/store';
 import { ThemeToggle } from '@/components/shared/ThemeToggle';
@@ -15,11 +15,8 @@ export function LandingPage() {
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">
         <div className="flex items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-              <span className="font-bold text-primary-foreground text-sm">M</span>
-            </div>
-            <span className="font-bold text-lg">Menuzo</span>
+          <div className="flex items-center">
+            <img src="/logo/Logo main.png" alt="Menuzo" className="h-8 w-auto" />
           </div>
           <div className="flex items-center gap-2">
             <ThemeToggle />
@@ -37,6 +34,16 @@ export function LandingPage() {
             >
               Create menu
             </Button>
+            <button
+              onClick={() => {
+                dispatch({ type: 'SET_VIEW', payload: 'company-admin-login' });
+                if (typeof window !== 'undefined') window.history.pushState({}, '', '/admin');
+              }}
+              className="p-2 rounded-lg hover:bg-muted/50 transition-colors text-muted-foreground hover:text-primary"
+              title="Admin Portal"
+            >
+              <ShieldCheck className="w-4 h-4" />
+            </button>
           </div>
         </div>
       </nav>
@@ -320,16 +327,23 @@ export function LandingPage() {
       <footer className="py-8 px-4 border-t border-border">
         <div className="max-w-5xl mx-auto">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-                <span className="font-bold text-primary-foreground text-sm">M</span>
-              </div>
-              <span className="font-bold">Menuzo</span>
+            <div className="flex items-center">
+              <img src="/logo/Logo main.png" alt="Menuzo" className="h-8 w-auto" />
             </div>
             <div className="flex items-center gap-6 text-sm text-muted-foreground">
               <a href="#" className="hover:text-foreground transition-colors">Privacy</a>
               <a href="#" className="hover:text-foreground transition-colors">Terms</a>
               <a href="#" className="hover:text-foreground transition-colors">Support</a>
+              <button
+                onClick={() => {
+                  dispatch({ type: 'SET_VIEW', payload: 'company-admin-login' });
+                  if (typeof window !== 'undefined') window.history.pushState({}, '', '/admin');
+                }}
+                className="hover:text-primary transition-colors flex items-center gap-1"
+              >
+                <ShieldCheck className="w-3 h-3" />
+                Admin
+              </button>
             </div>
             <p className="text-xs text-muted-foreground">
               © 2024 Menuzo. All rights reserved.

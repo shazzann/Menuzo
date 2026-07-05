@@ -1,0 +1,168 @@
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
+
+export interface Database {
+  public: {
+    Tables: {
+      categories: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          shop_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          shop_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          shop_id?: string
+        }
+        Relationships: []
+      }
+      food_items: {
+        Row: {
+          category_id: string | null
+          created_at: string
+          description: string | null
+          discount: number | null
+          final_price: number
+          id: string
+          image: string | null
+          is_available: boolean | null
+          is_special_offer: boolean | null
+          name: string
+          original_price: number
+          shop_id: string
+          tagline: string | null
+        }
+        Insert: {
+          category_id?: string | null
+          created_at?: string
+          description?: string | null
+          discount?: number | null
+          final_price: number
+          id?: string
+          image?: string | null
+          is_available?: boolean | null
+          is_special_offer?: boolean | null
+          name: string
+          original_price: number
+          shop_id: string
+          tagline?: string | null
+        }
+        Update: {
+          category_id?: string | null
+          created_at?: string
+          description?: string | null
+          discount?: number | null
+          final_price?: number
+          id?: string
+          image?: string | null
+          is_available?: boolean | null
+          is_special_offer?: boolean | null
+          name?: string
+          original_price?: number
+          shop_id?: string
+          tagline?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          subscription_expires_at: string | null
+          subscription_plan: string | null
+          subscription_status: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id: string
+          subscription_expires_at?: string | null
+          subscription_plan?: string | null
+          subscription_status?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          subscription_expires_at?: string | null
+          subscription_plan?: string | null
+          subscription_status?: string | null
+        }
+        Relationships: []
+      }
+      shops: {
+        Row: {
+          banner: string | null
+          contact_number: string | null
+          created_at: string
+          description: string | null
+          email: string | null
+          facebook: string | null
+          id: string
+          instagram: string | null
+          is_open: boolean | null
+          location: string | null
+          logo: string | null
+          name: string
+          tagline: string | null
+          user_id: string
+          website: string | null
+        }
+        Insert: {
+          banner?: string | null
+          contact_number?: string | null
+          created_at?: string
+          description?: string | null
+          email?: string | null
+          facebook?: string | null
+          id?: string
+          instagram?: string | null
+          is_open?: boolean | null
+          location?: string | null
+          logo?: string | null
+          name?: string
+          tagline?: string | null
+          user_id: string
+          website?: string | null
+        }
+        Update: {
+          banner?: string | null
+          contact_number?: string | null
+          created_at?: string
+          description?: string | null
+          email?: string | null
+          facebook?: string | null
+          id?: string
+          instagram?: string | null
+          is_open?: boolean | null
+          location?: string | null
+          logo?: string | null
+          name?: string
+          tagline?: string | null
+          user_id?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
+    }
+    Views: Record<string, never>
+    Functions: Record<string, never>
+    Enums: Record<string, never>
+    CompositeTypes: Record<string, never>
+  }
+}

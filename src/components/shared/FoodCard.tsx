@@ -43,10 +43,10 @@ export function FoodCard({ item, onClick, variant = 'grid' }: FoodCardProps) {
             {item.discount ? (
               <>
                 <span className="text-xs text-muted-foreground line-through">
-                  ${item.originalPrice.toFixed(2)}
+                  LKR {item.originalPrice.toFixed(2)}
                 </span>
                 <span className="text-sm font-bold text-primary">
-                  ${item.finalPrice.toFixed(2)}
+                  LKR {item.finalPrice.toFixed(2)}
                 </span>
                 <span className="text-[10px] px-1.5 py-0.5 bg-destructive/20 text-destructive rounded-full">
                   -{discountPercent}%
@@ -54,7 +54,7 @@ export function FoodCard({ item, onClick, variant = 'grid' }: FoodCardProps) {
               </>
             ) : (
               <span className="text-sm font-bold">
-                ${item.finalPrice.toFixed(2)}
+                LKR {item.finalPrice.toFixed(2)}
               </span>
             )}
           </div>
@@ -105,15 +105,15 @@ export function FoodCard({ item, onClick, variant = 'grid' }: FoodCardProps) {
           {item.discount ? (
             <>
               <span className="text-xs text-muted-foreground line-through">
-                ${item.originalPrice.toFixed(2)}
+                LKR {item.originalPrice.toFixed(2)}
               </span>
               <span className="text-sm font-bold text-primary">
-                ${item.finalPrice.toFixed(2)}
+                LKR {item.finalPrice.toFixed(2)}
               </span>
             </>
           ) : (
             <span className="text-sm font-bold">
-              ${item.finalPrice.toFixed(2)}
+              LKR {item.finalPrice.toFixed(2)}
             </span>
           )}
         </div>

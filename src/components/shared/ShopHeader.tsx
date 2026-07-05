@@ -1,4 +1,4 @@
-import { Clock, MapPin, Phone } from 'lucide-react';
+import { Clock, MapPin, Phone, Store, Image as ImageIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Shop } from '@/types';
 
@@ -11,12 +11,16 @@ export function ShopHeader({ shop, variant = 'full' }: ShopHeaderProps) {
   if (variant === 'compact') {
     return (
       <div className="flex items-center gap-3 p-4">
-        <div className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 bg-muted">
-          <img
-            src={shop.logo}
-            alt={shop.name}
-            className="w-full h-full object-cover"
-          />
+        <div className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 bg-muted flex items-center justify-center">
+          {shop.logo ? (
+            <img
+              src={shop.logo}
+              alt={shop.name}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <Store className="w-6 h-6 text-muted-foreground/50" />
+          )}
         </div>
         <div className="flex-1 min-w-0">
           <h2 className="font-bold text-lg truncate">{shop.name}</h2>
@@ -38,22 +42,30 @@ export function ShopHeader({ shop, variant = 'full' }: ShopHeaderProps) {
 
   return (
     <div className="relative">
-      <div className="relative h-48 overflow-hidden">
-        <img
-          src={shop.banner}
-          alt={shop.name}
-          className="w-full h-full object-cover"
-        />
+      <div className="relative h-48 overflow-hidden bg-muted flex items-center justify-center">
+        {shop.banner ? (
+          <img
+            src={shop.banner}
+            alt={shop.name}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <ImageIcon className="w-12 h-12 text-muted-foreground/20" />
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
       </div>
       <div className="relative -mt-16 px-4 pb-4">
         <div className="flex items-end gap-4">
-          <div className="w-24 h-24 rounded-2xl overflow-hidden border-4 border-background bg-muted flex-shrink-0">
-            <img
-              src={shop.logo}
-              alt={shop.name}
-              className="w-full h-full object-cover"
-            />
+          <div className="w-24 h-24 rounded-2xl overflow-hidden border-4 border-background bg-muted flex-shrink-0 flex items-center justify-center">
+            {shop.logo ? (
+              <img
+                src={shop.logo}
+                alt={shop.name}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <Store className="w-8 h-8 text-muted-foreground/30" />
+            )}
           </div>
           <div className="flex-1 pb-2">
             <div className="flex items-center gap-2">
