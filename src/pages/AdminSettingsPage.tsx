@@ -8,9 +8,9 @@ import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { useApp } from '@/store';
 import { cn } from '@/lib/utils';
-import { BottomNav } from '@/components/shared/BottomNav';
+
 import type { Database } from '@/types/supabase';
-import type { AdminTab } from '@/types';
+
 import { uploadImageToCloudinary, deleteImageFromCloudinary } from '@/lib/cloudinary';
 import { ImageCropperModal } from '@/components/shared/ImageCropperModal';
 import {
@@ -209,26 +209,6 @@ export function AdminSettingsPage() {
     toast.success('Password updated successfully');
   };
 
-  const handleTabChange = (tab: AdminTab) => {
-    dispatch({ type: 'SET_ADMIN_TAB', payload: tab });
-    switch (tab) {
-      case 'dashboard':
-        dispatch({ type: 'SET_VIEW', payload: 'user-dashboard' });
-        break;
-      case 'menu-preview':
-        dispatch({ type: 'SET_VIEW', payload: 'admin-preview' });
-        break;
-      case 'settings':
-        dispatch({ type: 'SET_VIEW', payload: 'admin-settings' });
-        break;
-      case 'add-food':
-        dispatch({ type: 'SET_VIEW', payload: 'admin-add-food' });
-        break;
-      case 'analytics':
-        dispatch({ type: 'SET_VIEW', payload: 'admin-analytics' });
-        break;
-    }
-  };
 
   const tabs = [
     { id: 'shop' as const, label: 'Shop Info', icon: Store },

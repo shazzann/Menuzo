@@ -1,4 +1,4 @@
-import { UtensilsCrossed, Store, PlusCircle, BarChart2, LayoutDashboard, Settings } from 'lucide-react';
+import { UtensilsCrossed, Store, PlusCircle, BarChart2, LayoutDashboard } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { AdminTab } from '@/types';
 

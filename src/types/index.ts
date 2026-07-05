@@ -71,7 +71,7 @@ export type View =
   | 'company-admin'
   | 'company-admin-login';
 
-export type AdminTab = 'dashboard' | 'menu-preview' | 'settings' | 'add-food' | 'analytics';
+export type AdminTab = 'dashboard' | 'menu-preview' | 'settings' | 'add-food' | 'analytics' | 'shop-details';
 
 export type CompanyAdminSection =
   | 'dashboard'

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import {
   Store, UserPlus, Tag, Palette, BarChart3, Bell, TrendingUp, TrendingDown,
-  ArrowUpRight, DollarSign, CheckCircle, Clock, AlertCircle, ShieldCheck,
+  DollarSign, CheckCircle, Clock, AlertCircle, ShieldCheck,
   PauseCircle, CreditCard, RefreshCw, Ban, UtensilsCrossed, Zap, Eye,
   ChevronRight, Send,
 } from 'lucide-react';

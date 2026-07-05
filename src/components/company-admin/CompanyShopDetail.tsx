@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useApp } from '@/store';
 import {
-  ArrowLeft, CheckCircle2, MapPin, Phone, Mail, Globe, Star, Eye,
-  QrCode, TrendingUp, Users, Clock, Calendar, CreditCard, Shield,
+  ArrowLeft, CheckCircle2, MapPin, Phone, Mail, Star, Eye,
+  QrCode, TrendingUp, Users, Clock, Calendar, CreditCard,
   Activity, Share2, Heart, MoreHorizontal, BarChart3, UtensilsCrossed,
   Image as ImageIcon, Video, FileText, Monitor, Smartphone, Laptop,
 } from 'lucide-react';

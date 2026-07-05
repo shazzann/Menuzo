@@ -4,8 +4,8 @@ import { mockManagedShops } from '@/data/companyAdminData';
 import type { ManagedShop } from '@/types';
 import {
   Search, Filter, Download, Upload, RefreshCw, LayoutGrid, List,
-  Eye, Pencil, Pause, RefreshCcw, Trash2, MessageSquare, MapPin,
-  Star, CheckCircle2, XCircle, Clock, AlertTriangle, ChevronDown,
+  Eye, Pencil, Pause, Trash2, MessageSquare, MapPin,
+  Star, CheckCircle2, XCircle, Clock, ChevronDown,
 } from 'lucide-react';
 
 const statusColors: Record<string, string> = {

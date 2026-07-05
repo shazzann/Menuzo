@@ -1,7 +1,7 @@
 import { mockTickets } from '@/data/companyAdminData';
 import {
   Ticket, MessageSquare, Search, Filter, Plus, Clock, AlertTriangle,
-  CheckCircle2, XCircle, ChevronRight, Send, User, Headphones,
+  CheckCircle2, XCircle, ChevronRight, Send, Headphones,
 } from 'lucide-react';
 import { useState } from 'react';
 

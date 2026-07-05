@@ -1,6 +1,6 @@
 import {
-  Search, Filter, Download, Calendar, User, Monitor, Globe,
-  Shield, Clock, ChevronLeft, ChevronRight,
+  Search, Filter, Download, Calendar, Monitor,
+  Clock, ChevronLeft, ChevronRight,
 } from 'lucide-react';
 import { useState } from 'react';
 

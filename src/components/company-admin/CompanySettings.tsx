@@ -2,7 +2,7 @@ import { useState } from 'react';
 import {
   Settings, Shield, CreditCard, Zap, Mail, Bell, Save, Upload,
   Globe, Phone, MapPin, Clock, Building2, Palette, Moon, Sun,
-  Smartphone, Monitor, Key, Lock, Eye, EyeOff,
+  Monitor, Key, Eye,
 } from 'lucide-react';
 
 type SettingsTab = 'general' | 'security' | 'billing' | 'integrations' | 'email' | 'notifications' | 'appearance';

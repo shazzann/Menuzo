@@ -1,12 +1,13 @@
 import { ArrowLeft, MapPin, Phone, Clock, Mail, Globe, Instagram, Facebook, ExternalLink } from 'lucide-react';
 import { useApp } from '@/store';
 import { BottomNav } from '@/components/shared/BottomNav';
+import type { AdminTab } from '@/types';
 
 export function ShopDetailPage() {
   const { state, dispatch } = useApp();
   const { shop } = state;
 
-  const handleTabChange = (tab: string) => {
+  const handleTabChange = (tab: AdminTab) => {
     if (tab === 'menu-preview') {
       dispatch({ type: 'SET_VIEW', payload: 'customer-menu' });
     }

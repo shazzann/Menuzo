@@ -1,6 +1,6 @@
 import {
-  Server, Database, Globe, HardDrive, Cpu, MemoryStick, Activity,
-  AlertTriangle, CheckCircle2, RefreshCw, Clock, Zap, Wifi, Shield,
+  Server, Database, Globe,
+  AlertTriangle, RefreshCw, Clock, Zap, Wifi, Shield,
 } from 'lucide-react';
 
 export function CompanySystemHealth() {

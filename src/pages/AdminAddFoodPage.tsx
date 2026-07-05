@@ -11,12 +11,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+
 import { useApp } from '@/store';
 import { BottomNav } from '@/components/shared/BottomNav';
 import type { AdminTab, FoodItem } from '@/types';
@@ -454,7 +449,7 @@ export function AdminAddFoodPage() {
             <div className="flex gap-3 pt-4">
               <Button
                 variant="outline"
-                onClick={() => setIsDialogOpen(false)}
+                onClick={() => setShowForm(false)}
                 className="flex-1"
               >
                 Cancel
