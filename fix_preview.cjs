@@ -1,4 +1,11 @@
-import { useMemo, useState, useEffect } from 'react';
+const fs = require('fs');
+const path = require('path');
+
+const filePath = path.join(__dirname, 'src', 'pages', 'AdminPreviewPage.tsx');
+let content = fs.readFileSync(filePath, 'utf-8');
+
+// The file was mangled. Let's completely rewrite it based on a clean known state.
+content = `import { useMemo, useState, useEffect } from 'react';
 import { Settings, ArrowLeft, Image as ImageIcon, Store } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useApp } from '@/store';
@@ -56,7 +63,7 @@ export function AdminPreviewPage() {
 
       const sections = categoriesWithItems
         .filter(c => c.id !== 'all')
-        .map(c => document.getElementById(`category-section-${c.id}`))
+        .map(c => document.getElementById(\`category-section-\${c.id}\`))
         .filter(Boolean) as HTMLElement[];
 
       let currentSection = sections[0];
@@ -163,11 +170,11 @@ export function AdminPreviewPage() {
             <div className="flex items-center gap-2">
               <h2 className="font-bold text-lg">{shop.name}</h2>
               <span
-                className={`px-2 py-0.5 text-[10px] font-mono uppercase tracking-wider rounded-full ${
+                className={\`px-2 py-0.5 text-[10px] font-mono uppercase tracking-wider rounded-full \${
                   shop.isOpen
                     ? 'bg-primary/20 text-primary'
                     : 'bg-muted text-muted-foreground'
-                }`}
+                }\`}
               >
                 {shop.isOpen ? 'Open' : 'Closed'}
               </span>
@@ -208,13 +215,22 @@ export function AdminPreviewPage() {
             if (categoryId === 'all') {
               window.scrollTo({ top: 0, behavior: 'smooth' });
             } else {
-              const el = document.getElementById(`category-section-${categoryId}`);
+              const el = document.getElementById(\`category-section-\${categoryId}\`);
               if (el) {
                 const headerOffset = 130;
                 const elementPosition = el.getBoundingClientRect().top + window.scrollY;
                 window.scrollTo({ top: elementPosition - headerOffset, behavior: 'smooth' });
               }
             }
+          }
+        }}
+        onAddCategory={() => {
+          const name = prompt('Enter new category name:');
+          if (name) {
+            dispatch({ 
+              type: 'ADD_CATEGORY', 
+              payload: { id: name.toLowerCase().replace(/\\s+/g, '-'), name } 
+            });
           }
         }}
       />
@@ -228,7 +244,7 @@ export function AdminPreviewPage() {
               if (categoryItems.length === 0) return null;
 
               return (
-                <div key={category.id} id={`category-section-${category.id}`}>
+                <div key={category.id} id={\`category-section-\${category.id}\`}>
                   <div className="px-4 flex items-center justify-between mb-3">
                     <h3 className="font-semibold text-sm">{category.name}</h3>
                     <button
@@ -311,3 +327,7 @@ export function AdminPreviewPage() {
     </div>
   );
 }
+`;
+
+fs.writeFileSync(filePath, content, 'utf-8');
+console.log('Fixed preview page!');

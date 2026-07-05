@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Settings, CreditCard, Calendar, TrendingUp, Users, Eye, BarChart3, Utensils, LayoutGrid } from 'lucide-react';
+import { Settings, CreditCard, Calendar, TrendingUp, Users, Eye, Utensils, LayoutGrid } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useApp } from '@/store';
 import { BottomNav } from '@/components/shared/BottomNav';
@@ -14,11 +14,14 @@ export function AdminAnalyticsPage() {
   const handleTabChange = (tab: AdminTab) => {
     dispatch({ type: 'SET_ADMIN_TAB', payload: tab });
     switch (tab) {
+      case 'dashboard':
+        dispatch({ type: 'SET_VIEW', payload: 'user-dashboard' });
+        break;
       case 'menu-preview':
         dispatch({ type: 'SET_VIEW', payload: 'admin-preview' });
         break;
-      case 'shop-details':
-        dispatch({ type: 'SET_VIEW', payload: 'admin-shop-details' });
+      case 'settings':
+        dispatch({ type: 'SET_VIEW', payload: 'admin-settings' });
         break;
       case 'add-food':
         dispatch({ type: 'SET_VIEW', payload: 'admin-add-food' });
@@ -60,8 +63,8 @@ export function AdminAnalyticsPage() {
       <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-lg border-b border-border">
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
-              <BarChart3 className="w-5 h-5 text-primary-foreground" />
+            <div className="w-10 h-10 rounded-xl bg-transparent flex items-center justify-center">
+              <img src="/logo/Logo favicon.png" alt="Logo" className="w-8 h-8 object-contain" />
             </div>
             <div>
               <h1 className="font-semibold text-sm">Analytics</h1>
@@ -89,13 +92,13 @@ export function AdminAnalyticsPage() {
               </div>
               <div>
                 <p className="text-xs text-muted-foreground uppercase tracking-wider">Current Plan</p>
-                <p className={cn('font-bold text-lg capitalize', getPlanColor(user?.subscription.plan || 'free'))}>
-                  {user?.subscription.plan || 'Free'}
+                <p className={cn('font-bold text-lg capitalize', getPlanColor(user?.subscription?.plan || 'free'))}>
+                  {user?.subscription?.plan || 'Free'}
                 </p>
               </div>
             </div>
-            <span className={cn('px-3 py-1 text-xs font-mono uppercase rounded-full', getPlanBadge(user?.subscription.plan || 'free'))}>
-              {user?.subscription.status || 'Active'}
+            <span className={cn('px-3 py-1 text-xs font-mono uppercase rounded-full', getPlanBadge(user?.subscription?.plan || 'free'))}>
+              {user?.subscription?.status || 'Active'}
             </span>
           </div>
           

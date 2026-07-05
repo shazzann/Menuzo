@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect } from 'react';
-import { ArrowLeft, Clock, MapPin, Phone } from 'lucide-react';
+import { ArrowLeft, Clock, MapPin, Phone, Store, Image as ImageIcon } from 'lucide-react';
 import { useApp } from '@/store';
 import { SearchBar } from '@/components/shared/SearchBar';
 import { CategoryTabs } from '@/components/shared/CategoryTabs';
@@ -39,6 +39,12 @@ export function CustomerMenuPage() {
     return items.filter((item) => item.isAvailable);
   }, [foodItems, selectedCategory, searchQuery, viewMode]);
 
+  const categoriesWithItems = useMemo(() => {
+    return categories.filter(
+      (cat) => cat.id === 'all' || foodItems.some((item) => item.category === cat.id && item.isAvailable)
+    );
+  }, [categories, foodItems]);
+
   useEffect(() => {
     if (viewMode === 'list') return;
 
@@ -48,7 +54,7 @@ export function CustomerMenuPage() {
         return;
       }
 
-      const sections = categories
+      const sections = categoriesWithItems
         .filter(c => c.id !== 'all')
         .map(c => document.getElementById(`category-section-${c.id}`))
         .filter(Boolean) as HTMLElement[];
@@ -71,7 +77,7 @@ export function CustomerMenuPage() {
 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [categories, viewMode, activeTabId]);
+  }, [categoriesWithItems, viewMode, activeTabId]);
 
   const handleFoodClick = (item: FoodItem) => {
     dispatch({ type: 'SELECT_FOOD_ITEM', payload: item });
@@ -86,13 +92,16 @@ export function CustomerMenuPage() {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      {/* Banner */}
-      <div className="relative h-48 overflow-hidden">
-        <img
-          src={shop.banner}
-          alt={shop.name}
-          className="w-full h-full object-cover"
-        />
+      <div className="relative h-48 overflow-hidden bg-muted flex items-center justify-center">
+        {shop.banner ? (
+          <img
+            src={shop.banner}
+            alt={shop.name}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <ImageIcon className="w-12 h-12 text-muted-foreground/20" />
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
         <button
           onClick={() => dispatch({ type: 'SET_VIEW', payload: 'landing' })}
@@ -108,12 +117,16 @@ export function CustomerMenuPage() {
       {/* Shop Info */}
       <div className="relative -mt-16 px-4">
         <div className="flex items-end gap-4">
-          <div className="w-24 h-24 rounded-2xl overflow-hidden border-4 border-background bg-muted flex-shrink-0">
-            <img
-              src={shop.logo}
-              alt={shop.name}
-              className="w-full h-full object-cover"
-            />
+          <div className="w-24 h-24 rounded-2xl overflow-hidden border-4 border-background bg-muted flex-shrink-0 flex items-center justify-center">
+            {shop.logo ? (
+              <img
+                src={shop.logo}
+                alt={shop.name}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <Store className="w-8 h-8 text-muted-foreground/30" />
+            )}
           </div>
           <div className="flex-1 pb-2">
             <div className="flex items-center gap-2">
@@ -166,7 +179,7 @@ export function CustomerMenuPage() {
 
       {/* Categories */}
       <CategoryTabs
-        categories={categories}
+        categories={categoriesWithItems}
         selectedCategory={viewMode === 'rows' ? activeTabId : selectedCategory}
         onSelectCategory={(categoryId) => {
           if (viewMode === 'list') {
@@ -194,7 +207,7 @@ export function CustomerMenuPage() {
       <div className="py-4">
         {viewMode === 'rows' ? (
           <div className="space-y-6">
-            {categories.filter(c => c.id !== 'all').map(category => {
+            {categoriesWithItems.filter(c => c.id !== 'all').map(category => {
               const categoryItems = filteredItems.filter(item => item.category === category.id);
               if (categoryItems.length === 0) return null;
 
@@ -243,7 +256,7 @@ export function CustomerMenuPage() {
                   <ArrowLeft className="w-4 h-4" />
                 </button>
                 <h3 className="font-semibold text-sm">
-                  {categories.find(c => c.id === selectedCategory)?.name}
+                  {categoriesWithItems.find(c => c.id === selectedCategory)?.name}
                 </h3>
               </div>
               <span className="text-xs text-muted-foreground">

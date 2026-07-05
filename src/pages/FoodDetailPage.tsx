@@ -21,11 +21,17 @@ export function FoodDetailPage() {
     <div className="min-h-screen bg-background">
       {/* Image Header */}
       <div className="relative h-72">
-        <img
-          src={item.image}
-          alt={item.name}
-          className="w-full h-full object-cover"
-        />
+        {item.image ? (
+          <img
+            src={item.image}
+            alt={item.name}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="w-full h-full bg-muted flex items-center justify-center">
+            <span className="text-muted-foreground text-sm">No image available</span>
+          </div>
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
         
         {/* Back Button */}
@@ -65,10 +71,10 @@ export function FoodDetailPage() {
               {item.discount ? (
                 <>
                   <p className="text-sm text-muted-foreground line-through">
-                    ${item.originalPrice.toFixed(2)}
+                    LKR {item.originalPrice.toFixed(2)}
                   </p>
                   <p className="text-2xl font-bold text-primary">
-                    ${item.finalPrice.toFixed(2)}
+                    LKR {item.finalPrice.toFixed(2)}
                   </p>
                   <span className="inline-block mt-1 px-2 py-0.5 text-[10px] bg-destructive/20 text-destructive rounded-full">
                     Save {discountPercent}%
@@ -76,7 +82,7 @@ export function FoodDetailPage() {
                 </>
               ) : (
                 <p className="text-2xl font-bold">
-                  ${item.finalPrice.toFixed(2)}
+                  LKR {item.finalPrice.toFixed(2)}
                 </p>
               )}
             </div>
@@ -104,11 +110,17 @@ export function FoodDetailPage() {
           {/* Shop Info */}
           <div className="p-4 rounded-xl bg-muted/50 mb-6">
             <div className="flex items-center gap-3">
-              <img
-                src={shop.logo}
-                alt={shop.name}
-                className="w-10 h-10 rounded-lg object-cover"
-              />
+              {shop.logo ? (
+                <img
+                  src={shop.logo}
+                  alt={shop.name}
+                  className="w-10 h-10 rounded-lg object-cover"
+                />
+              ) : (
+                <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold">
+                  {shop.name ? shop.name.charAt(0).toUpperCase() : 'S'}
+                </div>
+              )}
               <div>
                 <p className="font-medium text-sm">{shop.name}</p>
                 <p className="text-xs text-muted-foreground">{shop.tagline}</p>
