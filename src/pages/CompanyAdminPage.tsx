@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useApp } from '@/store';
 import type { CompanyAdminSection } from '@/types';
 import {
@@ -113,6 +113,40 @@ const navGroups: NavGroup[] = [
 export function CompanyAdminPage() {
   const { state, dispatch } = useApp();
   const { theme, setTheme } = useTheme();
+  
+  useEffect(() => {
+    const verifyAdmin = async () => {
+      try {
+        const { supabase } = await import('@/lib/supabase');
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session?.user?.email) {
+          throw new Error('Not authenticated');
+        }
+
+        const { data, error } = await supabase
+          .from('admins')
+          .select('role')
+          .eq('email', session.user.email)
+          .maybeSingle();
+
+        if (error || !data) {
+          throw new Error('Unauthorized');
+        }
+      } catch (err: any) {
+        console.error('Admin access denied:', err);
+        const { toast } = await import('sonner');
+        toast.error('Unauthorized. Super admin access required.');
+        
+        const { supabase } = await import('@/lib/supabase');
+        await supabase.auth.signOut();
+        
+        dispatch({ type: 'SET_VIEW', payload: 'company-admin-login' });
+      }
+    };
+    verifyAdmin();
+  }, [dispatch]);
+
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState<string[]>(['Business']);
@@ -186,8 +220,8 @@ export function CompanyAdminPage() {
     <div className="flex flex-col h-full">
       {/* Logo */}
       <div className="flex items-center gap-3 px-5 py-5 border-b border-border/50">
-        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center shadow-lg shadow-orange-500/20">
-          <span className="text-white font-bold text-sm">M</span>
+        <div className="w-9 h-9 rounded-xl bg-transparent flex items-center justify-center">
+          <img src="/logo/Logo favicon.png" alt="Menuzo Logo" className="w-7 h-7 object-contain" />
         </div>
         {!sidebarCollapsed && (
           <div className="flex flex-col">
@@ -262,7 +296,7 @@ export function CompanyAdminPage() {
           {!sidebarCollapsed && (
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium truncate">Super Admin</p>
-              <p className="text-[11px] text-muted-foreground truncate">admin@menuzo.com</p>
+              <p className="text-[11px] text-muted-foreground truncate">{state.user?.email || 'admin@menuzo.com'}</p>
             </div>
           )}
         </div>

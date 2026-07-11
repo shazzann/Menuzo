@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useApp } from '@/store';
-import { mockManagedShops } from '@/data/companyAdminData';
+import { supabase } from '@/lib/supabase';
 import type { ManagedShop } from '@/types';
 import {
   Search, Filter, Download, Upload, RefreshCw, LayoutGrid, List,
@@ -30,8 +30,64 @@ export function CompanyShopList() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [planFilter, setPlanFilter] = useState<string>('all');
   const [showFilters, setShowFilters] = useState(false);
+  const [shops, setShops] = useState<ManagedShop[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const filtered = mockManagedShops.filter((shop) => {
+  const fetchShops = async () => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('shops')
+        .select(`
+          *,
+          profiles:user_id (
+            email,
+            subscription_plan,
+            subscription_status,
+            subscription_expires_at
+          ),
+          food_items ( count )
+        `);
+      
+      if (error) throw error;
+
+      const mappedShops: ManagedShop[] = (data || []).map(shop => {
+        const profile = Array.isArray(shop.profiles) ? shop.profiles[0] : shop.profiles;
+        const itemsCount = shop.food_items?.[0]?.count || 0;
+        return {
+          id: shop.id,
+          name: shop.name || 'Unnamed Shop',
+          owner: profile?.email ? profile.email.split('@')[0] : 'Shop Owner',
+          ownerEmail: profile?.email || shop.email || '',
+          phone: shop.contact_number || 'No Phone',
+          location: shop.location || 'No location',
+          plan: profile?.subscription_plan || 'free',
+          status: profile?.subscription_status || 'active',
+          revenue: 0,
+          menuItems: itemsCount,
+          rating: 5.0,
+          verified: true,
+          createdAt: new Date(shop.created_at).toLocaleDateString(),
+          expiresAt: profile?.subscription_expires_at ? new Date(profile.subscription_expires_at).toLocaleDateString() : 'Never',
+          logo: shop.logo || '',
+          banner: shop.banner || '',
+          qrScans: 0,
+          visitors: 0
+        };
+      });
+      setShops(mappedShops);
+    } catch (err) {
+      console.error('Failed to fetch shops', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchShops();
+  }, []);
+
+  const filtered = shops.filter((shop) => {
     const matchSearch = shop.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       shop.owner.toLowerCase().includes(searchQuery.toLowerCase()) ||
       shop.location.toLowerCase().includes(searchQuery.toLowerCase());
@@ -152,7 +208,10 @@ export function CompanyShopList() {
             >
               {/* Card Header */}
               <div className="relative h-24 bg-gradient-to-br from-orange-500/10 to-violet-500/10">
-                <div className="absolute top-3 right-3 flex items-center gap-2">
+                {shop.banner && (
+                  <img src={shop.banner} alt="Banner" className="absolute inset-0 w-full h-full object-cover opacity-80 mix-blend-overlay" />
+                )}
+                <div className="absolute top-3 right-3 flex items-center gap-2 z-10">
                   <span className={`px-2 py-0.5 rounded-full text-[11px] font-medium border ${statusColors[shop.status]}`}>
                     {shop.status}
                   </span>
@@ -162,10 +221,16 @@ export function CompanyShopList() {
                     </div>
                   )}
                 </div>
-                <div className="absolute -bottom-6 left-4">
-                  <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white text-lg font-bold shadow-lg border-4 border-card">
-                    {shop.name.charAt(0)}
-                  </div>
+                <div className="absolute -bottom-6 left-4 z-10">
+                  {shop.logo ? (
+                    <div className="w-14 h-14 rounded-xl shadow-lg border-4 border-card overflow-hidden bg-card">
+                      <img src={shop.logo} alt="Logo" className="w-full h-full object-cover" />
+                    </div>
+                  ) : (
+                    <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white text-lg font-bold shadow-lg border-4 border-card">
+                      {shop.name.charAt(0)}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -254,9 +319,15 @@ export function CompanyShopList() {
                   <tr key={shop.id} className="border-b border-border/30 hover:bg-muted/10 transition-colors">
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white text-xs font-bold">
-                          {shop.name.charAt(0)}
-                        </div>
+                        {shop.logo ? (
+                          <div className="w-8 h-8 rounded-lg overflow-hidden bg-card shrink-0">
+                            <img src={shop.logo} alt="Logo" className="w-full h-full object-cover" />
+                          </div>
+                        ) : (
+                          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white text-xs font-bold shrink-0">
+                            {shop.name.charAt(0)}
+                          </div>
+                        )}
                         <div>
                           <p className="text-sm font-medium">{shop.name}</p>
                           <p className="text-[11px] text-muted-foreground">{shop.menuItems} items</p>

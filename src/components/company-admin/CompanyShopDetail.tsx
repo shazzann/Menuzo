@@ -41,7 +41,11 @@ export function CompanyShopDetail() {
       {/* Shop Hero */}
       <div className="bg-card/80 backdrop-blur-sm border border-border/50 rounded-2xl overflow-hidden">
         <div className="h-32 bg-gradient-to-r from-orange-500/20 via-violet-500/10 to-blue-500/20 relative">
-          <div className="absolute top-3 right-3 flex items-center gap-2">
+          {shop.banner && (
+            <img src={shop.banner} alt="Banner" className="absolute inset-0 w-full h-full object-cover opacity-80 mix-blend-overlay" />
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+          <div className="absolute top-3 right-3 flex items-center gap-2 z-10">
             <button className="p-2 rounded-lg bg-black/20 backdrop-blur-sm text-white hover:bg-black/30 transition-colors">
               <Heart className="w-4 h-4" />
             </button>
@@ -53,11 +57,17 @@ export function CompanyShopDetail() {
             </button>
           </div>
         </div>
-        <div className="px-6 pb-6 -mt-10">
+        <div className="px-6 pb-6 -mt-10 relative z-10">
           <div className="flex flex-col sm:flex-row gap-4 sm:items-end">
-            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white text-2xl font-bold shadow-xl border-4 border-card">
-              {shop.name.charAt(0)}
-            </div>
+            {shop.logo ? (
+              <div className="w-20 h-20 rounded-2xl shadow-xl border-4 border-card overflow-hidden bg-card z-10 shrink-0">
+                <img src={shop.logo} alt="Logo" className="w-full h-full object-cover" />
+              </div>
+            ) : (
+              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white text-2xl font-bold shadow-xl border-4 border-card z-10 shrink-0">
+                {shop.name.charAt(0)}
+              </div>
+            )}
             <div className="flex-1">
               <div className="flex items-center gap-2 flex-wrap">
                 <h2 className="text-xl font-bold">{shop.name}</h2>

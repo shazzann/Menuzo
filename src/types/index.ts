@@ -125,6 +125,7 @@ export interface ManagedShop {
   createdAt: string;
   expiresAt: string;
   logo: string;
+  banner: string;
   qrScans: number;
   visitors: number;
 }

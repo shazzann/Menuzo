@@ -35,8 +35,7 @@ function AppContent() {
         // Check if Google just redirected us back with a token or code
         if (window.location.hash.includes('access_token') || window.location.search.includes('code')) {
           isGoogleRedirect = true;
-          // Clear the messy URL
-          window.history.replaceState(null, '', window.location.pathname);
+          // Note: Do NOT clear the URL here! Supabase needs to read the access_token from the hash.
         }
 
         const { data: { session }, error } = await supabase.auth.getSession();
