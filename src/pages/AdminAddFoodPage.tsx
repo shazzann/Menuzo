@@ -19,6 +19,7 @@ import type { Database } from '@/types/supabase';
 import { cn } from '@/lib/utils';
 import { uploadImageToCloudinary, deleteImageFromCloudinary } from '@/lib/cloudinary';
 import { ImageCropperModal } from '@/components/shared/ImageCropperModal';
+import { CategoryTabs } from '@/components/shared/CategoryTabs';
 import { toast } from 'sonner';
 import {
   Select,
@@ -32,6 +33,7 @@ export function AdminAddFoodPage() {
   const { state, dispatch } = useApp();
   const { foodItems, categories } = state;
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [showForm, setShowForm] = useState(false);
   const [cropModalOpen, setCropModalOpen] = useState(false);
   const [cropImageSrc, setCropImageSrc] = useState<string>('');
@@ -52,11 +54,12 @@ export function AdminAddFoodPage() {
   const [isCreatingCategory, setIsCreatingCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
 
-  const filteredItems = foodItems.filter(
-    (item) =>
-      item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.description.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredItems = foodItems.filter((item) => {
+    const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          item.description.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory = selectedCategory === 'all' || item.category === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
 
   const handleOpenForm = (item?: FoodItem) => {
     setIsCreatingCategory(false);
@@ -520,6 +523,13 @@ export function AdminAddFoodPage() {
           </div>
         </div>
       </div>
+
+      <CategoryTabs
+        categories={categories}
+        selectedCategory={selectedCategory}
+        onSelectCategory={setSelectedCategory}
+        className="top-[60px] mb-4"
+      />
 
       {/* Items List */}
       <div className="px-4 space-y-3">

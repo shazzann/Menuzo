@@ -428,6 +428,7 @@ export function AdminSettingsPage() {
                 {formData.location && (
                   <div className="mt-2 w-full h-48 rounded-xl overflow-hidden border border-border">
                     <iframe
+                      className="dark:grayscale dark:invert-[.92] dark:contrast-[.83]"
                       width="100%"
                       height="100%"
                       style={{ border: 0 }}
