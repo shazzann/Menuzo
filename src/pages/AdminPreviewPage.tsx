@@ -8,9 +8,7 @@ import { SpecialOffersCarousel } from '@/components/shared/SpecialOffersCarousel
 import { FoodCard } from '@/components/shared/FoodCard';
 import { BottomNav } from '@/components/shared/BottomNav';
 import type { AdminTab, FoodItem } from '@/types';
-import { toast } from 'sonner';
-import { ArrowLeft as ArrowLeftDetail, Clock, ChefHat, Sparkles } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { ArrowLeft as ArrowLeftDetail, ChefHat, Sparkles } from 'lucide-react';
 
 export function AdminPreviewPage() {
   const { state, dispatch } = useApp();

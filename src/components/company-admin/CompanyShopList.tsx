@@ -51,7 +51,7 @@ export function CompanyShopList() {
       
       if (error) throw error;
 
-      const mappedShops: ManagedShop[] = (data || []).map(shop => {
+      const mappedShops: ManagedShop[] = ((data as any) || []).map((shop: any) => {
         const profile = Array.isArray(shop.profiles) ? shop.profiles[0] : shop.profiles;
         const itemsCount = shop.food_items?.[0]?.count || 0;
         return {
@@ -61,8 +61,8 @@ export function CompanyShopList() {
           ownerEmail: profile?.email || shop.email || '',
           phone: shop.contact_number || 'No Phone',
           location: shop.location || 'No location',
-          plan: profile?.subscription_plan || 'free',
-          status: profile?.subscription_status || 'active',
+          plan: (profile?.subscription_plan || 'free') as ManagedShop['plan'],
+          status: (profile?.subscription_status || 'active') as ManagedShop['status'],
           revenue: 0,
           menuItems: itemsCount,
           rating: 5.0,
@@ -198,8 +198,13 @@ export function CompanyShopList() {
         )}
       </div>
 
-      {/* Grid View */}
-      {viewMode === 'grid' ? (
+      {/* Grid View / Table View */}
+      {isLoading ? (
+        <div className="flex flex-col items-center justify-center py-16 gap-3">
+          <RefreshCw className="w-8 h-8 text-primary animate-spin" />
+          <p className="text-sm text-muted-foreground">Loading shops...</p>
+        </div>
+      ) : viewMode === 'grid' ? (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {filtered.map((shop) => (
             <div

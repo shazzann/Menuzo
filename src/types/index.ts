@@ -124,8 +124,8 @@ export interface ManagedShop {
   verified: boolean;
   createdAt: string;
   expiresAt: string;
-  logo: string;
-  banner: string;
+  logo?: string;
+  banner?: string;
   qrScans: number;
   visitors: number;
 }

@@ -2,13 +2,11 @@ import { useEffect } from 'react';
 import { ArrowLeft, ChefHat, Sparkles, Share2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useSEO } from '@/hooks/useSEO';
-import { Button } from '@/components/ui/button';
 import { useApp } from '@/store';
-import { cn } from '@/lib/utils';
 
 export function FoodDetailPage() {
   const { state, dispatch } = useApp();
-  const { selectedFoodItem, shop, categories } = state;
+  const { selectedFoodItem, shop } = state;
 
   let backView: 'customer-menu' | 'admin-preview' | 'admin-add-food' = 'customer-menu';
   if (state.currentView === 'admin-food-detail') backView = 'admin-preview';

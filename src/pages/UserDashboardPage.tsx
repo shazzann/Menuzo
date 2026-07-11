@@ -79,13 +79,14 @@ export function UserDashboardPage() {
         if (shopData) {
           const formattedShop: Shop = {
             id: shopData.id,
+            username: shop.username || (user?.email ? user.email.split('@')[0] : 'owner'),
             name: shopData.name,
             tagline: shopData.tagline || '',
             description: shopData.description || '',
             location: shopData.location || '',
             contactNumber: shopData.contact_number || '',
             email: shopData.email || '',
-            isOpen: shopData.is_open,
+            isOpen: !!shopData.is_open,
             logo: shopData.logo || '',
             banner: shopData.banner || '',
             openingHours: [

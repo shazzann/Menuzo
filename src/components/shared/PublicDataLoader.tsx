@@ -42,10 +42,10 @@ export function PublicDataLoader() {
             location: shopData.location || '',
             contactNumber: shopData.contact_number || '',
             email: shopData.email || '',
-            isOpen: shopData.is_open,
+            isOpen: !!shopData.is_open,
             logo: shopData.logo || '',
             banner: shopData.banner || '',
-            username: shopData.username || shop.username,
+            username: shop.username,
             openingHours: [
               { day: 'Monday - Saturday', hours: '10:00 AM - 10:00 PM' } // Mocked for now, same as dashboard
             ],
@@ -75,8 +75,8 @@ export function PublicDataLoader() {
               originalPrice: Number(item.original_price),
               discount: Number(item.discount),
               finalPrice: Number(item.final_price),
-              isSpecialOffer: item.is_special_offer,
-              isAvailable: item.is_available,
+              isSpecialOffer: !!item.is_special_offer,
+              isAvailable: !!item.is_available,
             }));
             dispatch({ type: 'SET_FOOD_ITEMS', payload: formattedFood });
           }
