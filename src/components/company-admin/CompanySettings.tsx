@@ -98,7 +98,7 @@ export function CompanySettings() {
                   <label className="text-xs font-medium text-muted-foreground">Currency</label>
                   <select className="w-full px-3 py-2.5 rounded-xl bg-muted/20 border border-border/50 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30">
                     <option>USD ($)</option>
-                    <option>LKR (Rs)</option>
+                    <option>Rs.</option>
                     <option>EUR (€)</option>
                     <option>GBP (£)</option>
                   </select>

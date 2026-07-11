@@ -66,6 +66,9 @@ export function ImageCropperModal({
         </div>
 
         <div className="p-4 space-y-4">
+          <p className="text-xs text-muted-foreground text-center">
+            Tip: Drag the image to adjust its position.
+          </p>
           <div className="flex items-center gap-4">
             <span className="text-sm font-medium">Zoom</span>
             <Slider

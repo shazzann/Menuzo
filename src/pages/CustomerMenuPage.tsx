@@ -1,12 +1,13 @@
 import { useMemo, useState, useEffect } from 'react';
-import { ArrowLeft, Clock, MapPin, Phone, Store, Image as ImageIcon } from 'lucide-react';
+import { ArrowLeft, Clock, MapPin, Phone, Store, Image as ImageIcon, Share2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { useApp } from '@/store';
 import { SearchBar } from '@/components/shared/SearchBar';
 import { CategoryTabs } from '@/components/shared/CategoryTabs';
 import { SpecialOffersCarousel } from '@/components/shared/SpecialOffersCarousel';
 import { FoodCard } from '@/components/shared/FoodCard';
 import { BottomNav } from '@/components/shared/BottomNav';
-import { ThemeToggle } from '@/components/shared/ThemeToggle';
+import { useSEO } from '@/hooks/useSEO';
 import type { FoodItem } from '@/types';
 
 export function CustomerMenuPage() {
@@ -44,6 +45,12 @@ export function CustomerMenuPage() {
       (cat) => cat.id === 'all' || foodItems.some((item) => item.category === cat.id && item.isAvailable)
     );
   }, [categories, foodItems]);
+
+  useSEO({
+    title: shop.name || 'Menu',
+    description: shop.tagline || shop.description,
+    image: shop.banner || shop.logo,
+  });
 
   useEffect(() => {
     if (viewMode === 'list') return;
@@ -90,6 +97,26 @@ export function CustomerMenuPage() {
     }
   };
 
+  const handleShare = async () => {
+    const url = window.location.href;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `${shop.name} Menu`,
+          text: `Check out ${shop.name}'s menu!`,
+          url: url,
+        });
+      } catch (err) {
+        if ((err as Error).name !== 'AbortError') {
+          console.error('Error sharing:', err);
+        }
+      }
+    } else {
+      navigator.clipboard.writeText(url);
+      toast.success('Menu link copied to clipboard!');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background pb-20">
       <div className="relative h-48 overflow-hidden bg-muted flex items-center justify-center">
@@ -109,9 +136,12 @@ export function CustomerMenuPage() {
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
-        <div className="absolute top-4 right-4 p-1 rounded-full bg-background/50 backdrop-blur-sm hover:bg-background/70 transition-colors text-foreground">
-          <ThemeToggle />
-        </div>
+        <button
+          onClick={handleShare}
+          className="absolute top-4 right-4 p-2 rounded-full bg-background/50 backdrop-blur-sm hover:bg-background/70 transition-colors text-foreground"
+        >
+          <Share2 className="w-5 h-5" />
+        </button>
       </div>
 
       {/* Shop Info */}
@@ -157,10 +187,16 @@ export function CustomerMenuPage() {
           </div>
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <Clock className="w-3.5 h-3.5" />
-            <span>{shop.openingHours[0].hours}</span>
+            <span>{shop.openingHours?.[0]?.hours || 'Opening hours not set'}</span>
           </div>
         </div>
       </div>
+
+      {/* Special Offers */}
+      <SpecialOffersCarousel
+        items={specialOffers}
+        onItemClick={handleFoodClick}
+      />
 
       {/* Search */}
       <div className="px-4 mt-4">
@@ -170,12 +206,6 @@ export function CustomerMenuPage() {
           placeholder="Search dishes..."
         />
       </div>
-
-      {/* Special Offers */}
-      <SpecialOffersCarousel
-        items={specialOffers}
-        onItemClick={handleFoodClick}
-      />
 
       {/* Categories */}
       <CategoryTabs

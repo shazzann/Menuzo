@@ -83,32 +83,21 @@ export function AdminAddFoodPage() {
   };
 
   const handleSave = async () => {
-    if (!formData.name || !formData.originalPrice) return;
+    if (!formData.name || formData.originalPrice === undefined) return;
 
     const finalPrice = formData.discountedPrice ? formData.discountedPrice : formData.originalPrice;
     const discount = formData.discountedPrice ? Math.round(((formData.originalPrice - formData.discountedPrice) / formData.originalPrice) * 100) : 0;
 
-    let finalCategoryId = formData.category || '';
+    let finalCategoryName = formData.category || '';
+    if (isCreatingCategory && newCategoryName.trim()) {
+      finalCategoryName = newCategoryName.trim();
+    }
+    
     let newItemId = `item-${Date.now()}`;
 
     try {
       const { supabase } = await import('@/lib/supabase');
       if (state.shop.id && state.shop.id !== 'shop-1') {
-        if (isCreatingCategory && newCategoryName.trim()) {
-           const { data: catData, error: catError } = await supabase
-             .from('categories')
-             .insert({ shop_id: state.shop.id, name: newCategoryName.trim() })
-             .select()
-             .single();
-           if (catError) throw catError;
-           if (catData) {
-             finalCategoryId = catData.id;
-             dispatch({ type: 'ADD_CATEGORY', payload: { id: catData.id, name: catData.name } });
-           }
-        }
-
-        let dbCategoryId = isCreatingCategory ? finalCategoryId : categories.find(c => c.id === finalCategoryId)?.id;
-        if (dbCategoryId && dbCategoryId.length < 10) dbCategoryId = undefined; // heuristic for mock ids
         type FoodItemInsert = Database['public']['Tables']['food_items']['Insert'];
         const dbPayload: FoodItemInsert = {
           shop_id: state.shop.id,
@@ -121,7 +110,7 @@ export function AdminAddFoodPage() {
           final_price: Number(finalPrice.toFixed(2)),
           is_special_offer: formData.isSpecialOffer,
           is_available: formData.isAvailable ?? true,
-          category_id: dbCategoryId || null
+          category: finalCategoryName || null
         };
 
         if (editingItem && !editingItem.id.startsWith('item-')) {
@@ -146,7 +135,7 @@ export function AdminAddFoodPage() {
         name: formData.name || '',
         description: formData.description || '',
         tagline: formData.tagline || '',
-        category: finalCategoryId,
+        category: finalCategoryName,
         image: formData.image || '/food-burger.jpg',
         originalPrice: formData.originalPrice || 0,
         discountedPrice: formData.discountedPrice || 0,
@@ -172,7 +161,7 @@ export function AdminAddFoodPage() {
 
   const handleDelete = async (id: string) => {
     try {
-      if (!id.startsWith('item-')) {
+      if (!id.startsWith('item-') && state.shop.id && state.shop.id !== 'shop-1') {
         const supabase = await import('@/lib/supabase').then(m => m.supabase);
         const { error } = await supabase.from('food_items').delete().eq('id', id);
         if (error) throw error;
@@ -187,7 +176,7 @@ export function AdminAddFoodPage() {
   const handleToggleQuick = async (item: FoodItem, field: 'isSpecialOffer' | 'isAvailable') => {
     const newValue = !item[field];
     try {
-      if (!item.id.startsWith('item-')) {
+      if (!item.id.startsWith('item-') && state.shop.id && state.shop.id !== 'shop-1') {
         const supabase = await import('@/lib/supabase').then(m => m.supabase);
         type FoodItemUpdate = Database['public']['Tables']['food_items']['Update'];
         const updatePayload: FoodItemUpdate = field === 'isSpecialOffer' 
@@ -239,6 +228,7 @@ export function AdminAddFoodPage() {
   };
 
   const handleRemoveImage = () => {
+    if (!window.confirm('Are you sure you want to remove this image?')) return;
     const oldUrl = formData.image;
     if (oldUrl && !oldUrl.startsWith('/')) {
       deleteImageFromCloudinary(oldUrl);
@@ -376,7 +366,7 @@ export function AdminAddFoodPage() {
                       {categories
                         .filter((c) => c.id !== 'all')
                         .map((cat) => (
-                          <SelectItem key={cat.id} value={cat.id}>
+                          <SelectItem key={cat.id} value={cat.name}>
                             {cat.name}
                           </SelectItem>
                         ))}
@@ -393,7 +383,7 @@ export function AdminAddFoodPage() {
             {/* Pricing */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Original Price (LKR)</Label>
+                <Label>Original Price (Rs.)</Label>
                 <Input
                   type="number"
                   step="0.01"
@@ -405,7 +395,7 @@ export function AdminAddFoodPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>Discounted Price (LKR)</Label>
+                <Label>Discounted Price (Rs.)</Label>
                 <Input
                   type="number"
                   step="0.01"
@@ -421,7 +411,7 @@ export function AdminAddFoodPage() {
             {/* Toggles */}
             <div className="flex items-center justify-between p-3 rounded-xl bg-muted">
               <div>
-                <p className="font-medium text-sm">Special Offer</p>
+                <p className="font-medium text-sm">Our Special</p>
                 <p className="text-xs text-muted-foreground">Highlight on menu</p>
               </div>
               <Switch
@@ -536,8 +526,13 @@ export function AdminAddFoodPage() {
         {filteredItems.map((item) => (
           <div
             key={item.id}
+            onClick={() => {
+              toast.success(`Opening ${item.name}`);
+              dispatch({ type: 'SELECT_FOOD_ITEM', payload: item });
+              dispatch({ type: 'SET_VIEW', payload: 'admin-add-food-detail' });
+            }}
             className={cn(
-              'flex items-center gap-4 p-3 rounded-2xl bg-card card-border card-shadow',
+              'flex items-center gap-4 p-3 rounded-2xl bg-card card-border card-shadow cursor-pointer hover:border-primary/30 transition-all',
               !item.isAvailable && 'opacity-60'
             )}
           >
@@ -556,33 +551,42 @@ export function AdminAddFoodPage() {
             <div className="flex-1 min-w-0">
               <h4 className="font-semibold text-sm truncate">{item.name}</h4>
               <p className="text-xs text-muted-foreground line-clamp-1">
-                {item.tagline}
+                {item.category}
               </p>
               <div className="flex items-center gap-2 mt-1">
-                <span className="text-sm font-bold">LKR {item.finalPrice.toFixed(2)}</span>
+                <span className="text-sm font-bold">Rs. {item.finalPrice.toFixed(2)}</span>
                 {(item.discountedPrice ?? 0) > 0 && (
                   <span className="text-[10px] px-1.5 py-0.5 bg-destructive/20 text-destructive rounded-full">
-                    Sale
+                    Offer
                   </span>
                 )}
               </div>
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="text-muted-foreground">
+                <Button variant="ghost" size="icon" className="text-muted-foreground" onClick={(e) => e.stopPropagation()}>
                   <MoreVertical className="w-4 h-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => handleOpenForm(item)}>
+                <DropdownMenuItem 
+                  onSelect={() => handleOpenForm(item)}
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <Edit2 className="w-4 h-4 mr-2" />
                   Edit
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleToggleQuick(item, 'isSpecialOffer')}>
+                <DropdownMenuItem 
+                  onSelect={() => handleToggleQuick(item, 'isSpecialOffer')}
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <Star className="w-4 h-4 mr-2" />
                   {item.isSpecialOffer ? 'Remove Special' : 'Mark as Special'}
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleToggleQuick(item, 'isAvailable')}>
+                <DropdownMenuItem 
+                  onSelect={() => handleToggleQuick(item, 'isAvailable')}
+                  onClick={(e) => e.stopPropagation()}
+                >
                   {item.isAvailable ? (
                     <>
                       <X className="w-4 h-4 mr-2" />
@@ -596,7 +600,8 @@ export function AdminAddFoodPage() {
                   )}
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  onClick={() => handleDelete(item.id)}
+                  onSelect={() => handleDelete(item.id)}
+                  onClick={(e) => e.stopPropagation()}
                   className="text-destructive"
                 >
                   <Trash2 className="w-4 h-4 mr-2" />

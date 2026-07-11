@@ -16,6 +16,9 @@ import { Toaster } from '@/components/ui/sonner';
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import { BrowserRouter } from 'react-router-dom';
+import { RouterSync } from '@/components/shared/RouterSync';
+import { PublicDataLoader } from '@/components/shared/PublicDataLoader';
 
 function AppContent() {
   const { state, dispatch } = useApp();
@@ -105,6 +108,8 @@ function AppContent() {
     case 'customer-menu':
       return <CustomerMenuPage />;
     case 'customer-food-detail':
+    case 'admin-food-detail':
+    case 'admin-add-food-detail':
       return <FoodDetailPage />;
     case 'customer-shop-detail':
       return <ShopDetailPage />;
@@ -129,7 +134,11 @@ function App() {
   return (
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
       <AppProvider>
-        <AppContent />
+        <BrowserRouter>
+          <RouterSync />
+          <PublicDataLoader />
+          <AppContent />
+        </BrowserRouter>
         <Toaster />
       </AppProvider>
     </ThemeProvider>

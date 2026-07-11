@@ -28,7 +28,7 @@ export function SpecialOffersCarousel({ items, onItemClick }: SpecialOffersCarou
       <div className="flex items-center justify-between px-4 mb-3">
         <div className="flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-primary" />
-          <h3 className="font-semibold text-sm">Special Offers</h3>
+          <h3 className="font-semibold text-sm">Our Special</h3>
         </div>
         <div className="flex gap-1">
           <button
@@ -81,10 +81,10 @@ export function SpecialOffersCarousel({ items, onItemClick }: SpecialOffersCarou
                 </p>
                 <div className="flex items-center gap-2 mt-2">
                   <span className="text-xs text-muted-foreground line-through">
-                    ${item.originalPrice.toFixed(2)}
+                    Rs. {item.originalPrice.toFixed(2)}
                   </span>
                   <span className="text-sm font-bold text-primary">
-                    ${item.finalPrice.toFixed(2)}
+                    Rs. {item.finalPrice.toFixed(2)}
                   </span>
                 </div>
               </div>

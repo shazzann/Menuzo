@@ -3,6 +3,7 @@ import type { AppState, View, AdminTab, FoodItem, Shop, User, Category, CompanyA
 
 const initialShop: Shop = {
   id: '',
+  username: 'menuzo',
   name: '',
   tagline: '',
   description: '',
@@ -27,11 +28,25 @@ const initialCategories: Category[] = [
 ];
 
 const getInitialView = (): View => {
-  if (typeof window !== 'undefined' && window.location.pathname.startsWith('/admin')) {
-    if (window.location.pathname === '/admin') {
-      return 'company-admin-login';
-    } else {
-      return 'company-admin';
+  if (typeof window !== 'undefined') {
+    const path = window.location.pathname;
+    if (path === '/' || path === '') return 'landing';
+    if (path === '/login') return 'login';
+    if (path === '/admin') return 'company-admin-login';
+    if (path.startsWith('/admin-portal') || path === '/admin-login') return 'company-admin';
+    
+    const parts = path.split('/').filter(Boolean);
+    if (parts.length >= 2) {
+      const page = parts[1];
+      switch (page) {
+        case 'menu': return 'customer-menu';
+        case 'shop': return 'customer-shop-detail';
+        case 'dashboard': return 'user-dashboard';
+        case 'menupreview': return 'admin-preview';
+        case 'settings': return 'admin-settings';
+        case 'add-food': return 'admin-add-food';
+        case 'analytics': return 'admin-analytics';
+      }
     }
   }
   return 'landing';
@@ -70,6 +85,17 @@ type Action =
   | { type: 'SET_COMPANY_ADMIN_SECTION'; payload: CompanyAdminSection }
   | { type: 'SELECT_MANAGED_SHOP'; payload: ManagedShop | null };
 
+function extractCategories(foodItems: FoodItem[]): Category[] {
+  const uniqueNames = Array.from(new Set(foodItems.map(item => item.category))).filter(Boolean);
+  return [
+    { id: 'all', name: 'All' },
+    ...uniqueNames.map(name => ({
+      id: name,
+      name
+    }))
+  ];
+}
+
 function appReducer(state: AppState, action: Action): AppState {
   switch (action.type) {
     case 'SET_VIEW':
@@ -82,20 +108,20 @@ function appReducer(state: AppState, action: Action): AppState {
       return { ...state, user: action.payload };
     case 'UPDATE_SHOP':
       return { ...state, shop: { ...state.shop, ...action.payload } };
-    case 'ADD_FOOD_ITEM':
-      return { ...state, foodItems: [...state.foodItems, action.payload] };
-    case 'UPDATE_FOOD_ITEM':
-      return {
-        ...state,
-        foodItems: state.foodItems.map((item) =>
-          item.id === action.payload.id ? action.payload : item
-        ),
-      };
-    case 'DELETE_FOOD_ITEM':
-      return {
-        ...state,
-        foodItems: state.foodItems.filter((item) => item.id !== action.payload),
-      };
+    case 'ADD_FOOD_ITEM': {
+      const newItems = [...state.foodItems, action.payload];
+      return { ...state, foodItems: newItems, categories: extractCategories(newItems) };
+    }
+    case 'UPDATE_FOOD_ITEM': {
+      const updatedItems = state.foodItems.map((item) =>
+        item.id === action.payload.id ? action.payload : item
+      );
+      return { ...state, foodItems: updatedItems, categories: extractCategories(updatedItems) };
+    }
+    case 'DELETE_FOOD_ITEM': {
+      const remainingItems = state.foodItems.filter((item) => item.id !== action.payload);
+      return { ...state, foodItems: remainingItems, categories: extractCategories(remainingItems) };
+    }
     case 'SET_SEARCH_QUERY':
       return { ...state, searchQuery: action.payload };
     case 'SET_SELECTED_CATEGORY':
@@ -104,8 +130,10 @@ function appReducer(state: AppState, action: Action): AppState {
       return { ...state, categories: [...state.categories, action.payload] };
     case 'SET_CATEGORIES':
       return { ...state, categories: action.payload };
-    case 'SET_FOOD_ITEMS':
-      return { ...state, foodItems: action.payload };
+    case 'SET_FOOD_ITEMS': {
+      const items = action.payload;
+      return { ...state, foodItems: items, categories: extractCategories(items) };
+    }
     case 'LOGIN': {
       const shouldRedirect = state.currentView === 'landing' || state.currentView === 'login';
       return {

@@ -9,30 +9,9 @@ export type Json =
 export interface Database {
   public: {
     Tables: {
-      categories: {
-        Row: {
-          created_at: string
-          id: string
-          name: string
-          shop_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          name: string
-          shop_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          name?: string
-          shop_id?: string
-        }
-        Relationships: []
-      }
       food_items: {
         Row: {
-          category_id: string | null
+          category: string | null
           created_at: string
           description: string | null
           discount: number | null
@@ -47,7 +26,7 @@ export interface Database {
           tagline: string | null
         }
         Insert: {
-          category_id?: string | null
+          category?: string | null
           created_at?: string
           description?: string | null
           discount?: number | null
@@ -62,7 +41,7 @@ export interface Database {
           tagline?: string | null
         }
         Update: {
-          category_id?: string | null
+          category?: string | null
           created_at?: string
           description?: string | null
           discount?: number | null

@@ -15,6 +15,7 @@ export interface FoodItem {
 
 export interface Shop {
   id: string;
+  username: string;
   name: string;
   tagline: string;
   description: string;
@@ -60,6 +61,8 @@ export type View =
   | 'login' 
   | 'customer-menu' 
   | 'customer-food-detail' 
+  | 'admin-food-detail'
+  | 'admin-add-food-detail'
   | 'customer-shop-detail'
   | 'user-dashboard'
   | 'admin-preview'

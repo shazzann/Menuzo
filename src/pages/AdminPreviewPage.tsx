@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useCallback } from 'react';
 import { Settings, ArrowLeft, Image as ImageIcon, Store } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useApp } from '@/store';
@@ -7,13 +7,17 @@ import { CategoryTabs } from '@/components/shared/CategoryTabs';
 import { SpecialOffersCarousel } from '@/components/shared/SpecialOffersCarousel';
 import { FoodCard } from '@/components/shared/FoodCard';
 import { BottomNav } from '@/components/shared/BottomNav';
-import type { AdminTab } from '@/types';
+import type { AdminTab, FoodItem } from '@/types';
+import { toast } from 'sonner';
+import { ArrowLeft as ArrowLeftDetail, Clock, ChefHat, Sparkles } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export function AdminPreviewPage() {
   const { state, dispatch } = useApp();
   const { shop, foodItems, categories, searchQuery, selectedCategory } = state;
   const [viewMode, setViewMode] = useState<'rows' | 'list'>('rows');
   const [activeTabId, setActiveTabId] = useState('all');
+  const [selectedItem, setSelectedItem] = useState<FoodItem | null>(null);
 
   const specialOffers = useMemo(
     () => foodItems.filter((item) => item.isSpecialOffer && item.isAvailable),
@@ -79,9 +83,9 @@ export function AdminPreviewPage() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [categoriesWithItems, viewMode, activeTabId]);
 
-  const handleFoodClick = () => {
-    // Handled by the FoodCard onClick
-  };
+  const handleFoodClick = useCallback((item: FoodItem) => {
+    setSelectedItem(item);
+  }, []);
 
   const handleTabChange = (tab: AdminTab) => {
     dispatch({ type: 'SET_ADMIN_TAB', payload: tab });
@@ -127,6 +131,8 @@ export function AdminPreviewPage() {
           </div>
         </div>
       </div>
+
+
 
       {/* Banner */}
       <div className="relative h-40 overflow-hidden bg-muted flex items-center justify-center">
@@ -177,6 +183,12 @@ export function AdminPreviewPage() {
         </div>
       </div>
 
+      {/* Special Offers */}
+      <SpecialOffersCarousel
+        items={specialOffers}
+        onItemClick={handleFoodClick}
+      />
+
       {/* Search */}
       <div className="px-4 mt-4">
         <SearchBar
@@ -185,12 +197,6 @@ export function AdminPreviewPage() {
           placeholder="Search your menu..."
         />
       </div>
-
-      {/* Special Offers */}
-      <SpecialOffersCarousel
-        items={specialOffers}
-        onItemClick={handleFoodClick}
-      />
 
       {/* Categories */}
       <CategoryTabs
@@ -247,7 +253,7 @@ export function AdminPreviewPage() {
                       <div key={item.id} className="w-[200px] flex-shrink-0 snap-start first:ml-2">
                         <FoodCard
                           item={item}
-                          onClick={handleFoodClick}
+                          onClick={() => handleFoodClick(item)}
                         />
                       </div>
                     ))}
@@ -286,7 +292,7 @@ export function AdminPreviewPage() {
                   <FoodCard
                     key={item.id}
                     item={item}
-                    onClick={handleFoodClick}
+                    onClick={() => handleFoodClick(item)}
                   />
                 ))}
               </div>
@@ -308,6 +314,125 @@ export function AdminPreviewPage() {
         onTabChange={handleTabChange}
         isAdmin={true}
       />
+
+      {/* Food Detail Overlay */}
+      {selectedItem && (() => {
+        const item = selectedItem;
+        const discountPercent = item.discount
+          ? Math.round(((item.originalPrice - item.finalPrice) / item.originalPrice) * 100)
+          : 0;
+        const categoryName = categories.find(c => c.id === item.category)?.name;
+
+        return (
+          <div className="fixed inset-0 z-[60] bg-background overflow-y-auto">
+            {/* Image Header */}
+            <div className="relative h-72">
+              {item.image ? (
+                <img
+                  src={item.image}
+                  alt={item.name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-muted flex items-center justify-center">
+                  <span className="text-muted-foreground text-sm">No image available</span>
+                </div>
+              )}
+              <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
+              
+              {/* Back Button */}
+              <button
+                onClick={() => setSelectedItem(null)}
+                className="absolute top-4 left-4 p-2.5 rounded-full bg-background/50 backdrop-blur-sm hover:bg-background/70 transition-colors"
+              >
+                <ArrowLeftDetail className="w-5 h-5" />
+              </button>
+
+              {/* Badges */}
+              <div className="absolute top-4 right-4 flex flex-col gap-2">
+                {item.isSpecialOffer && (
+                  <span className="px-3 py-1.5 text-xs font-mono uppercase tracking-wider bg-primary text-primary-foreground rounded-full flex items-center gap-1.5">
+                    <Sparkles className="w-3 h-3" />
+                    Our Special
+                  </span>
+                )}
+                {!item.isAvailable && (
+                  <span className="px-3 py-1.5 text-xs font-mono uppercase tracking-wider bg-muted text-muted-foreground rounded-full">
+                    Sold Out
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="relative -mt-6 px-4 pb-8">
+              <div className="bg-card rounded-3xl card-border card-shadow p-5">
+                {/* Title & Price */}
+                <div className="flex items-start justify-between gap-4 mb-3">
+                  <div>
+                    <h1 className="text-2xl font-bold">{item.name}</h1>
+                    <p className="text-sm text-muted-foreground mt-1">{item.tagline}</p>
+                  </div>
+                  <div className="text-right">
+                    {item.discount ? (
+                      <>
+                        <p className="text-sm text-muted-foreground line-through">
+                          Rs. {item.originalPrice.toFixed(2)}
+                        </p>
+                        <p className="text-2xl font-bold text-primary">
+                          Rs. {item.finalPrice.toFixed(2)}
+                        </p>
+                        <span className="inline-block mt-1 px-2 py-0.5 text-[10px] bg-destructive/20 text-destructive rounded-full">
+                          Save {discountPercent}%
+                        </span>
+                      </>
+                    ) : (
+                      <p className="text-2xl font-bold">
+                        Rs. {item.finalPrice.toFixed(2)}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Category */}
+                <div className="mb-4">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted text-muted-foreground text-sm font-medium">
+                    <ChefHat className="w-4 h-4" />
+                    {categoryName || 'Uncategorized'}
+                  </span>
+                </div>
+
+                {/* Description */}
+                <p className="text-muted-foreground leading-relaxed mb-6">
+                  {item.description}
+                </p>
+
+                {/* Shop Info */}
+                <div className="p-4 rounded-xl bg-muted/50 mb-6">
+                  <div className="flex items-center gap-3">
+                    {shop.logo ? (
+                      <img
+                        src={shop.logo}
+                        alt={shop.name}
+                        className="w-10 h-10 rounded-lg object-cover"
+                      />
+                    ) : (
+                      <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold">
+                        {shop.name ? shop.name.charAt(0).toUpperCase() : 'S'}
+                      </div>
+                    )}
+                    <div>
+                      <p className="font-medium text-sm">{shop.name}</p>
+                      <p className="text-xs text-muted-foreground">{shop.tagline}</p>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }

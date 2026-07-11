@@ -6,7 +6,8 @@ import {
   Crown,
   Share2,
   Calendar,
-  Plus
+  Plus,
+  Copy
 } from 'lucide-react';
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis } from 'recharts';
 import { Button } from '@/components/ui/button';
@@ -14,6 +15,7 @@ import { useApp } from '@/store';
 import { BottomNav } from '@/components/shared/BottomNav';
 import { supabase } from '@/lib/supabase';
 import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 import type { AdminTab, Shop, FoodItem } from '@/types';
 import {
   AlertDialog,
@@ -97,23 +99,6 @@ export function UserDashboardPage() {
           };
           dispatch({ type: 'UPDATE_SHOP', payload: formattedShop });
 
-          // ONE-OFF CLEANUP: Remove dummy categories
-          await supabase
-            .from('categories')
-            .delete()
-            .in('name', ['Starters', 'Mains', 'Bowls', 'Desserts', 'Drinks'])
-            .eq('shop_id', shopData.id);
-
-          // Fetch Categories
-          const { data: catData } = (await supabase
-            .from('categories')
-            .select('*')
-            .eq('shop_id', shopData.id)) as { data: any[] | null };
-
-          if (catData) {
-            const formattedCat = [{ id: 'all', name: 'All' }, ...catData.map(c => ({ id: c.id, name: c.name }))];
-            dispatch({ type: 'SET_CATEGORIES', payload: formattedCat });
-          }
 
           // Fetch Food Items
           const { data: foodData } = (await supabase
@@ -127,7 +112,7 @@ export function UserDashboardPage() {
               name: item.name,
               description: item.description || '',
               tagline: item.tagline || '',
-              category: item.category_id || 'unassigned',
+              category: item.category || 'unassigned',
               image: item.image || '/food-burger.jpg',
               originalPrice: Number(item.original_price),
               discount: Number(item.discount),
@@ -326,23 +311,37 @@ export function UserDashboardPage() {
         </div>
 
         {/* QR Code Action Card */}
-        <div className="p-5 rounded-2xl bg-card border border-border shadow-sm flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-lg bg-white p-1 border flex-shrink-0 flex items-center justify-center">
-               <QrCode className="w-10 h-10 text-black" />
-            </div>
-            <div>
-              <h3 className="font-semibold text-sm">Your QR Menu</h3>
-              <p className="text-xs text-muted-foreground mb-2">Ready for print & table tents</p>
-              <div className="flex gap-2">
-                <Button size="sm" variant="secondary" className="h-7 text-xs px-3">
-                  Download
-                </Button>
-                <Button size="sm" variant="outline" className="h-7 text-xs px-2">
-                  <Share2 className="w-3 h-3" />
-                </Button>
+        <div className="p-5 rounded-2xl bg-card border border-border shadow-sm flex flex-col gap-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 rounded-lg bg-white p-1 border flex-shrink-0 flex items-center justify-center">
+                 <QrCode className="w-10 h-10 text-black" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-sm">Your QR Menu</h3>
+                <p className="text-xs text-muted-foreground mb-2">Ready for print & table tents</p>
+                <div className="flex gap-2">
+                  <Button size="sm" variant="secondary" className="h-7 text-xs px-3">
+                    Download
+                  </Button>
+                  <Button size="sm" variant="outline" className="h-7 text-xs px-2">
+                    <Share2 className="w-3 h-3" />
+                  </Button>
+                </div>
               </div>
             </div>
+          </div>
+          <div className="flex items-center gap-2 bg-muted/70 p-1.5 rounded-xl border border-border/50">
+            <span className="text-xs text-foreground truncate flex-1 ml-3 font-medium select-all">
+              {typeof window !== 'undefined' ? `${window.location.host}/${shop.username || 'menuzo'}/menu` : `menuzo.com/${shop.username || 'menuzo'}/menu`}
+            </span>
+            <Button size="icon" variant="ghost" className="h-8 w-8 hover:bg-background rounded-lg flex-shrink-0 text-muted-foreground hover:text-foreground shadow-sm" onClick={() => {
+              const url = `${window.location.origin}/${shop.username || 'menuzo'}/menu`;
+              navigator.clipboard.writeText(url);
+              toast.success('Menu link copied!');
+            }}>
+              <Copy className="w-4 h-4" />
+            </Button>
           </div>
         </div>
 

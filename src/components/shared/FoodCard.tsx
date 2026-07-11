@@ -18,7 +18,7 @@ export function FoodCard({ item, onClick, variant = 'grid' }: FoodCardProps) {
         onClick={onClick}
         className={cn(
           'flex items-center gap-4 p-3 rounded-2xl bg-card card-border card-shadow',
-          'cursor-pointer transition-all duration-200 hover:scale-[1.02] hover:border-primary/30',
+          onClick && 'cursor-pointer transition-all duration-200 hover:scale-[1.02] hover:border-primary/30',
           !item.isAvailable && 'opacity-60'
         )}
       >
@@ -30,7 +30,7 @@ export function FoodCard({ item, onClick, variant = 'grid' }: FoodCardProps) {
           />
           {item.isSpecialOffer && (
             <span className="absolute -top-1 -left-1 px-2 py-0.5 text-[9px] font-mono uppercase tracking-wider bg-primary text-primary-foreground rounded-full">
-              Special
+              Our Special
             </span>
           )}
         </div>
@@ -43,10 +43,10 @@ export function FoodCard({ item, onClick, variant = 'grid' }: FoodCardProps) {
             {item.discount ? (
               <>
                 <span className="text-xs text-muted-foreground line-through">
-                  LKR {item.originalPrice.toFixed(2)}
+                  Rs. {item.originalPrice.toFixed(2)}
                 </span>
                 <span className="text-sm font-bold text-primary">
-                  LKR {item.finalPrice.toFixed(2)}
+                  Rs. {item.finalPrice.toFixed(2)}
                 </span>
                 <span className="text-[10px] px-1.5 py-0.5 bg-destructive/20 text-destructive rounded-full">
                   -{discountPercent}%
@@ -54,7 +54,7 @@ export function FoodCard({ item, onClick, variant = 'grid' }: FoodCardProps) {
               </>
             ) : (
               <span className="text-sm font-bold">
-                LKR {item.finalPrice.toFixed(2)}
+                Rs. {item.finalPrice.toFixed(2)}
               </span>
             )}
           </div>
@@ -73,7 +73,7 @@ export function FoodCard({ item, onClick, variant = 'grid' }: FoodCardProps) {
       onClick={onClick}
       className={cn(
         'group relative rounded-2xl bg-card card-border card-shadow overflow-hidden',
-        'cursor-pointer transition-all duration-200 hover:scale-[1.03] hover:border-primary/30',
+        onClick && 'cursor-pointer transition-all duration-200 hover:scale-[1.03] hover:border-primary/30',
         !item.isAvailable && 'opacity-60'
       )}
     >
@@ -85,7 +85,7 @@ export function FoodCard({ item, onClick, variant = 'grid' }: FoodCardProps) {
         />
         {item.isSpecialOffer && (
           <span className="absolute top-2 left-2 px-2.5 py-1 text-[10px] font-mono uppercase tracking-wider bg-primary text-primary-foreground rounded-full">
-            Special Offer
+            Our Special
           </span>
         )}
         {!item.isAvailable && (
@@ -105,15 +105,15 @@ export function FoodCard({ item, onClick, variant = 'grid' }: FoodCardProps) {
           {item.discount ? (
             <>
               <span className="text-xs text-muted-foreground line-through">
-                LKR {item.originalPrice.toFixed(2)}
+                Rs. {item.originalPrice.toFixed(2)}
               </span>
               <span className="text-sm font-bold text-primary">
-                LKR {item.finalPrice.toFixed(2)}
+                Rs. {item.finalPrice.toFixed(2)}
               </span>
             </>
           ) : (
             <span className="text-sm font-bold">
-              LKR {item.finalPrice.toFixed(2)}
+              Rs. {item.finalPrice.toFixed(2)}
             </span>
           )}
         </div>

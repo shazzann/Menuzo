@@ -58,6 +58,19 @@ export function AdminSettingsPage() {
     confirm: '',
   });
 
+  const [usernameInput, setUsernameInput] = useState(shop.username || 'menuzo');
+  const [isSavingUsername, setIsSavingUsername] = useState(false);
+
+  const handleUpdateUsername = async () => {
+    setIsSavingUsername(true);
+    // In a real app we'd save to Supabase here and check for duplicates
+    setTimeout(() => {
+      dispatch({ type: 'UPDATE_SHOP', payload: { username: usernameInput.toLowerCase().replace(/[^a-z0-9-]/g, '') } });
+      toast.success('Shop URL updated successfully');
+      setIsSavingUsername(false);
+    }, 500);
+  };
+
   const handleChange = (field: string, value: string | boolean) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
@@ -95,6 +108,7 @@ export function AdminSettingsPage() {
   };
 
   const handleRemoveImage = (type: 'logo' | 'banner') => {
+    if (!window.confirm(`Are you sure you want to remove the ${type}?`)) return;
     const oldUrl = formData[type];
     if (oldUrl) {
       deleteImageFromCloudinary(oldUrl);
@@ -607,6 +621,27 @@ export function AdminSettingsPage() {
           <div className="space-y-6">
             <div className="space-y-4">
               <h3 className="font-semibold text-sm">Account Information</h3>
+              <div className="space-y-2">
+                <Label className="text-xs">Shop URL Username</Label>
+                <div className="flex items-center gap-2">
+                  <Input 
+                    type="text" 
+                    value={usernameInput} 
+                    onChange={(e) => setUsernameInput(e.target.value)}
+                    placeholder="your-shop-name"
+                    className="flex-1"
+                  />
+                  <Button 
+                    onClick={handleUpdateUsername} 
+                    disabled={isSavingUsername || usernameInput === shop.username}
+                  >
+                    {isSavingUsername ? 'Saving...' : 'Update'}
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Your menu will be available at: domain/{usernameInput || 'username'}/menu
+                </p>
+              </div>
               <div className="space-y-2">
                 <Label className="text-xs">Account Email</Label>
                 <Input 
