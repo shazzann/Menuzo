@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
 import QRCodeStyling from 'qr-code-styling';
 import type { DotType, CornerSquareType, CornerDotType } from 'qr-code-styling';
 import type { ThemeConfig } from '@/types';
@@ -19,9 +19,26 @@ const PATTERNS: { label: string, value: DotType, eyeFrame: CornerSquareType, eye
   { label: 'Diamond', value: 'classy-rounded', eyeFrame: 'extra-rounded', eyeBall: 'rounded' },
 ];
 
-export function SmallQrPreview({ shopUrl, theme, shopLogo, size = 64 }: SmallQrPreviewProps) {
+export interface SmallQrPreviewRef {
+  download: (filename: string) => void;
+}
+
+export const SmallQrPreview = forwardRef<SmallQrPreviewRef, SmallQrPreviewProps>(({ 
+  shopUrl, 
+  theme, 
+  shopLogo,
+  size = 64
+}, ref) => {
   const qrRef = useRef<HTMLDivElement>(null);
   const qrCode = useRef<QRCodeStyling | null>(null);
+
+  useImperativeHandle(ref, () => ({
+    download: (filename: string) => {
+      if (qrCode.current) {
+        qrCode.current.download({ name: filename, extension: 'png' });
+      }
+    }
+  }));
 
   const qrStyle = (theme as any)?.qrStyle || 'classic';
   const qrPattern = (theme as any)?.qrPattern || 'square';
@@ -126,4 +143,4 @@ export function SmallQrPreview({ shopUrl, theme, shopLogo, size = 64 }: SmallQrP
       <div ref={qrRef} className="w-full h-full flex items-center justify-center" />
     </div>
   );
-}
+});
