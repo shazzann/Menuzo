@@ -9,7 +9,6 @@ import {
   Copy,
   ExternalLink,
   ChevronRight,
-  CheckCircle2,
   Download
 } from 'lucide-react';
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis } from 'recharts';
@@ -304,7 +303,7 @@ export function UserDashboardPage() {
               <Button 
                 variant="default" 
                 className="w-full text-xs h-9"
-                onClick={() => dispatch({ type: 'SET_VIEW', payload: 'admin-settings' })}
+                onClick={() => dispatch({ type: 'SET_VIEW', payload: 'admin-qr' })}
               >
                 Customize QR
                 <ChevronRight className="w-3 h-3 ml-1" />

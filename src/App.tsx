@@ -9,6 +9,10 @@ import { AdminPreviewPage } from '@/pages/AdminPreviewPage';
 import { AdminAddFoodPage } from '@/pages/AdminAddFoodPage';
 import { AdminAnalyticsPage } from '@/pages/AdminAnalyticsPage';
 import { AdminSettingsPage } from '@/pages/AdminSettingsPage';
+import { AdminShopDetailsPage } from '@/pages/AdminShopDetailsPage';
+import { AdminThemePage } from '@/pages/AdminThemePage';
+import { AdminQrPage } from '@/pages/AdminQrPage';
+import { AdminSecurityPage } from '@/pages/AdminSecurityPage';
 import { UserDashboardPage } from '@/pages/UserDashboardPage';
 import { CompanyAdminPage } from '@/pages/CompanyAdminPage';
 import { CompanyAdminLoginPage } from '@/pages/CompanyAdminLoginPage';
@@ -121,6 +125,14 @@ function AppContent() {
       return <AdminAnalyticsPage />;
     case 'admin-settings':
       return <AdminSettingsPage />;
+    case 'admin-shop-details':
+      return <AdminShopDetailsPage />;
+    case 'admin-theme':
+      return <AdminThemePage />;
+    case 'admin-qr':
+      return <AdminQrPage />;
+    case 'admin-security':
+      return <AdminSecurityPage />;
     case 'company-admin':
       return <CompanyAdminPage />;
     case 'company-admin-login':
@@ -147,3 +159,5 @@ function App() {
 }
 
 export default App;
+
+// trigger app rebuild

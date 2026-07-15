@@ -16,6 +16,10 @@ function getUrlForView(view: View, username: string): string | null {
     case 'admin-settings': return `/${username}/settings`;
     case 'admin-add-food': return `/${username}/add-food`;
     case 'admin-analytics': return `/${username}/analytics`;
+    case 'admin-theme': return `/${username}/settings/theme`;
+    case 'admin-qr': return `/${username}/settings/qr`;
+    case 'admin-security': return `/${username}/settings/security`;
+    case 'admin-shop-details': return `/${username}/settings/shop`;
     default: return null; // We don't map popup/detail views to primary routes yet, they stay in place
   }
 }
@@ -74,7 +78,19 @@ export function RouterSync() {
             case 'shop': nextView = 'customer-shop-detail'; break;
             case 'dashboard': nextView = 'user-dashboard'; break;
             case 'menupreview': nextView = 'admin-preview'; break;
-            case 'settings': nextView = 'admin-settings'; break;
+            case 'settings':
+              if (parts.length >= 3) {
+                switch (parts[2]) {
+                  case 'shop': nextView = 'admin-shop-details'; break;
+                  case 'theme': nextView = 'admin-theme'; break;
+                  case 'qr': nextView = 'admin-qr'; break;
+                  case 'security': nextView = 'admin-security'; break;
+                  default: nextView = 'admin-settings'; break;
+                }
+              } else {
+                nextView = 'admin-settings';
+              }
+              break;
             case 'add-food': nextView = 'admin-add-food'; break;
             case 'analytics': nextView = 'admin-analytics'; break;
           }
@@ -90,3 +106,5 @@ export function RouterSync() {
 
   return null;
 }
+
+// trigger route rebuild

@@ -85,6 +85,9 @@ export type View =
   | 'admin-edit-food'
   | 'admin-analytics'
   | 'admin-settings'
+  | 'admin-theme'
+  | 'admin-qr'
+  | 'admin-security'
   | 'company-admin'
   | 'company-admin-login';
 
@@ -205,3 +208,5 @@ export interface AppState {
   companyAdminSection: CompanyAdminSection;
   selectedManagedShop: ManagedShop | null;
 }
+
+// trigger rebuild
