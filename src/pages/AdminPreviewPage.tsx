@@ -356,7 +356,7 @@ export function AdminPreviewPage() {
                 )}
                 {!item.isAvailable && (
                   <span className="px-3 py-1.5 text-xs font-mono uppercase tracking-wider bg-muted text-muted-foreground rounded-full">
-                    Sold Out
+                    Unavailable
                   </span>
                 )}
               </div>

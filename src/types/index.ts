@@ -29,6 +29,12 @@ export interface Shop {
     date?: string;
   }[];
   contactNumber: string;
+  contacts?: {
+    id: string;
+    label: string;
+    number: string;
+    isVisible: boolean;
+  }[];
   email: string;
   isOpen: boolean;
   socialLinks?: {
@@ -36,6 +42,14 @@ export interface Shop {
     facebook?: string;
     website?: string;
   };
+  categoryOrder?: string[];
+  theme?: ThemeConfig;
+}
+
+export interface ThemeConfig {
+  primary: string;
+  secondary: string;
+  accent: string;
 }
 
 export interface User {

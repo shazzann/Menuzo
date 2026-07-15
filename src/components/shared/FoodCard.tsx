@@ -61,7 +61,7 @@ export function FoodCard({ item, onClick, variant = 'grid' }: FoodCardProps) {
         </div>
         {!item.isAvailable && (
           <span className="px-2 py-1 text-[10px] font-mono uppercase bg-muted text-muted-foreground rounded-full">
-            Sold Out
+            Unavailable
           </span>
         )}
       </div>
@@ -91,7 +91,7 @@ export function FoodCard({ item, onClick, variant = 'grid' }: FoodCardProps) {
         {!item.isAvailable && (
           <div className="absolute inset-0 bg-background/70 flex items-center justify-center">
             <span className="px-3 py-1.5 text-xs font-mono uppercase bg-muted text-muted-foreground rounded-full">
-              Sold Out
+              Unavailable
             </span>
           </div>
         )}

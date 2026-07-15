@@ -13,6 +13,9 @@ import type { Database } from '@/types/supabase';
 
 import { uploadImageToCloudinary, deleteImageFromCloudinary } from '@/lib/cloudinary';
 import { ImageCropperModal } from '@/components/shared/ImageCropperModal';
+import { ThemedMap } from '@/components/shared/ThemedMap';
+import { AdminThemeSettings } from '@/components/admin/AdminThemeSettings';
+import { AdminQrSettings } from '@/components/admin/AdminQrSettings';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,7 +34,6 @@ export function AdminSettingsPage() {
   const { user, shop } = state;
   const [activeTab, setActiveTab] = useState<SettingsTab>('shop');
   const [isSaving, setIsSaving] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
   const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [pendingNav, setPendingNav] = useState<(() => void) | null>(null);
@@ -42,6 +44,7 @@ export function AdminSettingsPage() {
     description: shop.description || '',
     location: shop.location || '',
     contactNumber: shop.contactNumber || '',
+    contacts: shop.contacts || [],
     email: shop.email || user?.email || '',
     isOpen: shop.isOpen,
     openingHours: [...shop.openingHours],
@@ -50,6 +53,11 @@ export function AdminSettingsPage() {
     website: shop.socialLinks?.website || '',
     logo: shop.logo || '',
     banner: shop.banner || '',
+    theme: shop.theme || {
+      primary: '#090A0C',
+      secondary: '#1C1E22',
+      accent: '#FB8500',
+    },
   });
 
   const [passwordData, setPasswordData] = useState({
@@ -58,18 +66,7 @@ export function AdminSettingsPage() {
     confirm: '',
   });
 
-  const [usernameInput, setUsernameInput] = useState(shop.username || 'menuzo');
-  const [isSavingUsername, setIsSavingUsername] = useState(false);
 
-  const handleUpdateUsername = async () => {
-    setIsSavingUsername(true);
-    // In a real app we'd save to Supabase here and check for duplicates
-    setTimeout(() => {
-      dispatch({ type: 'UPDATE_SHOP', payload: { username: usernameInput.toLowerCase().replace(/[^a-z0-9-]/g, '') } });
-      toast.success('Shop URL updated successfully');
-      setIsSavingUsername(false);
-    }, 500);
-  };
 
   const handleChange = (field: string, value: string | boolean) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -138,8 +135,8 @@ export function AdminSettingsPage() {
     }));
   };
 
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSave = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     setIsSaving(true);
     
     try {
@@ -152,6 +149,7 @@ export function AdminSettingsPage() {
         description: formData.description || null,
         location: formData.location || null,
         contact_number: formData.contactNumber || null,
+        contacts: formData.contacts as any, // Cast to any to bypass strict JSON type for now
         email: formData.email || null,
         is_open: formData.isOpen,
         instagram: formData.instagram || null,
@@ -159,6 +157,7 @@ export function AdminSettingsPage() {
         website: formData.website || null,
         logo: formData.logo || null,
         banner: formData.banner || null,
+        theme: formData.theme as any,
       };
 
       let finalShopId = shop.id;
@@ -198,8 +197,7 @@ export function AdminSettingsPage() {
         } 
       });
       setIsEditing(false);
-      setShowSuccess(true);
-      setTimeout(() => setShowSuccess(false), 3000);
+      toast.success('Settings saved successfully!');
     } catch (err: any) {
       console.error('Error saving settings:', err);
       if (err.message?.includes('shops_user_id_fkey')) {
@@ -260,16 +258,43 @@ export function AdminSettingsPage() {
               <img src="/logo/Logo favicon.png" alt="Logo" className="w-8 h-8 object-contain" />
             </div>
           </div>
-          {activeTab === 'shop' && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsEditing(!isEditing)}
-              className="gap-2"
-            >
-              {isEditing ? <X className="w-4 h-4" /> : <Edit3 className="w-4 h-4" />}
-              {isEditing ? 'Cancel' : 'Edit'}
-            </Button>
+          {(activeTab === 'shop' || activeTab === 'customization') && (
+            isEditing ? (
+              <div className="flex items-center gap-1.5">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsEditing(false)}
+                  className="px-2"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  form="settings-form"
+                  size="sm"
+                  disabled={isSaving}
+                  className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground border-0"
+                >
+                  {isSaving ? 'Saving...' : (
+                    <>
+                      <Save className="w-4 h-4" />
+                      Save
+                    </>
+                  )}
+                </Button>
+              </div>
+            ) : (
+              <Button
+                size="sm"
+                onClick={() => setIsEditing(true)}
+                className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground border-0"
+              >
+                <Edit3 className="w-4 h-4" />
+                Edit
+              </Button>
+            )
           )}
         </div>
         
@@ -304,9 +329,9 @@ export function AdminSettingsPage() {
       </div>
 
       {/* Content */}
-      <div className="px-4 py-4 space-y-6">
+      <form id="settings-form" onSubmit={handleSave} className="px-4 py-4 space-y-6">
         {activeTab === 'shop' && (
-          <form onSubmit={handleSave} className="space-y-6">
+          <div className="space-y-6">
             {/* Images */}
             <div className="space-y-4">
               <div className="relative h-40 rounded-2xl overflow-hidden bg-muted">
@@ -426,30 +451,100 @@ export function AdminSettingsPage() {
                   )}
                 </div>
                 {formData.location && (
-                  <div className="mt-2 w-full h-48 rounded-xl overflow-hidden border border-border">
-                    <iframe
-                      className="dark:grayscale dark:invert-[.92] dark:contrast-[.83]"
-                      width="100%"
-                      height="100%"
-                      style={{ border: 0 }}
-                      loading="lazy"
-                      allowFullScreen
-                      referrerPolicy="no-referrer-when-downgrade"
-                      src={`https://maps.google.com/maps?q=${encodeURIComponent(formData.location)}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
-                    ></iframe>
+                  <div className="mt-2">
+                    <ThemedMap location={formData.location} className="w-full h-48" />
                   </div>
                 )}
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="contactNumber">Phone Number</Label>
-                <Input
-                  id="contactNumber"
-                  value={formData.contactNumber}
-                  onChange={(e) => handleChange('contactNumber', e.target.value)}
-                  placeholder="+1 (555) 000-0000"
-                  disabled={!isEditing}
-                />
+              <div className="space-y-4 pt-2">
+                <div className="flex items-center justify-between">
+                  <Label>Phone Numbers (Up to 3)</Label>
+                  {isEditing && formData.contacts.length < 3 && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setFormData(prev => ({
+                        ...prev,
+                        contacts: [...prev.contacts, { id: Date.now().toString(), label: 'Main', number: '', isVisible: true }]
+                      }))}
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Number
+                    </Button>
+                  )}
+                </div>
+                
+                <div className="space-y-3">
+                  {formData.contacts.map((contact, index) => (
+                    <div key={contact.id} className="flex gap-2 items-start bg-muted/30 p-3 rounded-lg border border-border">
+                      <div className="space-y-3 flex-1">
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1.5">
+                            <Label className="text-xs text-muted-foreground">Label</Label>
+                            <Input
+                              value={contact.label}
+                              onChange={(e) => {
+                                const newContacts = [...formData.contacts];
+                                newContacts[index].label = e.target.value;
+                                setFormData(prev => ({ ...prev, contacts: newContacts }));
+                              }}
+                              placeholder="e.g. Main, Delivery"
+                              disabled={!isEditing}
+                              className="h-9"
+                            />
+                          </div>
+                          <div className="space-y-1.5">
+                            <Label className="text-xs text-muted-foreground">Number</Label>
+                            <Input
+                              value={contact.number}
+                              onChange={(e) => {
+                                const newContacts = [...formData.contacts];
+                                newContacts[index].number = e.target.value;
+                                setFormData(prev => ({ ...prev, contacts: newContacts }));
+                              }}
+                              placeholder="+94 77 ..."
+                              disabled={!isEditing}
+                              className="h-9"
+                            />
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Switch
+                            checked={contact.isVisible}
+                            onCheckedChange={(checked) => {
+                              const newContacts = [...formData.contacts];
+                              newContacts[index].isVisible = checked;
+                              setFormData(prev => ({ ...prev, contacts: newContacts }));
+                            }}
+                            disabled={!isEditing}
+                          />
+                          <Label className="text-xs font-normal cursor-pointer text-muted-foreground">Visible to customers</Label>
+                        </div>
+                      </div>
+                      {isEditing && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="text-muted-foreground hover:text-destructive h-9 w-9 mt-6"
+                          onClick={() => {
+                            const newContacts = formData.contacts.filter((_, i) => i !== index);
+                            setFormData(prev => ({ ...prev, contacts: newContacts }));
+                          }}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                  {formData.contacts.length === 0 && (
+                    <div className="text-sm text-muted-foreground py-2.5 px-3 bg-muted/30 rounded-lg border border-border border-dashed text-center">
+                      No phone numbers added.
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="space-y-2">
@@ -575,46 +670,40 @@ export function AdminSettingsPage() {
               </div>
             </div>
 
-            {/* Success Message */}
-            {showSuccess && (
-              <div className="p-3 rounded-lg bg-primary/10 text-primary text-sm text-center">
-                Changes saved successfully!
-              </div>
-            )}
-
-            {/* Submit Button */}
-            {isEditing && (
-              <Button
-                type="submit"
-                disabled={isSaving}
-                className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
-              >
-                {isSaving ? (
-                  'Saving...'
-                ) : (
-                  <>
-                    <Save className="w-4 h-4 mr-2" />
-                    Save Changes
-                  </>
-                )}
-              </Button>
-            )}
-          </form>
+          </div>
         )}
 
         {activeTab === 'customization' && (
-          <div className="text-center py-12">
-            <Paintbrush className="w-12 h-12 text-muted-foreground mx-auto mb-3 opacity-50" />
-            <h3 className="font-medium text-lg">Theme Customization</h3>
-            <p className="text-sm text-muted-foreground mt-1">Coming soon. Customize your menu's colors and fonts.</p>
+          <div className="relative pb-20">
+            <AdminThemeSettings
+              theme={formData.theme as any}
+              onChange={(theme) => setFormData(prev => ({ ...prev, theme }))}
+              isEditing={isEditing}
+              shopName={formData.name || shop.name}
+            />
           </div>
         )}
 
         {activeTab === 'qr' && (
-          <div className="text-center py-12">
-            <QrCode className="w-12 h-12 text-muted-foreground mx-auto mb-3 opacity-50" />
-            <h3 className="font-medium text-lg">QR Generator</h3>
-            <p className="text-sm text-muted-foreground mt-1">Coming soon. Generate and customize your table QR codes.</p>
+          <div className="relative pb-20">
+            <AdminQrSettings 
+              shopUrl={`${window.location.origin}/${usernameInput || shop.username}/menu`}
+              themePrimary={formData.theme?.primary || '#090A0C'}
+              themeAccent={formData.theme?.accent || '#FB8500'}
+              shopLogo={formData.logo}
+              shopName={formData.name || shop.name}
+              isSaving={isSaving}
+              qrStyle={(formData.theme as any)?.qrStyle || 'classic'}
+              qrPattern={(formData.theme as any)?.qrPattern || 'square'}
+              onChangeStyle={(style) => setFormData(prev => ({
+                ...prev,
+                theme: { ...(prev.theme as any), qrStyle: style }
+              }))}
+              onChangePattern={(pattern) => setFormData(prev => ({
+                ...prev,
+                theme: { ...(prev.theme as any), qrPattern: pattern }
+              }))}
+            />
           </div>
         )}
 
@@ -627,20 +716,13 @@ export function AdminSettingsPage() {
                 <div className="flex items-center gap-2">
                   <Input 
                     type="text" 
-                    value={usernameInput} 
-                    onChange={(e) => setUsernameInput(e.target.value)}
-                    placeholder="your-shop-name"
-                    className="flex-1"
+                    value={shop.username || 'your-shop-name'} 
+                    disabled
+                    className="flex-1 bg-muted text-muted-foreground opacity-100"
                   />
-                  <Button 
-                    onClick={handleUpdateUsername} 
-                    disabled={isSavingUsername || usernameInput === shop.username}
-                  >
-                    {isSavingUsername ? 'Saving...' : 'Update'}
-                  </Button>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Your menu will be available at: domain/{usernameInput || 'username'}/menu
+                  Your menu is available at: {window.location.origin}/{shop.username || 'username'}/menu
                 </p>
               </div>
               <div className="space-y-2">
@@ -703,7 +785,7 @@ export function AdminSettingsPage() {
             </div>
           </div>
         )}
-      </div>
+      </form>
 
       <AlertDialog open={!!pendingNav} onOpenChange={(open) => !open && setPendingNav(null)}>
         <AlertDialogContent>

@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils';
-import { Plus } from 'lucide-react';
+import { Plus, SlidersHorizontal } from 'lucide-react';
 import type { Category } from '@/types';
 
 interface CategoryTabsProps {
@@ -7,13 +7,14 @@ interface CategoryTabsProps {
   selectedCategory: string;
   onSelectCategory: (categoryId: string) => void;
   onAddCategory?: () => void;
+  onReorder?: () => void;
   className?: string;
 }
 
-export function CategoryTabs({ categories, selectedCategory, onSelectCategory, onAddCategory, className }: CategoryTabsProps) {
+export function CategoryTabs({ categories, selectedCategory, onSelectCategory, onAddCategory, onReorder, className }: CategoryTabsProps) {
   return (
-    <div className={cn("sticky top-0 z-30 bg-background/95 backdrop-blur-sm py-3 px-4 border-b border-border", className)}>
-      <div className="flex gap-2 overflow-x-auto scrollbar-hide">
+    <div className={cn("sticky z-30 bg-background/95 backdrop-blur-sm py-3 px-4 border-b border-border flex items-center justify-between gap-2", className)}>
+      <div className="flex gap-2 overflow-x-auto scrollbar-hide flex-1">
         {categories.map((category) => (
           <button
             key={category.id}
@@ -38,6 +39,15 @@ export function CategoryTabs({ categories, selectedCategory, onSelectCategory, o
           </button>
         )}
       </div>
+      {onReorder && (
+        <button
+          onClick={onReorder}
+          className="p-2 rounded-full bg-card text-muted-foreground hover:text-foreground card-border flex-shrink-0 shadow-sm"
+          title="Reorder Categories"
+        >
+          <SlidersHorizontal className="w-4 h-4" />
+        </button>
+      )}
     </div>
   );
 }

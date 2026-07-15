@@ -3,53 +3,64 @@ import { useApp } from '@/store';
 import { supabase } from '@/lib/supabase';
 import type { Shop, FoodItem } from '@/types';
 
-export function PublicDataLoader() {
+export function AdminDataLoader() {
   const { state, dispatch } = useApp();
-  const { shop, currentView } = state;
-  const [loadingUsername, setLoadingUsername] = useState('');
+  const { user, shop, currentView } = state;
+  const [loadedUserId, setLoadedUserId] = useState('');
 
   useEffect(() => {
-    // Only load if we are on a customer view
-    const isCustomerView = currentView === 'customer-menu' || currentView === 'customer-shop-detail' || currentView === 'customer-food-detail';
+    // Only load if we are in an admin view (but not login)
+    const isAdminView = currentView.startsWith('admin-') || currentView === 'user-dashboard';
     
-    if (!isCustomerView) return;
-    if (!shop.username) return;
+    if (!isAdminView) return;
+    if (!user?.id || user.id === 'google-auth-bypass-id' || user.id === 'user-1') return;
     
-    // If we already have real data for this shop, skip
-    if (shop.id && shop.id !== 'shop-1' && loadingUsername === shop.username) return;
+    // If we already loaded data for this user, skip
+    if (loadedUserId === user.id) return;
 
     async function loadData() {
       try {
-        setLoadingUsername(shop.username);
+        setLoadedUserId(user!.id);
         
-        // Fetch Shop (currently fetches first shop since username column doesn't exist in DB schema yet)
-        const { data: shopData, error: shopError } = await supabase
+        let { data: shopData } = (await supabase
           .from('shops')
           .select('*')
-          .limit(1)
-          .single();
+          .eq('user_id', user!.id)
+          .single()) as { data: any };
+
+        if (!shopData) {
+          const { data: newShop } = await supabase
+            .from('shops')
+            .insert({
+              user_id: user!.id,
+              name: 'My Awesome Shop',
+              is_open: false,
+            })
+            .select()
+            .single();
           
-        if (shopError) {
-          console.error("Supabase shops fetch error:", shopError);
+          if (newShop) {
+            shopData = newShop;
+          }
         }
 
         if (shopData) {
           const formattedShop: Shop = {
             id: shopData.id,
+            username: shopData.username || shop.username || (user!.email ? user!.email.split('@')[0] : 'owner'),
             name: shopData.name,
             tagline: shopData.tagline || '',
             description: shopData.description || '',
             location: shopData.location || '',
             contactNumber: shopData.contact_number || '',
-            contacts: (shopData.contacts as any) || [],
-            theme: (shopData.theme as any) || undefined,
+            contacts: shopData.contacts || [],
             email: shopData.email || '',
             isOpen: !!shopData.is_open,
             logo: shopData.logo || '',
             banner: shopData.banner || '',
-            username: shop.username,
-            openingHours: [
-              { day: 'Monday - Saturday', hours: '10:00 AM - 10:00 PM' } // Mocked for now, same as dashboard
+            theme: shopData.theme as any || undefined,
+            openingHours: shopData.opening_hours || [
+              { day: 'Monday - Saturday', hours: '10:00 AM - 10:00 PM' }
             ],
             socialLinks: {
               instagram: shopData.instagram || '',
@@ -60,12 +71,11 @@ export function PublicDataLoader() {
           };
           dispatch({ type: 'UPDATE_SHOP', payload: formattedShop });
 
-
           // Fetch Food Items
-          const { data: foodData } = await supabase
+          const { data: foodData } = (await supabase
             .from('food_items')
             .select('*')
-            .eq('shop_id', shopData.id);
+            .eq('shop_id', shopData.id)) as { data: any[] | null };
 
           if (foodData) {
             const formattedFood: FoodItem[] = foodData.map(item => ({
@@ -78,19 +88,19 @@ export function PublicDataLoader() {
               originalPrice: Number(item.original_price),
               discount: Number(item.discount),
               finalPrice: Number(item.final_price),
-              isSpecialOffer: !!item.is_special_offer,
-              isAvailable: !!item.is_available,
+              isSpecialOffer: item.is_special_offer,
+              isAvailable: item.is_available,
             }));
             dispatch({ type: 'SET_FOOD_ITEMS', payload: formattedFood });
           }
         }
       } catch (err) {
-        console.error("Error loading public shop data:", err);
+        console.error("Error loading admin dashboard data:", err);
       }
     }
 
     loadData();
-  }, [shop.username, currentView, shop.id, loadingUsername, dispatch]);
+  }, [user?.id, currentView, loadedUserId, dispatch]);
 
   return null;
 }

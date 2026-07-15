@@ -4,19 +4,21 @@ import {
   Settings, 
   QrCode,
   Crown,
-  Share2,
   Calendar,
   Plus,
-  Copy
+  Copy,
+  ExternalLink,
+  ChevronRight,
+  CheckCircle2
 } from 'lucide-react';
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis } from 'recharts';
 import { Button } from '@/components/ui/button';
 import { useApp } from '@/store';
 import { BottomNav } from '@/components/shared/BottomNav';
-import { supabase } from '@/lib/supabase';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import type { AdminTab, Shop, FoodItem } from '@/types';
+import { SmallQrPreview } from '@/components/admin/SmallQrPreview';
+import type { AdminTab } from '@/types';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -44,95 +46,9 @@ export function UserDashboardPage() {
   const [isLoadingData, setIsLoadingData] = useState(true);
 
   useEffect(() => {
-    async function loadDashboardData() {
-      if (!user?.id || user.id === 'google-auth-bypass-id' || user.id === 'user-1') {
-        setIsLoadingData(false);
-        return; // Skip for mock users
-      }
-
-      try {
-        // Fetch Shop
-        let { data: shopData } = (await supabase
-          .from('shops')
-          .select('*')
-          .eq('user_id', user.id)
-          .single()) as { data: any };
-
-        if (!shopData) {
-
-          // Initialize shop if one doesn't exist for this user
-          const { data: newShop } = await supabase
-            .from('shops')
-            .insert({
-              user_id: user.id,
-              name: 'My Awesome Shop',
-              is_open: false,
-            })
-            .select()
-            .single();
-          
-          if (newShop) {
-            shopData = newShop;
-          }
-        }
-
-        if (shopData) {
-          const formattedShop: Shop = {
-            id: shopData.id,
-            username: shop.username || (user?.email ? user.email.split('@')[0] : 'owner'),
-            name: shopData.name,
-            tagline: shopData.tagline || '',
-            description: shopData.description || '',
-            location: shopData.location || '',
-            contactNumber: shopData.contact_number || '',
-            email: shopData.email || '',
-            isOpen: !!shopData.is_open,
-            logo: shopData.logo || '',
-            banner: shopData.banner || '',
-            openingHours: [
-              { day: 'Monday - Saturday', hours: '10:00 AM - 10:00 PM' } // Mocked for now
-            ],
-            socialLinks: {
-              instagram: shopData.instagram || '',
-              facebook: shopData.facebook || '',
-              website: shopData.website || '',
-            }
-          };
-          dispatch({ type: 'UPDATE_SHOP', payload: formattedShop });
-
-
-          // Fetch Food Items
-          const { data: foodData } = (await supabase
-            .from('food_items')
-            .select('*')
-            .eq('shop_id', shopData.id)) as { data: any[] | null };
-
-          if (foodData) {
-            const formattedFood: FoodItem[] = foodData.map(item => ({
-              id: item.id,
-              name: item.name,
-              description: item.description || '',
-              tagline: item.tagline || '',
-              category: item.category || 'unassigned',
-              image: item.image || '/food-burger.jpg',
-              originalPrice: Number(item.original_price),
-              discount: Number(item.discount),
-              finalPrice: Number(item.final_price),
-              isSpecialOffer: item.is_special_offer,
-              isAvailable: item.is_available,
-            }));
-            dispatch({ type: 'SET_FOOD_ITEMS', payload: formattedFood });
-          }
-        }
-      } catch (err) {
-        console.error("Error loading dashboard data:", err);
-      } finally {
-        setIsLoadingData(false);
-      }
-    }
-
-    loadDashboardData();
-  }, [user?.id, dispatch]);
+    // Data is now loaded globally by AdminDataLoader
+    setIsLoadingData(false);
+  }, []);
 
   const handleTabChange = (tab: AdminTab) => {
     dispatch({ type: 'SET_ADMIN_TAB', payload: tab });
@@ -311,38 +227,96 @@ export function UserDashboardPage() {
           </div>
         </div>
 
-        {/* QR Code Action Card */}
-        <div className="p-5 rounded-2xl bg-card border border-border shadow-sm flex flex-col gap-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-lg bg-white p-1 border flex-shrink-0 flex items-center justify-center">
-                 <QrCode className="w-10 h-10 text-black" />
+        {/* QR Menu Section */}
+        <div>
+          <h2 className="text-lg font-bold mb-1">QR Menu</h2>
+          <p className="text-sm text-muted-foreground mb-4">Your customers access your menu here</p>
+          
+          <div className="rounded-2xl bg-card border border-border shadow-sm overflow-hidden">
+            {/* Top Section: QR Preview + Mini Stats */}
+            <div className="p-5 border-b border-border/50 flex flex-col sm:flex-row gap-5">
+              {/* QR Preview Card */}
+              <div className="bg-muted/30 p-3 rounded-xl border border-border/50 flex flex-col items-center justify-center min-w-[120px]">
+                <SmallQrPreview 
+                   shopUrl={`${window.location.origin}/${shop.username}/menu`}
+                   theme={shop.theme || { primary: '#090A0C', secondary: '#1C1E22', accent: '#FB8500' }}
+                   shopLogo={shop.logo}
+                   size={80}
+                 />
+                 <div className="mt-3 text-center">
+                   <p className="text-xs font-semibold">Menu QR</p>
+                   <p className="text-[10px] text-muted-foreground">Customized</p>
+                 </div>
               </div>
-              <div>
-                <h3 className="font-semibold text-sm">Your QR Menu</h3>
-                <p className="text-xs text-muted-foreground mb-2">Ready for print & table tents</p>
-                <div className="flex gap-2">
-                  <Button size="sm" variant="secondary" className="h-7 text-xs px-3">
-                    Download
-                  </Button>
-                  <Button size="sm" variant="outline" className="h-7 text-xs px-2">
-                    <Share2 className="w-3 h-3" />
-                  </Button>
+              
+              {/* Status & Stats */}
+              <div className="flex-1 space-y-4">
+                <div className="flex items-center gap-2 text-emerald-500 bg-emerald-500/10 px-3 py-1.5 rounded-full w-fit">
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span className="text-xs font-medium">Active</span>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-muted/30 p-3 rounded-lg border border-border/50">
+                    <p className="text-2xl font-bold">1,245</p>
+                    <p className="text-xs text-muted-foreground">Scans</p>
+                  </div>
+                  <div className="bg-muted/30 p-3 rounded-lg border border-border/50">
+                    <p className="text-2xl font-bold">980</p>
+                    <p className="text-xs text-muted-foreground">Menu Views</p>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-          <div className="flex items-center gap-2 bg-muted/70 p-1.5 rounded-xl border border-border/50">
-            <span className="text-xs text-foreground truncate flex-1 ml-3 font-medium select-all">
-              {typeof window !== 'undefined' ? `${window.location.host}/${shop.username || 'menuzo'}/menu` : `menuzo.com/${shop.username || 'menuzo'}/menu`}
-            </span>
-            <Button size="icon" variant="ghost" className="h-8 w-8 hover:bg-background rounded-lg flex-shrink-0 text-muted-foreground hover:text-foreground shadow-sm" onClick={() => {
-              const url = `${window.location.origin}/${shop.username || 'menuzo'}/menu`;
-              navigator.clipboard.writeText(url);
-              toast.success('Menu link copied!');
-            }}>
-              <Copy className="w-4 h-4" />
-            </Button>
+
+            {/* QR Information */}
+            <div className="p-4 border-b border-border/50 bg-muted/10 grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-xs text-muted-foreground mb-1">Current Style</p>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: (shop.theme as any)?.qrStyle === 'brand' ? shop.theme?.accent || '#FB8500' : '#000' }} />
+                  <span className="text-sm font-medium capitalize">{(shop.theme as any)?.qrStyle === 'brand' ? 'Brand QR' : 'Classic QR'}</span>
+                </div>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground mb-1">Logo</p>
+                <span className="text-sm font-medium">{shop.logo ? 'Enabled' : 'Disabled'}</span>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="p-2 flex flex-col sm:flex-row gap-2 bg-muted/5">
+              <div className="flex gap-2 flex-1">
+                <Button 
+                  variant="secondary" 
+                  className="flex-1 text-xs h-9 bg-background hover:bg-muted"
+                  onClick={() => window.open(`/${shop.username || 'menuzo'}/menu`, '_blank')}
+                >
+                  <ExternalLink className="w-3 h-3 mr-2" />
+                  Open Menu
+                </Button>
+                <Button 
+                  variant="secondary" 
+                  className="flex-1 text-xs h-9 bg-background hover:bg-muted"
+                  onClick={() => {
+                    const url = `${window.location.origin}/${shop.username || 'menuzo'}/menu`;
+                    navigator.clipboard.writeText(url);
+                    toast.success('Menu link copied!');
+                  }}
+                >
+                  <Copy className="w-3 h-3 mr-2" />
+                  Copy Link
+                </Button>
+              </div>
+              <Button 
+                variant="default" 
+                className="w-full sm:w-auto text-xs h-9"
+                onClick={() => dispatch({ type: 'SET_VIEW', payload: 'admin-settings' })}
+              >
+                Customize QR
+                <ChevronRight className="w-3 h-3 ml-1" />
+              </Button>
+            </div>
           </div>
         </div>
 

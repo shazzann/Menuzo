@@ -20,6 +20,7 @@ import { cn } from '@/lib/utils';
 import { uploadImageToCloudinary, deleteImageFromCloudinary } from '@/lib/cloudinary';
 import { ImageCropperModal } from '@/components/shared/ImageCropperModal';
 import { CategoryTabs } from '@/components/shared/CategoryTabs';
+import { CategoryReorderModal } from '@/components/shared/CategoryReorderModal';
 import { toast } from 'sonner';
 import {
   Select,
@@ -38,6 +39,7 @@ export function AdminAddFoodPage() {
   const [cropModalOpen, setCropModalOpen] = useState(false);
   const [cropImageSrc, setCropImageSrc] = useState<string>('');
   const [editingItem, setEditingItem] = useState<FoodItem | null>(null);
+  const [isReorderModalOpen, setIsReorderModalOpen] = useState(false);
 
   const [formData, setFormData] = useState<Partial<FoodItem>>({
     name: '',
@@ -255,6 +257,26 @@ export function AdminAddFoodPage() {
       case 'analytics':
         dispatch({ type: 'SET_VIEW', payload: 'admin-analytics' });
         break;
+    }
+  };
+
+  const handleSaveCategoryOrder = async (newOrder: string[]) => {
+    try {
+      const { supabase } = await import('@/lib/supabase');
+      if (state.shop.id && state.shop.id !== 'shop-1') {
+        const { error } = await supabase
+          .from('shops')
+          .update({ category_order: newOrder })
+          .eq('id', state.shop.id);
+        if (error) throw error;
+      }
+      
+      dispatch({ type: 'UPDATE_SHOP', payload: { categoryOrder: newOrder } });
+      setIsReorderModalOpen(false);
+      toast.success('Category order saved');
+    } catch (err: any) {
+      console.error('Error saving category order:', err);
+      toast.error('Failed to save category order');
     }
   };
 
@@ -528,6 +550,7 @@ export function AdminAddFoodPage() {
         categories={categories}
         selectedCategory={selectedCategory}
         onSelectCategory={setSelectedCategory}
+        onReorder={() => setIsReorderModalOpen(true)}
         className="top-[60px] mb-4"
       />
 
@@ -636,13 +659,22 @@ export function AdminAddFoodPage() {
         title="Crop Food Image"
       />
 
+      <CategoryReorderModal
+        categories={categories}
+        isOpen={isReorderModalOpen}
+        onClose={() => setIsReorderModalOpen(false)}
+        onSave={handleSaveCategoryOrder}
+      />
+
 
       {/* Bottom Navigation */}
-      <BottomNav
-        activeTab="add-food"
-        onTabChange={handleTabChange}
-        isAdmin={true}
-      />
+      {!isReorderModalOpen && (
+        <BottomNav
+          activeTab="add-food"
+          onTabChange={handleTabChange}
+          isAdmin={true}
+        />
+      )}
     </div>
   );
 }

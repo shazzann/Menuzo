@@ -87,7 +87,9 @@ export interface Database {
       shops: {
         Row: {
           banner: string | null
+          category_order: string[] | null
           contact_number: string | null
+          contacts: Json | null
           created_at: string
           description: string | null
           email: string | null
@@ -101,10 +103,13 @@ export interface Database {
           tagline: string | null
           user_id: string
           website: string | null
+          theme: Json | null
         }
         Insert: {
           banner?: string | null
+          category_order?: string[] | null
           contact_number?: string | null
+          contacts?: Json | null
           created_at?: string
           description?: string | null
           email?: string | null
@@ -118,10 +123,13 @@ export interface Database {
           tagline?: string | null
           user_id: string
           website?: string | null
+          theme?: Json | null
         }
         Update: {
           banner?: string | null
+          category_order?: string[] | null
           contact_number?: string | null
+          contacts?: Json | null
           created_at?: string
           description?: string | null
           email?: string | null
@@ -135,6 +143,7 @@ export interface Database {
           tagline?: string | null
           user_id?: string
           website?: string | null
+          theme?: Json | null
         }
         Relationships: []
       }

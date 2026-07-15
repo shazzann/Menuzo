@@ -12,12 +12,18 @@ const initialShop: Shop = {
   location: '',
   openingHours: [],
   contactNumber: '',
+  contacts: [],
   email: '',
   isOpen: false,
   socialLinks: {
     instagram: '',
     facebook: '',
     website: '',
+  },
+  theme: {
+    primary: '#090A0C',
+    secondary: '#1C1E22',
+    accent: '#FB8500',
   },
 };
 
@@ -85,8 +91,20 @@ type Action =
   | { type: 'SET_COMPANY_ADMIN_SECTION'; payload: CompanyAdminSection }
   | { type: 'SELECT_MANAGED_SHOP'; payload: ManagedShop | null };
 
-function extractCategories(foodItems: FoodItem[]): Category[] {
+function extractCategories(foodItems: FoodItem[], categoryOrder?: string[]): Category[] {
   const uniqueNames = Array.from(new Set(foodItems.map(item => item.category))).filter(Boolean);
+  
+  if (categoryOrder && categoryOrder.length > 0) {
+    uniqueNames.sort((a, b) => {
+      const indexA = categoryOrder.indexOf(a);
+      const indexB = categoryOrder.indexOf(b);
+      if (indexA === -1 && indexB === -1) return 0;
+      if (indexA === -1) return 1; // Unordered items go to the end
+      if (indexB === -1) return -1;
+      return indexA - indexB;
+    });
+  }
+
   return [
     { id: 'all', name: 'All' },
     ...uniqueNames.map(name => ({
@@ -106,21 +124,27 @@ function appReducer(state: AppState, action: Action): AppState {
       return { ...state, selectedFoodItem: action.payload };
     case 'SET_USER':
       return { ...state, user: action.payload };
-    case 'UPDATE_SHOP':
-      return { ...state, shop: { ...state.shop, ...action.payload } };
+    case 'UPDATE_SHOP': {
+      const newShop = { ...state.shop, ...action.payload };
+      return { 
+        ...state, 
+        shop: newShop,
+        categories: extractCategories(state.foodItems, newShop.categoryOrder) 
+      };
+    }
     case 'ADD_FOOD_ITEM': {
       const newItems = [...state.foodItems, action.payload];
-      return { ...state, foodItems: newItems, categories: extractCategories(newItems) };
+      return { ...state, foodItems: newItems, categories: extractCategories(newItems, state.shop.categoryOrder) };
     }
     case 'UPDATE_FOOD_ITEM': {
       const updatedItems = state.foodItems.map((item) =>
         item.id === action.payload.id ? action.payload : item
       );
-      return { ...state, foodItems: updatedItems, categories: extractCategories(updatedItems) };
+      return { ...state, foodItems: updatedItems, categories: extractCategories(updatedItems, state.shop.categoryOrder) };
     }
     case 'DELETE_FOOD_ITEM': {
       const remainingItems = state.foodItems.filter((item) => item.id !== action.payload);
-      return { ...state, foodItems: remainingItems, categories: extractCategories(remainingItems) };
+      return { ...state, foodItems: remainingItems, categories: extractCategories(remainingItems, state.shop.categoryOrder) };
     }
     case 'SET_SEARCH_QUERY':
       return { ...state, searchQuery: action.payload };
@@ -132,7 +156,7 @@ function appReducer(state: AppState, action: Action): AppState {
       return { ...state, categories: action.payload };
     case 'SET_FOOD_ITEMS': {
       const items = action.payload;
-      return { ...state, foodItems: items, categories: extractCategories(items) };
+      return { ...state, foodItems: items, categories: extractCategories(items, state.shop.categoryOrder) };
     }
     case 'LOGIN': {
       const shouldRedirect = state.currentView === 'landing' || state.currentView === 'login';

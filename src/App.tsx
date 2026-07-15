@@ -19,6 +19,7 @@ import { supabase } from '@/lib/supabase';
 import { BrowserRouter } from 'react-router-dom';
 import { RouterSync } from '@/components/shared/RouterSync';
 import { PublicDataLoader } from '@/components/shared/PublicDataLoader';
+import { AdminDataLoader } from '@/components/shared/AdminDataLoader';
 
 function AppContent() {
   const { state, dispatch } = useApp();
@@ -136,6 +137,7 @@ function App() {
         <BrowserRouter>
           <RouterSync />
           <PublicDataLoader />
+          <AdminDataLoader />
           <AppContent />
         </BrowserRouter>
         <Toaster />
