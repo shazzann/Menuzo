@@ -12,15 +12,13 @@ export function SignupPage() {
   const { dispatch } = useApp();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    restaurantName: '',
-    ownerName: '',
     email: '',
     password: ''
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    trackEvent('signup_started', { restaurantName: formData.restaurantName });
+    trackEvent('signup_started', { method: 'email' });
     setLoading(true);
     
     try {
@@ -28,8 +26,8 @@ export function SignupPage() {
       const authData = await AuthService.signUp(
         formData.email,
         formData.password,
-        formData.restaurantName,
-        formData.ownerName
+        'Pending',
+        'Pending'
       );
 
       const userId = authData.user?.id;
@@ -44,30 +42,7 @@ export function SignupPage() {
         }
       }
 
-      // 2. Create Restaurant Profile (Using the shops table)
-      let shopId = 'temp-shop-id';
-      // Generate shop username in format: [sanitized_shop_name][two_digits]
-      const sanitizedShopName = formData.restaurantName.toLowerCase().replace(/[^a-z0-9]/g, '');
-      const randomTwoDigits = Math.floor(10 + Math.random() * 90); // 10-99
-      let generatedUsername = `${sanitizedShopName}${randomTwoDigits}`;
-      
-      try {
-        const restaurantData = await RestaurantService.createRestaurant(
-          userId,
-          formData.restaurantName,
-          formData.email,
-          generatedUsername
-        );
-        if (restaurantData) {
-          shopId = restaurantData.id;
-        }
-      } catch (restaurantError: any) {
-        console.error('Shop creation failed:', restaurantError);
-        toast.error(`Shop setup failed: ${restaurantError.message || "Unknown error"}. Please check Supabase policies.`, { duration: 8000 });
-      }
-
-      trackEvent('restaurant_created', { restaurantName: formData.restaurantName });
-      trackEvent('signup_completed', { restaurantName: formData.restaurantName });
+      trackEvent('signup_completed', { email: formData.email });
       
       // Update global state with the new user context
       dispatch({ 
@@ -75,22 +50,14 @@ export function SignupPage() {
         payload: {
           id: userId,
           email: formData.email,
-          shopName: formData.restaurantName,
-          shopId: shopId,
+          shopName: '',
+          shopId: '',
           subscription: { plan: 'free', expiresAt: new Date('2025-12-31'), status: 'active' }
         }
       });
-      
-      // Also update shop context for routing
-      dispatch({
-         type: 'UPDATE_SHOP',
-         payload: {
-           username: generatedUsername,
-           name: formData.restaurantName,
-         }
-      });
 
       toast.success("Account created successfully!");
+      
       // 3. Redirect to Onboarding
       dispatch({ type: 'SET_VIEW', payload: 'onboarding' });
 
@@ -123,26 +90,6 @@ export function SignupPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="relative">
-            <Store className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-            <Input 
-              required
-              placeholder="Restaurant Name" 
-              className="pl-12 h-12"
-              value={formData.restaurantName}
-              onChange={(e) => setFormData({...formData, restaurantName: e.target.value})}
-            />
-          </div>
-          <div className="relative">
-            <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-            <Input 
-              required
-              placeholder="Owner Name" 
-              className="pl-12 h-12"
-              value={formData.ownerName}
-              onChange={(e) => setFormData({...formData, ownerName: e.target.value})}
-            />
-          </div>
           <div className="relative">
             <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
             <Input 

@@ -25,13 +25,10 @@ export function AdminDataLoader() {
         let shopData = await RestaurantService.getRestaurantByUserId(user!.id);
 
         if (!shopData) {
-          const randomThreeDigits = Math.floor(100 + Math.random() * 900);
-          shopData = await RestaurantService.createRestaurant(
-            user!.id,
-            'My Awesome Shop',
-            user!.email,
-            `menuzo${randomThreeDigits}`
-          );
+          if (currentView !== 'onboarding') {
+            dispatch({ type: 'SET_VIEW', payload: 'onboarding' });
+          }
+          return;
         }
 
         if (shopData) {
