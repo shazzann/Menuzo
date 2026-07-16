@@ -1,9 +1,6 @@
-import { ShieldCheck, Facebook, Instagram, Linkedin, Globe } from 'lucide-react';
-import { useApp } from '@/store';
+import { Facebook, Instagram, Linkedin, Globe } from 'lucide-react';
 
 export function Footer() {
-  const { dispatch } = useApp();
-
   return (
     <footer className="py-16 px-4 border-t border-border/50 bg-card/50">
       <div className="max-w-6xl mx-auto">
