@@ -15,6 +15,7 @@ import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis } from 'recharts';
 import { Button } from '@/components/ui/button';
 import { useApp } from '@/store';
 import { BottomNav } from '@/components/shared/BottomNav';
+import { OnboardingChecklist } from '@/components/dashboard/OnboardingChecklist';
 import { useEffect, useState, useRef } from 'react';
 import { toast } from 'sonner';
 import { SmallQrPreview, type SmallQrPreviewRef } from '@/components/admin/SmallQrPreview';
@@ -122,6 +123,7 @@ export function UserDashboardPage() {
       </div>
 
       <main className="px-4 py-6 space-y-6">
+
         {/* Welcome Section */}
         <div>
           <h2 className="text-2xl font-bold mb-1">
@@ -129,6 +131,8 @@ export function UserDashboardPage() {
           </h2>
           <p className="text-muted-foreground">Here is what is happening with your menu today.</p>
         </div>
+
+        <OnboardingChecklist />
 
         {/* Subscription / Plan Status */}
         <div className="p-4 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 shadow-sm flex items-center justify-between">
@@ -341,6 +345,24 @@ export function UserDashboardPage() {
               <div className="text-left">
                 <p className="font-medium">Shop Settings</p>
                 <p className="text-xs text-muted-foreground">Update hours, location, and info</p>
+              </div>
+            </Button>
+            
+            {/* Developer Action */}
+            <Button 
+              variant="outline" 
+              className="w-full justify-start h-auto py-3 px-4 border-dashed border-primary text-primary hover:bg-primary/5"
+              onClick={async () => {
+                const { loadDemoRestaurant } = await import('@/lib/seeder');
+                loadDemoRestaurant(dispatch);
+              }}
+            >
+              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center mr-3">
+                <Utensils className="w-4 h-4" />
+              </div>
+              <div className="text-left">
+                <p className="font-medium">Load Demo Restaurant</p>
+                <p className="text-xs opacity-70">Fill dashboard with dummy data</p>
               </div>
             </Button>
           </div>

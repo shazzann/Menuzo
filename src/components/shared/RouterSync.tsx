@@ -7,6 +7,15 @@ function getUrlForView(view: View, username: string): string | null {
   switch (view) {
     case 'landing': return '/';
     case 'login': return '/login';
+    case 'signup': return '/signup';
+    case 'onboarding': return '/onboarding';
+    case 'demo': return '/demo';
+    case 'contact': return '/contact';
+    case 'privacy': return '/privacy';
+    case 'terms': return '/terms';
+    case 'seo-qr-menu': return '/qr-menu';
+    case 'seo-digital-menu': return '/digital-menu';
+    case 'seo-restaurant-menu': return '/restaurant-menu';
     case 'company-admin': return '/admin-portal';
     case 'company-admin-login': return '/admin-login';
     case 'customer-menu': return `/${username}/menu`;
@@ -20,7 +29,7 @@ function getUrlForView(view: View, username: string): string | null {
     case 'admin-qr': return `/${username}/settings/qr`;
     case 'admin-security': return `/${username}/settings/security`;
     case 'admin-shop-details': return `/${username}/settings/shop`;
-    default: return null; // We don't map popup/detail views to primary routes yet, they stay in place
+    default: return null;
   }
 }
 
@@ -51,18 +60,25 @@ export function RouterSync() {
       lastPathname.current = location.pathname;
       const path = location.pathname;
       
-      if (path === '/' || path === '') {
-        dispatch({ type: 'SET_VIEW', payload: 'landing' });
-        lastView.current = 'landing';
-      } else if (path === '/login') {
-        dispatch({ type: 'SET_VIEW', payload: 'login' });
-        lastView.current = 'login';
-      } else if (path === '/admin-portal') {
-        dispatch({ type: 'SET_VIEW', payload: 'company-admin' });
-        lastView.current = 'company-admin';
-      } else if (path === '/admin-login') {
-        dispatch({ type: 'SET_VIEW', payload: 'company-admin-login' });
-        lastView.current = 'company-admin-login';
+      const exactRoutes: Record<string, View> = {
+        '/': 'landing',
+        '/login': 'login',
+        '/signup': 'signup',
+        '/onboarding': 'onboarding',
+        '/demo': 'demo',
+        '/contact': 'contact',
+        '/privacy': 'privacy',
+        '/terms': 'terms',
+        '/qr-menu': 'seo-qr-menu',
+        '/digital-menu': 'seo-digital-menu',
+        '/restaurant-menu': 'seo-restaurant-menu',
+        '/admin-portal': 'company-admin',
+        '/admin-login': 'company-admin-login',
+      };
+
+      if (exactRoutes[path]) {
+        dispatch({ type: 'SET_VIEW', payload: exactRoutes[path] });
+        lastView.current = exactRoutes[path];
       } else {
         const parts = path.split('/').filter(Boolean);
         if (parts.length >= 2) {
@@ -106,5 +122,3 @@ export function RouterSync() {
 
   return null;
 }
-
-// trigger route rebuild

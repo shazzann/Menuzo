@@ -87,7 +87,6 @@ export const SmallQrPreview = forwardRef<SmallQrPreviewRef, SmallQrPreviewProps>
         color: bgColor,
       },
       imageOptions: {
-        crossOrigin: 'anonymous',
         margin: 5,
         imageSize: 0.2 // Reduced from 0.4 so it doesn't erase all data modules!
       },

@@ -73,6 +73,15 @@ export interface Category {
 export type View = 
   | 'landing'
   | 'login' 
+  | 'signup'
+  | 'onboarding'
+  | 'demo'
+  | 'seo-qr-menu'
+  | 'seo-digital-menu'
+  | 'seo-restaurant-menu'
+  | 'contact'
+  | 'privacy'
+  | 'terms'
   | 'customer-menu' 
   | 'customer-food-detail' 
   | 'admin-food-detail'
@@ -125,7 +134,6 @@ export type CompanyAdminSection =
   | 'system-health'
   | 'shop-detail';
 
-// Company Admin specific types
 export interface ManagedShop {
   id: string;
   name: string;
@@ -208,5 +216,3 @@ export interface AppState {
   companyAdminSection: CompanyAdminSection;
   selectedManagedShop: ManagedShop | null;
 }
-
-// trigger rebuild

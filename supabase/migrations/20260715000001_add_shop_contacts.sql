@@ -1,1 +1,0 @@
-ALTER TABLE shops ADD COLUMN IF NOT EXISTS contacts JSONB DEFAULT '[]'::jsonb;

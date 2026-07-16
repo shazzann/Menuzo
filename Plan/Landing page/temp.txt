@@ -1,0 +1,18 @@
+we have to develop  the shopusername
+whe a new user signs up its get a shopusername in ths format : menuze[xxx] 
+where [xxx] is a random 3 digit number.
+
+the user can change this shopusername later. 
+when he upgrade the plan to premium or the ultimate.
+and custom shopusername will be provided via company admin
+
+shopusername
+cant hve
+speace
+uppercase letters.
+
+cant easyly editad
+
+
+
+spicegardenkitchen

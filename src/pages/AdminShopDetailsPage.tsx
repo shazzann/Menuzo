@@ -9,8 +9,7 @@ import { toast } from 'sonner';
 import { useApp } from '@/store';
 
 import type { Database } from '@/types/supabase';
-
-import { uploadImageToCloudinary, deleteImageFromCloudinary } from '@/lib/cloudinary';
+import { StorageService, RestaurantService } from '@/services';
 import { ImageCropperModal } from '@/components/shared/ImageCropperModal';
 import { ThemedMap } from '@/components/shared/ThemedMap';
 import {
@@ -77,11 +76,12 @@ export function AdminShopDetailsPage() {
   const handleCropComplete = async (croppedFile: File) => {
     toast.loading(`Uploading ${cropType}...`, { id: `upload-${cropType}` });
     try {
-      const { url } = await uploadImageToCloudinary(croppedFile);
+      const { url } = await StorageService.uploadImage(croppedFile, 'restaurant-assets', `${shop.id || 'default'}/${cropType}`);
       
       const oldUrl = formData[cropType];
-      if (oldUrl) {
-        deleteImageFromCloudinary(oldUrl);
+      if (oldUrl && !oldUrl.startsWith('/')) {
+        const path = oldUrl.split('restaurant-assets/')[1];
+        if (path) await StorageService.deleteImage('restaurant-assets', path);
       }
 
       setFormData(prev => ({ ...prev, [cropType]: url }));
@@ -91,11 +91,12 @@ export function AdminShopDetailsPage() {
     }
   };
 
-  const handleRemoveImage = (type: 'logo' | 'banner') => {
+  const handleRemoveImage = async (type: 'logo' | 'banner') => {
     if (!window.confirm(`Are you sure you want to remove the ${type}?`)) return;
     const oldUrl = formData[type];
-    if (oldUrl) {
-      deleteImageFromCloudinary(oldUrl);
+    if (oldUrl && !oldUrl.startsWith('/')) {
+      const path = oldUrl.split('restaurant-assets/')[1];
+      if (path) await StorageService.deleteImage('restaurant-assets', path);
     }
     setFormData(prev => ({ ...prev, [type]: '' }));
     toast.success(`${type === 'logo' ? 'Logo' : 'Banner'} removed.`);
@@ -127,7 +128,6 @@ export function AdminShopDetailsPage() {
     setIsSaving(true);
     
     try {
-      const { supabase } = await import('@/lib/supabase');
       type ShopUpdate = Database['public']['Tables']['shops']['Update'];
       
       const updatePayload: ShopUpdate = {
@@ -151,6 +151,8 @@ export function AdminShopDetailsPage() {
 
       if (!finalShopId || finalShopId === 'shop-1') {
         if (user?.id && user.id !== 'google-auth-bypass-id' && user.id !== 'user-1') {
+          // this shouldn't happen with our new architecture since AdminDataLoader ensures shop exists, but keeping fallback
+          const { supabase } = await import('@/lib/supabase');
           const { data, error } = await supabase
             .from('shops')
             .insert({
@@ -164,12 +166,7 @@ export function AdminShopDetailsPage() {
           if (data) finalShopId = data.id;
         }
       } else {
-        const { error } = await supabase
-          .from('shops')
-          .update(updatePayload)
-          .eq('id', finalShopId);
-        
-        if (error) throw error;
+        await RestaurantService.updateRestaurant(finalShopId, updatePayload);
       }
 
       dispatch({ 
@@ -327,6 +324,27 @@ export function AdminShopDetailsPage() {
 
             {/* Basic Info */}
             <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="shopUsername">Shop URL / Username</Label>
+                <div className="flex items-center">
+                  <span className="text-muted-foreground bg-muted px-3 h-10 flex items-center justify-center rounded-l-md border border-r-0 border-input text-sm">menuzo.com/</span>
+                  <Input
+                    id="shopUsername"
+                    value={shop.username || ''}
+                    readOnly
+                    className="rounded-l-none bg-muted/50 cursor-not-allowed text-muted-foreground focus-visible:ring-0"
+                    onClick={() => {
+                      if (isEditing) toast('Custom URLs are provided via Company Admin. Please contact support to upgrade.', { icon: '🔒' });
+                    }}
+                  />
+                </div>
+                {isEditing && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Custom URLs are only available for Premium plans and are configured by admin.
+                  </p>
+                )}
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="name">Shop Name</Label>
                 <Input

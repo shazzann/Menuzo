@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { useApp } from '@/store';
 import { AdminQrSettings } from '@/components/admin/AdminQrSettings';
-import type { Database } from '@/types/supabase';
 import type { DotType } from 'qr-code-styling';
 
 export function AdminQrPage() {
@@ -22,17 +21,11 @@ export function AdminQrPage() {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      const { supabase } = await import('@/lib/supabase');
-      type ShopUpdate = Database['public']['Tables']['shops']['Update'];
       const updatedTheme = { ...(shop.theme as any), qrStyle, qrPattern };
-      const updatePayload: ShopUpdate = { theme: updatedTheme as any };
 
       if (shop.id && shop.id !== 'shop-1') {
-        const { error } = await supabase
-          .from('shops')
-          .update(updatePayload)
-          .eq('id', shop.id);
-        if (error) throw error;
+        const { RestaurantService } = await import('@/services');
+        await RestaurantService.updateRestaurant(shop.id, { theme: updatedTheme as any });
       }
 
       dispatch({ type: 'UPDATE_SHOP', payload: { theme: updatedTheme } });
@@ -80,7 +73,7 @@ export function AdminQrPage() {
       {/* Content */}
       <div className="px-4 py-4">
         <AdminQrSettings
-          shopUrl={`${window.location.origin}/${shop.username}/menu`}
+          shopUrl={`${window.location.origin}/${shop.username || 'menuzo'}/menu`}
           themePrimary={shop.theme?.primary || '#090A0C'}
           themeAccent={shop.theme?.accent || '#FB8500'}
           shopLogo={shop.logo}

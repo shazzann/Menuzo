@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useApp } from '@/store';
-import { supabase } from '@/lib/supabase';
+import { RestaurantService, MenuService } from '@/services';
 import type { Shop, FoodItem } from '@/types';
 
 export function AdminDataLoader() {
   const { state, dispatch } = useApp();
-  const { user, shop, currentView } = state;
+  const { user, currentView } = state;
   const [loadedUserId, setLoadedUserId] = useState('');
 
   useEffect(() => {
@@ -22,44 +22,34 @@ export function AdminDataLoader() {
       try {
         setLoadedUserId(user!.id);
         
-        let { data: shopData } = (await supabase
-          .from('shops')
-          .select('*')
-          .eq('user_id', user!.id)
-          .single()) as { data: any };
+        let shopData = await RestaurantService.getRestaurantByUserId(user!.id);
 
         if (!shopData) {
-          const { data: newShop } = await supabase
-            .from('shops')
-            .insert({
-              user_id: user!.id,
-              name: 'My Awesome Shop',
-              is_open: false,
-            })
-            .select()
-            .single();
-          
-          if (newShop) {
-            shopData = newShop;
-          }
+          const randomThreeDigits = Math.floor(100 + Math.random() * 900);
+          shopData = await RestaurantService.createRestaurant(
+            user!.id,
+            'My Awesome Shop',
+            user!.email,
+            `menuzo${randomThreeDigits}`
+          );
         }
 
         if (shopData) {
           const formattedShop: Shop = {
             id: shopData.id,
-            username: shopData.username || shop.username || (user!.email ? user!.email.split('@')[0] : 'owner'),
+            username: shopData.username || `menuzo${Math.floor(100 + Math.random() * 900)}`,
             name: shopData.name,
             tagline: shopData.tagline || '',
             description: shopData.description || '',
             location: shopData.location || '',
             contactNumber: shopData.contact_number || '',
-            contacts: shopData.contacts || [],
+            contacts: (shopData.contacts as any) || [],
             email: shopData.email || '',
             isOpen: !!shopData.is_open,
             logo: shopData.logo || '',
             banner: shopData.banner || '',
-            theme: shopData.theme as any || undefined,
-            openingHours: shopData.opening_hours || [
+            theme: (shopData.theme as any) || undefined,
+            openingHours: [
               { day: 'Monday - Saturday', hours: '10:00 AM - 10:00 PM' }
             ],
             socialLinks: {
@@ -71,11 +61,7 @@ export function AdminDataLoader() {
           };
           dispatch({ type: 'UPDATE_SHOP', payload: formattedShop });
 
-          // Fetch Food Items
-          const { data: foodData } = (await supabase
-            .from('food_items')
-            .select('*')
-            .eq('shop_id', shopData.id)) as { data: any[] | null };
+          const foodData = await MenuService.getMenuByShopId(shopData.id);
 
           if (foodData) {
             const formattedFood: FoodItem[] = foodData.map(item => ({
@@ -88,8 +74,8 @@ export function AdminDataLoader() {
               originalPrice: Number(item.original_price),
               discount: Number(item.discount),
               finalPrice: Number(item.final_price),
-              isSpecialOffer: item.is_special_offer,
-              isAvailable: item.is_available,
+              isSpecialOffer: !!item.is_special_offer,
+              isAvailable: !!item.is_available,
             }));
             dispatch({ type: 'SET_FOOD_ITEMS', payload: formattedFood });
           }

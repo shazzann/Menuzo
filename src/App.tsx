@@ -2,6 +2,12 @@ import { AppProvider, useApp } from '@/store';
 import { ThemeProvider } from '@/components/shared/ThemeProvider';
 import { LandingPage } from '@/pages/LandingPage';
 import { LoginPage } from '@/pages/LoginPage';
+import { SignupPage } from '@/pages/SignupPage';
+import { OnboardingPage } from '@/pages/OnboardingPage';
+import { DemoPage } from '@/pages/DemoPage';
+import { SeoLandingPage } from '@/pages/SeoLandingPage';
+import { ContactPage } from '@/pages/ContactPage';
+import { LegalPage } from '@/pages/LegalPage';
 import { CustomerMenuPage } from '@/pages/CustomerMenuPage';
 import { FoodDetailPage } from '@/pages/FoodDetailPage';
 import { ShopDetailPage } from '@/pages/ShopDetailPage';
@@ -37,10 +43,8 @@ function AppContent() {
       try {
         let isGoogleRedirect = false;
 
-        // Check if Google just redirected us back with a token or code
         if (window.location.hash.includes('access_token') || window.location.search.includes('code')) {
           isGoogleRedirect = true;
-          // Note: Do NOT clear the URL here! Supabase needs to read the access_token from the hash.
         }
 
         const { data: { session }, error } = await supabase.auth.getSession();
@@ -49,7 +53,6 @@ function AppContent() {
           console.error('Supabase getSession error:', error);
         }
 
-        // If we have a valid session OR we just came from Google, force the login!
         if ((session?.user || isGoogleRedirect) && mounted) {
           dispatch({
             type: 'LOGIN',
@@ -94,6 +97,14 @@ function AppContent() {
     };
   }, [dispatch]);
 
+  const isPrivateView = currentView.startsWith('admin-') || currentView === 'user-dashboard' || currentView === 'onboarding';
+
+  useEffect(() => {
+    if (!isAuthLoading && isPrivateView && !state.user) {
+      dispatch({ type: 'SET_VIEW', payload: 'login' });
+    }
+  }, [isAuthLoading, isPrivateView, state.user, dispatch]);
+
   if (isAuthLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -102,13 +113,33 @@ function AppContent() {
     );
   }
 
+  if (isPrivateView && !state.user) {
+    return null; // Prevents flash before redirect happens
+  }
+
   switch (currentView) {
     case 'landing':
       return <LandingPage />;
-    case 'user-dashboard':
-      return <UserDashboardPage />;
     case 'login':
       return <LoginPage />;
+    case 'signup':
+      return <SignupPage />;
+    case 'onboarding':
+      return <OnboardingPage />;
+    case 'demo':
+      return <DemoPage />;
+    case 'contact':
+      return <ContactPage />;
+    case 'privacy':
+      return <LegalPage type="privacy" />;
+    case 'terms':
+      return <LegalPage type="terms" />;
+    case 'seo-qr-menu':
+    case 'seo-digital-menu':
+    case 'seo-restaurant-menu':
+      return <SeoLandingPage />;
+    case 'user-dashboard':
+      return <UserDashboardPage />;
     case 'customer-menu':
       return <CustomerMenuPage />;
     case 'customer-food-detail':
@@ -159,5 +190,3 @@ function App() {
 }
 
 export default App;
-
-// trigger app rebuild

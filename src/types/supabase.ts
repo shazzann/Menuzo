@@ -104,6 +104,7 @@ export interface Database {
           user_id: string
           website: string | null
           theme: Json | null
+          username: string | null
         }
         Insert: {
           banner?: string | null
@@ -124,6 +125,7 @@ export interface Database {
           user_id: string
           website?: string | null
           theme?: Json | null
+          username?: string | null
         }
         Update: {
           banner?: string | null
@@ -144,6 +146,7 @@ export interface Database {
           user_id?: string
           website?: string | null
           theme?: Json | null
+          username?: string | null
         }
         Relationships: []
       }

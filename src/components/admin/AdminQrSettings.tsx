@@ -84,7 +84,6 @@ export function AdminQrSettings({
         color: bgColor,
       },
       imageOptions: {
-        crossOrigin: 'anonymous',
         margin: 5,
         imageSize: 0.25
       },

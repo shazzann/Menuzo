@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { useApp } from '@/store';
 import { AdminThemeSettings } from '@/components/admin/AdminThemeSettings';
-import type { Database } from '@/types/supabase';
 
 export function AdminThemePage() {
   const { state, dispatch } = useApp();
@@ -24,16 +23,9 @@ export function AdminThemePage() {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      const { supabase } = await import('@/lib/supabase');
-      type ShopUpdate = Database['public']['Tables']['shops']['Update'];
-      const updatePayload: ShopUpdate = { theme: theme as any };
-
       if (shop.id && shop.id !== 'shop-1') {
-        const { error } = await supabase
-          .from('shops')
-          .update(updatePayload)
-          .eq('id', shop.id);
-        if (error) throw error;
+        const { RestaurantService } = await import('@/services');
+        await RestaurantService.updateRestaurant(shop.id, { theme: theme as any });
       }
 
       dispatch({ type: 'UPDATE_SHOP', payload: { theme } });

@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { useApp } from '@/store';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
-import { toast } from 'sonner';
+import { AuthService } from '@/services';
 
 export function LoginPage() {
   const { dispatch } = useApp();
@@ -14,7 +14,6 @@ export function LoginPage() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [isSignUp, setIsSignUp] = useState(false);
   const [error, setError] = useState('');
 
   const handleGoogleLogin = async () => {
@@ -47,21 +46,8 @@ export function LoginPage() {
     setIsLoading(true);
 
     try {
-      if (isSignUp) {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-        });
-        if (error) throw error;
-        toast.success('Registration successful! If you have email confirmations enabled in Supabase, please check your inbox.');
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-        if (error) throw error;
-        // Note: App.tsx has a global listener that will catch the login and redirect to the dashboard automatically!
-      }
+      await AuthService.signIn(email, password);
+      // App.tsx has a global listener that will catch the login and redirect to the dashboard automatically!
     } catch (err: any) {
       setError(err.message || 'Authentication failed');
     } finally {
@@ -91,10 +77,10 @@ export function LoginPage() {
               <img src="/logo/Logo favicon.png" alt="Menuzo Logo" className="w-16 h-16" />
             </div>
             <h1 className="text-2xl font-bold mb-1">
-              {isSignUp ? 'Create an account' : 'Welcome back'}
+              Welcome back
             </h1>
             <p className="text-sm text-muted-foreground">
-              {isSignUp ? 'Sign up to start building your menu' : 'Sign in to manage your menu'}
+              Sign in to manage your menu
             </p>
           </div>
 
@@ -168,9 +154,7 @@ export function LoginPage() {
                 isLoading && 'opacity-70 cursor-not-allowed'
               )}
             >
-              {isLoading 
-                ? (isSignUp ? 'Creating account...' : 'Signing in...') 
-                : (isSignUp ? 'Sign up' : 'Sign in')}
+              {isLoading ? 'Signing in...' : 'Sign in'}
             </Button>
           </form>
 
@@ -213,13 +197,13 @@ export function LoginPage() {
 
           {/* Sign Up Link */}
           <p className="text-center text-sm text-muted-foreground mt-6">
-            {isSignUp ? 'Already have an account?' : "Don't have an account?"}{' '}
+            Don't have an account?{' '}
             <button
               type="button"
-              onClick={() => setIsSignUp(!isSignUp)}
+              onClick={() => dispatch({ type: 'SET_VIEW', payload: 'signup' })}
               className="text-primary hover:underline"
             >
-              {isSignUp ? 'Sign in' : 'Sign up'}
+              Sign up
             </button>
           </p>
         </div>

@@ -1,0 +1,78 @@
+import { supabase } from '@/lib/supabase';
+import type { Database } from '@/types/supabase';
+
+type ShopInsert = Database['public']['Tables']['shops']['Insert'];
+type ShopUpdate = Database['public']['Tables']['shops']['Update'];
+
+export const RestaurantService = {
+  async createRestaurant(userId: string, name: string, email: string, username: string) {
+    const payload: ShopInsert = {
+      user_id: userId,
+      name,
+      email,
+      username,
+      is_open: true,
+      category_order: [],
+      theme: { primary: '#f97316', secondary: '#1c1917', accent: '#f97316', qrStyle: 'brand' }
+    };
+    
+    const { data, error } = await supabase
+      .from('shops')
+      .insert(payload)
+      .select()
+      .single();
+      
+    if (error) throw error;
+    return data;
+  },
+
+  async getRestaurantByUserId(userId: string) {
+    const { data, error } = await supabase
+      .from('shops')
+      .select('*')
+      .eq('user_id', userId)
+      .maybeSingle(); // maybeSingle instead of single so it doesn't throw if not found
+      
+    if (error) throw error;
+    return data;
+  },
+
+  async getRestaurantByUsername(username: string) {
+    // First try exact match on the new username column
+    let { data, error } = await supabase
+      .from('shops')
+      .select('*')
+      .eq('username', username.toLowerCase())
+      .limit(1)
+      .maybeSingle();
+
+    // Fallback for existing shops that don't have a username set yet
+    if (!data) {
+      const slugName = username.replace(/-/g, ' ');
+      const fallback = await supabase
+        .from('shops')
+        .select('*')
+        .ilike('name', slugName)
+        .limit(1)
+        .maybeSingle();
+      
+      data = fallback.data;
+      error = fallback.error;
+    }
+
+    if (error) throw error;
+    return data;
+  },
+
+  async updateRestaurant(shopId: string, updates: ShopUpdate) {
+    const { data, error } = await supabase
+      .from('shops')
+      .update(updates)
+      .eq('id', shopId)
+      .select()
+      .single();
+      
+    if (error) throw error;
+    return data;
+  }
+};

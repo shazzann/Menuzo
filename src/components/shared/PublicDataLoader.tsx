@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useApp } from '@/store';
-import { supabase } from '@/lib/supabase';
+import { RestaurantService, MenuService } from '@/services';
 import type { Shop, FoodItem } from '@/types';
 
 export function PublicDataLoader() {
@@ -22,16 +22,7 @@ export function PublicDataLoader() {
       try {
         setLoadingUsername(shop.username);
         
-        // Fetch Shop (currently fetches first shop since username column doesn't exist in DB schema yet)
-        const { data: shopData, error: shopError } = await supabase
-          .from('shops')
-          .select('*')
-          .limit(1)
-          .single();
-          
-        if (shopError) {
-          console.error("Supabase shops fetch error:", shopError);
-        }
+        const shopData = await RestaurantService.getRestaurantByUsername(shop.username);
 
         if (shopData) {
           const formattedShop: Shop = {
@@ -49,7 +40,7 @@ export function PublicDataLoader() {
             banner: shopData.banner || '',
             username: shop.username,
             openingHours: [
-              { day: 'Monday - Saturday', hours: '10:00 AM - 10:00 PM' } // Mocked for now, same as dashboard
+              { day: 'Monday - Saturday', hours: '10:00 AM - 10:00 PM' }
             ],
             socialLinks: {
               instagram: shopData.instagram || '',
@@ -60,12 +51,7 @@ export function PublicDataLoader() {
           };
           dispatch({ type: 'UPDATE_SHOP', payload: formattedShop });
 
-
-          // Fetch Food Items
-          const { data: foodData } = await supabase
-            .from('food_items')
-            .select('*')
-            .eq('shop_id', shopData.id);
+          const foodData = await MenuService.getMenuByShopId(shopData.id);
 
           if (foodData) {
             const formattedFood: FoodItem[] = foodData.map(item => ({

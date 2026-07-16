@@ -17,11 +17,12 @@ import { BottomNav } from '@/components/shared/BottomNav';
 import type { AdminTab, FoodItem } from '@/types';
 import type { Database } from '@/types/supabase';
 import { cn } from '@/lib/utils';
-import { uploadImageToCloudinary, deleteImageFromCloudinary } from '@/lib/cloudinary';
 import { ImageCropperModal } from '@/components/shared/ImageCropperModal';
 import { CategoryTabs } from '@/components/shared/CategoryTabs';
 import { CategoryReorderModal } from '@/components/shared/CategoryReorderModal';
+import { trackEvent } from '@/lib/analytics';
 import { toast } from 'sonner';
+import { MenuService, CategoryService, StorageService } from '@/services';
 import {
   Select,
   SelectContent,
@@ -101,7 +102,6 @@ export function AdminAddFoodPage() {
     let newItemId = `item-${Date.now()}`;
 
     try {
-      const { supabase } = await import('@/lib/supabase');
       if (state.shop.id && state.shop.id !== 'shop-1') {
         type FoodItemInsert = Database['public']['Tables']['food_items']['Insert'];
         const dbPayload: FoodItemInsert = {
@@ -119,18 +119,9 @@ export function AdminAddFoodPage() {
         };
 
         if (editingItem && !editingItem.id.startsWith('item-')) {
-          const { error } = await supabase
-            .from('food_items')
-            .update(dbPayload)
-            .eq('id', editingItem.id);
-          if (error) throw error;
+          await MenuService.updateMenuItem(editingItem.id, dbPayload);
         } else {
-          const { data, error } = await supabase
-            .from('food_items')
-            .insert(dbPayload)
-            .select()
-            .single();
-          if (error) throw error;
+          const data = await MenuService.addMenuItem(dbPayload);
           if (data) newItemId = data.id;
         }
       }
@@ -153,6 +144,7 @@ export function AdminAddFoodPage() {
       if (editingItem) {
         dispatch({ type: 'UPDATE_FOOD_ITEM', payload: itemData });
       } else {
+        trackEvent('menu_item_added', { itemName: itemData.name });
         dispatch({ type: 'ADD_FOOD_ITEM', payload: itemData });
       }
 
@@ -167,9 +159,7 @@ export function AdminAddFoodPage() {
   const handleDelete = async (id: string) => {
     try {
       if (!id.startsWith('item-') && state.shop.id && state.shop.id !== 'shop-1') {
-        const supabase = await import('@/lib/supabase').then(m => m.supabase);
-        const { error } = await supabase.from('food_items').delete().eq('id', id);
-        if (error) throw error;
+        await MenuService.deleteMenuItem(id);
       }
       dispatch({ type: 'DELETE_FOOD_ITEM', payload: id });
     } catch (err) {
@@ -182,17 +172,12 @@ export function AdminAddFoodPage() {
     const newValue = !item[field];
     try {
       if (!item.id.startsWith('item-') && state.shop.id && state.shop.id !== 'shop-1') {
-        const supabase = await import('@/lib/supabase').then(m => m.supabase);
         type FoodItemUpdate = Database['public']['Tables']['food_items']['Update'];
         const updatePayload: FoodItemUpdate = field === 'isSpecialOffer' 
           ? { is_special_offer: newValue }
           : { is_available: newValue };
           
-        const { error } = await supabase
-          .from('food_items')
-          .update(updatePayload)
-          .eq('id', item.id);
-        if (error) throw error;
+        await MenuService.updateMenuItem(item.id, updatePayload);
       }
       dispatch({
         type: 'UPDATE_FOOD_ITEM',
@@ -218,11 +203,13 @@ export function AdminAddFoodPage() {
   const handleCropComplete = async (croppedFile: File) => {
     toast.loading('Uploading image...', { id: 'upload-food' });
     try {
-      const { url } = await uploadImageToCloudinary(croppedFile);
+      const { url } = await StorageService.uploadImage(croppedFile, 'restaurant-assets', `${state.shop.id || 'default'}/foods`);
       
       const oldUrl = formData.image;
       if (oldUrl && !oldUrl.startsWith('/')) {
-        deleteImageFromCloudinary(oldUrl);
+        // Simple extraction for path (not perfect but OK for MVP)
+        const path = oldUrl.split('restaurant-assets/')[1];
+        if (path) await StorageService.deleteImage('restaurant-assets', path);
       }
 
       setFormData(prev => ({ ...prev, image: url }));
@@ -232,11 +219,12 @@ export function AdminAddFoodPage() {
     }
   };
 
-  const handleRemoveImage = () => {
+  const handleRemoveImage = async () => {
     if (!window.confirm('Are you sure you want to remove this image?')) return;
     const oldUrl = formData.image;
     if (oldUrl && !oldUrl.startsWith('/')) {
-      deleteImageFromCloudinary(oldUrl);
+      const path = oldUrl.split('restaurant-assets/')[1];
+      if (path) await StorageService.deleteImage('restaurant-assets', path);
     }
     setFormData(prev => ({ ...prev, image: '' }));
     toast.success('Image removed.');
@@ -262,13 +250,8 @@ export function AdminAddFoodPage() {
 
   const handleSaveCategoryOrder = async (newOrder: string[]) => {
     try {
-      const { supabase } = await import('@/lib/supabase');
       if (state.shop.id && state.shop.id !== 'shop-1') {
-        const { error } = await supabase
-          .from('shops')
-          .update({ category_order: newOrder })
-          .eq('id', state.shop.id);
-        if (error) throw error;
+        await CategoryService.updateCategoryOrder(state.shop.id, newOrder);
       }
       
       dispatch({ type: 'UPDATE_SHOP', payload: { categoryOrder: newOrder } });
