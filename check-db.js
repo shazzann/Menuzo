@@ -1,12 +1,33 @@
 import { createClient } from '@supabase/supabase-js';
-import dotenv from 'dotenv';
-dotenv.config();
 
-const supabase = createClient(process.env.VITE_SUPABASE_URL, process.env.VITE_SUPABASE_ANON_KEY);
+const supabaseUrl = 'https://jzlfjrwhfcjcqeyculbd.supabase.co';
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp6bGZqcndoZmNqY3FleWN1bGJkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMyMTAyNzcsImV4cCI6MjA5ODc4NjI3N30.zIec4Ta06vxz7Il2SenRL-GsK5B0r7WNPdPVPDpWbnk';
 
-async function check() {
-  const { data, error } = await supabase.from('shops').select('*');
-  console.log('Shops:', data);
-  console.log('Error:', error);
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+async function probeColumns() {
+  console.log('Probing profiles table schema...');
+  
+  const columnsToTest = [
+    'id', 
+    'email', 
+    'username', 
+    'role', 
+    'subscription_plan', 
+    'subscription_status', 
+    'created_at', 
+    'updated_at',
+    'subscription_expires_at'
+  ];
+
+  for (const col of columnsToTest) {
+    const { error } = await supabase.from('profiles').select(col).limit(1);
+    if (error) {
+      console.error(`Column '${col}' test failed:`, error.message);
+    } else {
+      console.log(`Column '${col}' EXISTS.`);
+    }
+  }
 }
-check();
+
+probeColumns();

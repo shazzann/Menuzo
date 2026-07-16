@@ -42,8 +42,8 @@ const getInitialView = (): View => {
     if (path.startsWith('/admin-portal') || path === '/admin-login') return 'company-admin';
     
     const parts = path.split('/').filter(Boolean);
-    if (parts.length >= 2) {
-      const page = parts[1];
+    if (parts.length >= 1) {
+      const page = parts[1] || 'menu';
       switch (page) {
         case 'menu': return 'customer-menu';
         case 'shop': return 'customer-shop-detail';
@@ -70,6 +70,7 @@ const initialState: AppState = {
   selectedCategory: 'all',
   companyAdminSection: 'dashboard',
   selectedManagedShop: null,
+  shopNotFound: false,
 };
 
 type Action =
@@ -89,7 +90,8 @@ type Action =
   | { type: 'LOGIN'; payload: User }
   | { type: 'LOGOUT' }
   | { type: 'SET_COMPANY_ADMIN_SECTION'; payload: CompanyAdminSection }
-  | { type: 'SELECT_MANAGED_SHOP'; payload: ManagedShop | null };
+  | { type: 'SELECT_MANAGED_SHOP'; payload: ManagedShop | null }
+  | { type: 'SET_SHOP_NOT_FOUND'; payload: boolean };
 
 function extractCategories(foodItems: FoodItem[], categoryOrder?: string[]): Category[] {
   const uniqueNames = Array.from(new Set(foodItems.map(item => item.category))).filter(Boolean);
@@ -118,6 +120,8 @@ function appReducer(state: AppState, action: Action): AppState {
   switch (action.type) {
     case 'SET_VIEW':
       return { ...state, currentView: action.payload };
+    case 'SET_SHOP_NOT_FOUND':
+      return { ...state, shopNotFound: action.payload };
     case 'SET_ADMIN_TAB':
       return { ...state, currentAdminTab: action.payload };
     case 'SELECT_FOOD_ITEM':

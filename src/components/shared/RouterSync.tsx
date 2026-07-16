@@ -18,7 +18,7 @@ function getUrlForView(view: View, username: string): string | null {
     case 'seo-restaurant-menu': return '/restaurant-menu';
     case 'company-admin': return '/admin-portal';
     case 'company-admin-login': return '/admin-login';
-    case 'customer-menu': return `/${username}/menu`;
+    case 'customer-menu': return `/${username}`;
     case 'customer-shop-detail': return `/${username}/shop`;
     case 'user-dashboard': return `/${username}/dashboard`;
     case 'admin-preview': return `/${username}/menupreview`;
@@ -39,7 +39,7 @@ export function RouterSync() {
   const location = useLocation();
   const { shop, currentView } = state;
   const username = shop.username || 'menuzo';
-  const lastPathname = useRef(location.pathname);
+  const lastPathname = useRef('');
   const lastView = useRef(currentView);
 
   // Sync State -> URL
@@ -81,8 +81,9 @@ export function RouterSync() {
         lastView.current = exactRoutes[path];
       } else {
         const parts = path.split('/').filter(Boolean);
-        if (parts.length >= 2) {
-          const [urlUsername, page] = parts;
+        if (parts.length >= 1) {
+          const urlUsername = parts[0];
+          const page = parts[1] || 'menu';
           
           if (shop.username !== urlUsername) {
              dispatch({ type: 'UPDATE_SHOP', payload: { username: urlUsername } });

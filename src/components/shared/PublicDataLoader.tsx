@@ -18,13 +18,18 @@ export function PublicDataLoader() {
     // If we already have real data for this shop, skip
     if (shop.id && shop.id !== 'shop-1' && loadingUsername === shop.username) return;
 
+    let isCancelled = false;
+
     async function loadData() {
       try {
         setLoadingUsername(shop.username);
         
         const shopData = await RestaurantService.getRestaurantByUsername(shop.username);
 
+        if (isCancelled) return;
+
         if (shopData) {
+          dispatch({ type: 'SET_SHOP_NOT_FOUND', payload: false });
           const formattedShop: Shop = {
             id: shopData.id,
             name: shopData.name,
@@ -69,6 +74,8 @@ export function PublicDataLoader() {
             }));
             dispatch({ type: 'SET_FOOD_ITEMS', payload: formattedFood });
           }
+        } else {
+          dispatch({ type: 'SET_SHOP_NOT_FOUND', payload: true });
         }
       } catch (err) {
         console.error("Error loading public shop data:", err);
@@ -76,6 +83,10 @@ export function PublicDataLoader() {
     }
 
     loadData();
+
+    return () => {
+      isCancelled = true;
+    };
   }, [shop.username, currentView, shop.id, loadingUsername, dispatch]);
 
   return null;

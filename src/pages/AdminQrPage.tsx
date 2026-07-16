@@ -73,7 +73,7 @@ export function AdminQrPage() {
       {/* Content */}
       <div className="px-4 py-4">
         <AdminQrSettings
-          shopUrl={`${window.location.origin}/${shop.username || 'menuzo'}/menu`}
+          shopUrl={`${window.location.origin}/${shop.username || 'menuzo'}`}
           themePrimary={shop.theme?.primary || '#090A0C'}
           themeAccent={shop.theme?.accent || '#FB8500'}
           shopLogo={shop.logo}

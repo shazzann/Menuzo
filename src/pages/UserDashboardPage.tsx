@@ -244,7 +244,7 @@ export function UserDashboardPage() {
               <div className="bg-muted/30 p-5 rounded-xl border border-border/50 flex flex-col items-center justify-center w-full max-w-[260px]">
                 <SmallQrPreview 
                    ref={qrRef}
-                   shopUrl={`${window.location.origin}/${shop.username || 'menuzo'}/menu`}
+                   shopUrl={`${window.location.origin}/${shop.username || 'menuzo'}`}
                    theme={shop.theme || { primary: '#090A0C', secondary: '#1C1E22', accent: '#FB8500' }}
                    shopLogo={shop.logo}
                    size={200}
@@ -268,7 +268,7 @@ export function UserDashboardPage() {
                       <Download className="w-4 h-4" />
                     </Button>
                     <Button size="icon" variant="ghost" className="h-8 w-8 hover:bg-background rounded-lg flex-shrink-0 text-muted-foreground hover:text-foreground shadow-sm" onClick={() => {
-                      const url = `${window.location.origin}/${shop.username || 'menuzo'}/menu`;
+                      const url = `${window.location.origin}/${shop.username || 'menuzo'}`;
                       navigator.clipboard.writeText(url);
                       toast.success('Menu link copied!');
                     }}>

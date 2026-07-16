@@ -215,4 +215,5 @@ export interface AppState {
   selectedCategory: string;
   companyAdminSection: CompanyAdminSection;
   selectedManagedShop: ManagedShop | null;
+  shopNotFound?: boolean;
 }

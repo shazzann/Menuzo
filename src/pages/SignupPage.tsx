@@ -35,11 +35,21 @@ export function SignupPage() {
       const userId = authData.user?.id;
       if (!userId) throw new Error("Could not create user account.");
 
+      // Ensure the user is fully logged in before creating the shop (bypasses some RLS issues)
+      if (!authData.session) {
+        try {
+          await AuthService.signIn(formData.email, formData.password);
+        } catch (signInErr: any) {
+          throw new Error("Account created, but could not sign in. Please ensure email confirmation is not required: " + signInErr.message);
+        }
+      }
+
       // 2. Create Restaurant Profile (Using the shops table)
       let shopId = 'temp-shop-id';
-      // Generate shop username in format: menuzo[xxx] where [xxx] is random 3 digit number
-      const randomThreeDigits = Math.floor(100 + Math.random() * 900); // 100-999
-      let generatedUsername = `menuzo${randomThreeDigits}`;
+      // Generate shop username in format: [sanitized_shop_name][two_digits]
+      const sanitizedShopName = formData.restaurantName.toLowerCase().replace(/[^a-z0-9]/g, '');
+      const randomTwoDigits = Math.floor(10 + Math.random() * 90); // 10-99
+      let generatedUsername = `${sanitizedShopName}${randomTwoDigits}`;
       
       try {
         const restaurantData = await RestaurantService.createRestaurant(
@@ -53,7 +63,7 @@ export function SignupPage() {
         }
       } catch (restaurantError: any) {
         console.error('Shop creation failed:', restaurantError);
-        toast.error("Account created, but shop setup failed. We will set it up when you log in.", { duration: 5000 });
+        toast.error(`Shop setup failed: ${restaurantError.message || "Unknown error"}. Please check Supabase policies.`, { duration: 8000 });
       }
 
       trackEvent('restaurant_created', { restaurantName: formData.restaurantName });

@@ -61,7 +61,7 @@ export function AdminSecurityPage() {
               />
             </div>
             <p className="text-xs text-muted-foreground">
-              Your menu is available at: {window.location.origin}/{shop.username || 'username'}/menu
+              Your menu is available at: {window.location.origin}/{shop.username || 'username'}
             </p>
           </div>
           <div className="space-y-2">

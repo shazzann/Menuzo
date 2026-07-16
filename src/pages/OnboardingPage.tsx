@@ -7,6 +7,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Store, Phone, MapPin, CheckCircle2, ChevronRight, Upload, Clock, Loader2 } from 'lucide-react';
 import { trackEvent } from '@/lib/analytics';
 import { QRCodeSVG } from 'qrcode.react';
+import { RestaurantService } from '@/services/restaurant.service';
+import { MenuService } from '@/services/menu.service';
+import { toast } from 'sonner';
 
 const STEPS = ['Restaurant Info', 'Business Details', 'First Category', 'First Menu Item', 'Generate QR'];
 
@@ -32,31 +35,59 @@ export function OnboardingPage() {
 
   const finishOnboarding = async () => {
     setLoading(true);
-    // Simulate Supabase insert of all these details
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      const shopId = state.user?.shopId;
+      if (shopId) {
+        // Update Shop Info
+        await RestaurantService.updateRestaurant(shopId, {
+           description: info.description,
+           contact_number: business.phone,
+           location: business.address,
+           category_order: [category.name]
+        });
+
+        // Insert Food Item
+        const newFood = await MenuService.addMenuItem({
+           shop_id: shopId,
+           name: food.name || 'Sample Burger',
+           description: food.description || 'Delicious meal.',
+           category: category.name,
+           image: '/food-burger.jpg',
+           original_price: parseFloat(food.price) || 12.99,
+           final_price: parseFloat(food.price) || 12.99,
+           is_special_offer: false,
+           is_available: true,
+           tagline: 'Chef Recommended'
+        });
+
+        // We will inject the new food item into state for the dashboard checklist to show completion
+        dispatch({
+          type: 'SET_FOOD_ITEMS',
+          payload: [{
+            id: newFood.id,
+            name: newFood.name,
+            description: newFood.description || '',
+            category: newFood.category || '',
+            image: newFood.image || '',
+            originalPrice: newFood.original_price,
+            finalPrice: newFood.final_price,
+            isSpecialOffer: newFood.is_special_offer || false,
+            isAvailable: newFood.is_available !== false,
+            tagline: newFood.tagline || ''
+          }]
+        });
+      }
+
       trackEvent('qr_generated');
       trackEvent('menu_published');
       
-      // We will inject the new food item into state for the dashboard checklist to show completion
-      dispatch({
-        type: 'SET_FOOD_ITEMS',
-        payload: [{
-          id: 'food-1',
-          name: food.name || 'Sample Burger',
-          description: food.description || 'Delicious meal.',
-          category: category.name,
-          image: '/food-burger.jpg',
-          originalPrice: parseFloat(food.price) || 12.99,
-          finalPrice: parseFloat(food.price) || 12.99,
-          isSpecialOffer: false,
-          isAvailable: true,
-          tagline: 'Chef Recommended'
-        }]
-      });
-
       dispatch({ type: 'SET_VIEW', payload: 'user-dashboard' });
-    }, 1500);
+    } catch (err: any) {
+      console.error(err);
+      toast.error(`Failed to save details: ${err.message}`);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

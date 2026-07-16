@@ -22,6 +22,7 @@ import { AdminSecurityPage } from '@/pages/AdminSecurityPage';
 import { UserDashboardPage } from '@/pages/UserDashboardPage';
 import { CompanyAdminPage } from '@/pages/CompanyAdminPage';
 import { CompanyAdminLoginPage } from '@/pages/CompanyAdminLoginPage';
+import { ShopNotFoundPage } from '@/pages/ShopNotFoundPage';
 import { Toaster } from '@/components/ui/sonner';
 
 import { useEffect, useState } from 'react';
@@ -115,6 +116,10 @@ function AppContent() {
 
   if (isPrivateView && !state.user) {
     return null; // Prevents flash before redirect happens
+  }
+
+  if (state.shopNotFound && ['customer-menu', 'customer-food-detail', 'customer-shop-detail'].includes(currentView)) {
+    return <ShopNotFoundPage />;
   }
 
   switch (currentView) {
