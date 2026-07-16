@@ -99,9 +99,8 @@ export function UseCasesSection() {
           onTouchEnd={() => setIsPaused(false)}
         >
           
-          {/* Tabs */}
           <div 
-            className="flex overflow-x-auto hide-scrollbar gap-2 md:gap-4 justify-start md:justify-center mb-10 pb-4 snap-x snap-mandatory px-4 md:px-0"
+            className="flex overflow-x-auto hide-scrollbar gap-2 md:gap-4 justify-center mb-10 pb-4 snap-x snap-mandatory px-4 md:px-0"
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
             {cases.map((c, idx) => {
@@ -110,19 +109,19 @@ export function UseCasesSection() {
                 <button
                   key={c.id}
                   onClick={() => setActiveIndex(idx)}
-                  className={`flex items-center gap-2 px-5 py-3 rounded-full whitespace-nowrap snap-center transition-all duration-300 relative border ${
+                  className={`flex items-center justify-center gap-2 w-12 h-12 md:w-auto md:h-auto md:px-5 md:py-3 rounded-full whitespace-nowrap snap-center transition-all duration-300 relative border ${
                     isActive 
                       ? 'bg-primary/10 text-primary border-primary/20 scale-105 shadow-sm' 
                       : 'bg-white dark:bg-zinc-900 border-border/50 text-muted-foreground hover:bg-muted hover:text-foreground'
                   }`}
                 >
-                  <span className="text-xl">{c.icon}</span>
-                  <span className="font-semibold">{c.name}</span>
+                  <span className="text-xl flex-shrink-0">{c.icon}</span>
+                  <span className="font-semibold hidden md:block">{c.name}</span>
                   
                   {isActive && (
                     <motion.div
                       layoutId="activeTabUnderline"
-                      className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-12 h-1 bg-primary rounded-full"
+                      className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-12 h-1 bg-primary rounded-full hidden md:block"
                     />
                   )}
                 </button>
@@ -135,9 +134,9 @@ export function UseCasesSection() {
             <div className="flex flex-col lg:flex-row gap-10 lg:gap-16 items-center">
               
               {/* Screenshot Area (Mobile Frame) */}
-              <div className="w-[280px] md:w-[320px] h-[580px] md:h-[660px] shrink-0 mx-auto lg:mx-0 rounded-[2.5rem] md:rounded-[3rem] border-[8px] border-zinc-900 dark:border-black bg-zinc-950 overflow-hidden shadow-2xl relative">
+              <div className="w-[280px] lg:w-[320px] h-[580px] lg:h-[675px] shrink-0 mx-auto lg:mx-0 rounded-[2.5rem] lg:rounded-[3rem] border-[8px] border-zinc-900 dark:border-black bg-zinc-950 overflow-hidden shadow-2xl relative">
                 {/* iPhone Notch */}
-                <div className="absolute top-0 inset-x-0 h-6 md:h-7 bg-zinc-900 dark:bg-black rounded-b-3xl w-32 md:w-40 mx-auto z-20" />
+                <div className="absolute top-0 inset-x-0 h-6 lg:h-7 bg-zinc-900 dark:bg-black rounded-b-3xl w-32 lg:w-40 mx-auto z-20" />
 
                 <AnimatePresence mode="wait">
                   <motion.div

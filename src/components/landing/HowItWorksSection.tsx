@@ -17,7 +17,7 @@ export function HowItWorksSection() {
       title: 'Add your menu.',
       description: 'Upload mouth-watering photos, set up categories, and add customization options like sizes or dietary tags in just a few clicks.',
       icon: <ListPlus className="w-6 h-6 text-blue-500" />,
-      image: '/Landing/how-2.jpeg',
+      image: '/Landing/mobile10.jpeg',
       color: 'bg-blue-500/10'
     },
     {
@@ -25,7 +25,7 @@ export function HowItWorksSection() {
       title: 'Go live instantly.',
       description: 'Generate high-quality QR codes for your tables. Customers scan, view your stunning digital menu, and order instantly—no app required.',
       icon: <QrCode className="w-6 h-6 text-emerald-500" />,
-      image: '/Landing/how-3.jpeg',
+      image: '/Landing/mobile12.jpeg',
       color: 'bg-emerald-500/10'
     },
   ];
@@ -62,7 +62,7 @@ export function HowItWorksSection() {
             return (
               <div
                 key={index}
-                className={`flex flex-col gap-10 md:gap-20 items-center ${isEven ? 'md:flex-row' : 'md:flex-row-reverse'}`}
+                className={`flex flex-col gap-12 lg:gap-20 items-center ${isEven ? 'lg:flex-row' : 'lg:flex-row-reverse'}`}
               >
 
                 {/* Text Content */}
@@ -71,10 +71,10 @@ export function HowItWorksSection() {
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true, margin: "-100px" }}
                   transition={{ duration: 0.7, ease: "easeOut" }}
-                  className="w-full md:w-1/2 flex flex-col justify-center"
+                  className="w-full lg:w-1/2 flex flex-col justify-center text-center lg:text-left"
                 >
-                  <div className="flex items-center gap-4 mb-6">
-                    <span className="text-5xl md:text-7xl font-black text-muted/50 dark:text-muted">
+                  <div className="flex items-center justify-center lg:justify-start gap-4 mb-6">
+                    <span className="text-5xl md:text-7xl font-black text-zinc-300 dark:text-zinc-800/80">
                       {item.step}
                     </span>
                     <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-sm ${item.color}`}>
@@ -109,13 +109,12 @@ export function HowItWorksSection() {
                   whileInView={{ opacity: 1, scale: 1 }}
                   viewport={{ once: true, margin: "-100px" }}
                   transition={{ duration: 0.7, ease: "easeOut", delay: 0.2 }}
-                  className="w-full md:w-1/2 flex justify-center"
+                  className="w-full lg:w-1/2 flex justify-center mt-8 lg:mt-0"
                 >
-                  <div className="relative w-[280px] md:w-[320px] h-[580px] md:h-[660px] rounded-[2.5rem] md:rounded-[3rem] border-[8px] border-zinc-900 dark:border-black bg-zinc-950 overflow-hidden shadow-2xl group shrink-0">
+                  <div className="relative w-[280px] lg:w-[320px] h-[595px] lg:h-[678px] rounded-[2.5rem] lg:rounded-[3rem] border-[8px] border-zinc-900 dark:border-black bg-zinc-950 overflow-hidden shadow-2xl shrink-0">
                     {/* iPhone Notch */}
-                    <div className="absolute top-0 inset-x-0 h-6 md:h-7 bg-zinc-900 dark:bg-black rounded-b-3xl w-32 md:w-40 mx-auto z-20" />
-                    <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-10 pointer-events-none" />
-                    
+                    <div className="absolute top-0 inset-x-0 h-6 lg:h-7 bg-zinc-900 dark:bg-black rounded-b-3xl w-32 lg:w-40 mx-auto z-20" />
+
                     {/* Screen content */}
                     <div className="w-full h-full relative z-0 bg-muted">
                       {/* Fallback pattern */}
@@ -127,7 +126,7 @@ export function HowItWorksSection() {
                       <img
                         src={item.image}
                         alt={item.title}
-                        className="w-full h-full object-cover object-top relative z-0 transition-transform duration-700 group-hover:scale-105"
+                        className="w-full h-full object-cover object-top relative z-0 transition-transform duration-700"
                         onError={(e) => {
                           (e.target as HTMLImageElement).style.opacity = '0';
                         }}

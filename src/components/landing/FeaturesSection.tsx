@@ -21,9 +21,9 @@ export function FeaturesSection() {
         // Scroll horizontally
         el.scrollLeft += speed;
 
-        // Seamless loop using the exact offset of the 10th element (start of the duplicate set)
+        // Seamless loop using the exact offset of the 7th element (start of the duplicate set)
         const firstNode = el.children[0] as HTMLElement;
-        const duplicateStartNode = el.children[9] as HTMLElement;
+        const duplicateStartNode = el.children[7] as HTMLElement;
 
         if (firstNode && duplicateStartNode) {
           const loopPoint = duplicateStartNode.offsetLeft - firstNode.offsetLeft;
@@ -74,53 +74,60 @@ export function FeaturesSection() {
         >
           <div className="absolute inset-0 bg-gradient-to-b from-primary/10 to-transparent rounded-[3rem] blur-3xl opacity-50 pointer-events-none" />
 
-          {/* Gradient Edges for smooth scrolling fade */}
-          <div className="absolute left-0 top-0 bottom-0 w-12 md:w-24 bg-gradient-to-r from-background to-transparent z-20 pointer-events-none" />
-          <div className="absolute right-0 top-0 bottom-0 w-12 md:w-24 bg-gradient-to-l from-background to-transparent z-20 pointer-events-none" />
-
-          <div
-            ref={scrollRef}
-            onPointerDown={(e) => {
-              setIsPaused(true);
-              isDragging.current = true;
-              startX.current = e.pageX - scrollRef.current!.offsetLeft;
-              scrollLeftStart.current = scrollRef.current!.scrollLeft;
-            }}
-            onPointerMove={(e) => {
-              if (!isDragging.current) return;
-              e.preventDefault();
-              const x = e.pageX - scrollRef.current!.offsetLeft;
-              const walk = (x - startX.current) * 2; // Scroll fast
-              scrollRef.current!.scrollLeft = scrollLeftStart.current - walk;
-            }}
-            onPointerUp={() => {
-              setIsPaused(false);
-              isDragging.current = false;
-            }}
-            onPointerLeave={() => {
-              setIsPaused(false);
-              isDragging.current = false;
-            }}
-            onPointerCancel={() => {
-              setIsPaused(false);
-              isDragging.current = false;
-            }}
-            className="flex gap-6 md:gap-10 w-full px-6 relative z-10 overflow-x-auto hide-scrollbar select-none cursor-grab active:cursor-grabbing"
-            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }} // hide scrollbar for Firefox/IE
-          >
+          {/* Cleaner solution: CSS Mask Image for edge fading instead of solid color overlays */}
+          <div className="[mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)] md:[mask-image:linear-gradient(to_right,transparent,black_5%,black_95%,transparent)] w-full overflow-hidden">
+            <div
+              ref={scrollRef}
+              onPointerDown={(e) => {
+                setIsPaused(true);
+                isDragging.current = true;
+                startX.current = e.pageX - scrollRef.current!.offsetLeft;
+                scrollLeftStart.current = scrollRef.current!.scrollLeft;
+              }}
+              onPointerMove={(e) => {
+                if (!isDragging.current) return;
+                e.preventDefault();
+                const x = e.pageX - scrollRef.current!.offsetLeft;
+                const walk = (x - startX.current) * 2; // Scroll fast
+                scrollRef.current!.scrollLeft = scrollLeftStart.current - walk;
+              }}
+              onPointerUp={() => {
+                setIsPaused(false);
+                isDragging.current = false;
+              }}
+              onPointerLeave={() => {
+                setIsPaused(false);
+                isDragging.current = false;
+              }}
+              onPointerCancel={() => {
+                setIsPaused(false);
+                isDragging.current = false;
+              }}
+              className="flex gap-6 md:gap-10 w-full px-4 md:px-10 relative z-10 overflow-x-auto hide-scrollbar select-none cursor-grab active:cursor-grabbing"
+              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }} // hide scrollbar for Firefox/IE
+            >
             {[
               "/Landing/mobile1.jpeg",
               "/Landing/mobile2.jpeg",
               "/Landing/mobile3.jpeg",
               "/Landing/mobile4.jpeg",
               "/Landing/mobile5.jpeg",
+              "/Landing/mobile10.jpeg",
+              "/Landing/mobile11.jpeg",
               // Duplicated set for seamless loop
+              "/Landing/mobile1.jpeg",
+              "/Landing/mobile2.jpeg",
+              "/Landing/mobile3.jpeg",
+              "/Landing/mobile4.jpeg",
+              "/Landing/mobile5.jpeg",
+              "/Landing/mobile10.jpeg",
+              "/Landing/mobile11.jpeg",
             ].map((src, idx) => (
               <div
                 key={idx}
-                className="w-[260px] md:w-[280px] h-[540px] md:h-[600px] rounded-[2.5rem] md:rounded-[3rem] border-[6px] md:border-[8px] border-zinc-800 dark:border-zinc-900 bg-zinc-950 overflow-hidden shadow-2xl relative flex-shrink-0 group transform transition-transform duration-500 hover:scale-[1.02]"
+                className="w-[230px] md:w-[250px] h-[480px] md:h-[520px] rounded-[2rem] md:rounded-[2.5rem] border-[6px] border-zinc-800 dark:border-zinc-900 bg-zinc-950 overflow-hidden shadow-2xl relative flex-shrink-0 group transform transition-transform duration-500 hover:scale-[1.02]"
               >
-                <div className="absolute top-0 inset-x-0 h-6 md:h-7 bg-zinc-800 dark:bg-zinc-900 rounded-b-3xl w-32 md:w-40 mx-auto z-10" />
+                <div className="absolute top-0 inset-x-0 h-5 md:h-6 bg-zinc-800 dark:bg-zinc-900 rounded-b-2xl w-28 md:w-32 mx-auto z-10" />
 
                 {/* Fallback gradient if image is missing */}
                 <div className="absolute inset-0 bg-gradient-to-br from-zinc-800 to-zinc-900 flex items-center justify-center text-zinc-700 text-sm font-medium -z-10">
@@ -141,6 +148,7 @@ export function FeaturesSection() {
                 />
               </div>
             ))}
+            </div>
           </div>
         </motion.div>
       </div>

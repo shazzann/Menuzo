@@ -12,7 +12,7 @@ import { TestimonialsSection } from '@/components/landing/TestimonialsSection';
 import { FAQSection } from '@/components/landing/FAQSection';
 import { FinalCTASection } from '@/components/landing/FinalCTASection';
 import { Footer } from '@/components/landing/Footer';
-import { MobileFloatingCTA } from '@/components/landing/MobileFloatingCTA';
+
 
 export function LandingPage() {
   return (
@@ -33,7 +33,7 @@ export function LandingPage() {
         <FinalCTASection />
       </main>
       <Footer />
-      <MobileFloatingCTA />
+
     </div>
   );
 }

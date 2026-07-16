@@ -62,17 +62,17 @@ export function ProblemSolutionSection() {
             viewport={{ once: true, margin: "-100px" }}
             whileHover={{ rotate: 0, scale: 1.02 }}
             transition={{ duration: 0.5, type: "spring" }}
-            className="relative w-full max-w-md bg-zinc-900/80 backdrop-blur-xl border border-zinc-800 rounded-[2rem] p-8 shadow-2xl z-10 group"
+            className="relative w-full max-w-md bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl border border-border/50 dark:border-zinc-800 rounded-[2rem] p-8 shadow-2xl z-10 group"
           >
             <div className="absolute inset-0 bg-noise opacity-[0.03] rounded-[2rem] pointer-events-none" />
             
-            <div className="flex items-center gap-4 mb-8 pb-6 border-b border-zinc-800">
-              <div className="w-12 h-12 rounded-xl bg-zinc-800 flex items-center justify-center text-2xl shadow-inner">
+            <div className="flex items-center gap-4 mb-8 pb-6 border-b border-border/50 dark:border-zinc-800">
+              <div className="w-12 h-12 rounded-xl bg-muted dark:bg-zinc-800 flex items-center justify-center text-2xl shadow-inner">
                 📖
               </div>
               <div>
-                <h3 className="text-xl font-bold text-zinc-100">Traditional Menu</h3>
-                <p className="text-xs text-zinc-500 uppercase tracking-wider font-semibold">Static & Limited</p>
+                <h3 className="text-xl font-bold text-foreground dark:text-zinc-100">Traditional Menu</h3>
+                <p className="text-xs text-muted-foreground dark:text-zinc-500 uppercase tracking-wider font-semibold">Static & Limited</p>
               </div>
             </div>
             
@@ -102,13 +102,13 @@ export function ProblemSolutionSection() {
             </div>
 
             {/* Floating Problem Tags */}
-            <motion.div animate={{ y: [0, -4, 0] }} transition={{ duration: 3, repeat: Infinity }} className="absolute -left-6 top-32 bg-zinc-950 border border-red-900/50 text-red-400 text-xs font-bold px-3 py-2 rounded-lg shadow-xl flex items-center gap-2 z-20">
+            <motion.div animate={{ y: [0, -4, 0] }} transition={{ duration: 3, repeat: Infinity }} className="absolute -left-6 top-32 bg-white dark:bg-zinc-950 border border-red-200 dark:border-red-900/50 text-red-500 dark:text-red-400 text-xs font-bold px-3 py-2 rounded-lg shadow-xl flex items-center gap-2 z-20">
               <AlertCircle className="w-3.5 h-3.5" /> Gets dirty
             </motion.div>
-            <motion.div animate={{ y: [0, 4, 0] }} transition={{ duration: 4, repeat: Infinity, delay: 0.5 }} className="absolute -right-6 top-48 bg-zinc-950 border border-red-900/50 text-red-400 text-xs font-bold px-3 py-2 rounded-lg shadow-xl flex items-center gap-2 z-20">
+            <motion.div animate={{ y: [0, 4, 0] }} transition={{ duration: 4, repeat: Infinity, delay: 0.5 }} className="absolute -right-6 top-48 bg-white dark:bg-zinc-950 border border-red-200 dark:border-red-900/50 text-red-500 dark:text-red-400 text-xs font-bold px-3 py-2 rounded-lg shadow-xl flex items-center gap-2 z-20">
               <Ban className="w-3.5 h-3.5" /> Outdated items
             </motion.div>
-            <motion.div animate={{ y: [0, -3, 0] }} transition={{ duration: 3.5, repeat: Infinity, delay: 1 }} className="absolute -left-2 bottom-8 bg-zinc-950 border border-red-900/50 text-red-400 text-xs font-bold px-3 py-2 rounded-lg shadow-xl flex items-center gap-2 z-20">
+            <motion.div animate={{ y: [0, -3, 0] }} transition={{ duration: 3.5, repeat: Infinity, delay: 1 }} className="absolute -left-2 bottom-8 bg-white dark:bg-zinc-950 border border-red-200 dark:border-red-900/50 text-red-500 dark:text-red-400 text-xs font-bold px-3 py-2 rounded-lg shadow-xl flex items-center gap-2 z-20">
               💸 Expensive updates
             </motion.div>
           </motion.div>
@@ -148,13 +148,13 @@ export function ProblemSolutionSection() {
             <div className="absolute inset-0 bg-gradient-to-br from-primary via-orange-400 to-primary rounded-[2rem] opacity-70 group-hover:opacity-100 transition-opacity duration-500 blur-[2px]" />
             <div className="absolute inset-0 bg-gradient-to-br from-primary via-orange-400 to-primary rounded-[2rem] opacity-50 group-hover:opacity-100 transition-opacity duration-500 blur-xl" />
             
-            <div className="relative bg-black/90 backdrop-blur-2xl rounded-[2rem] p-8 shadow-2xl h-full border border-white/10">
-              <div className="flex items-center gap-4 mb-8 pb-6 border-b border-white/10">
+            <div className="relative bg-zinc-50 dark:bg-black/90 backdrop-blur-2xl rounded-[2rem] p-8 shadow-2xl h-full border border-border/50 dark:border-white/10">
+              <div className="flex items-center gap-4 mb-8 pb-6 border-b border-border/50 dark:border-white/10">
                 <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-orange-600 flex items-center justify-center text-white shadow-lg">
                   <Smartphone className="w-6 h-6" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-white">Menuzo</h3>
+                  <h3 className="text-xl font-bold text-foreground dark:text-white">Menuzo</h3>
                   <p className="text-xs text-primary uppercase tracking-wider font-semibold">Living Digital Menu</p>
                 </div>
               </div>
@@ -172,14 +172,14 @@ export function ProblemSolutionSection() {
               </div>
 
               {/* Floating Feature Chips */}
-              <motion.div animate={{ y: [0, -6, 0] }} transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }} className="absolute -right-6 top-12 bg-black/80 backdrop-blur-xl border border-primary/30 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-[0_0_20px_-5px_rgba(249,115,22,0.5)] flex items-center gap-2 z-20">
+              <motion.div animate={{ y: [0, -6, 0] }} transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }} className="absolute -right-6 top-12 bg-white/90 dark:bg-black/80 backdrop-blur-xl border border-primary/30 text-foreground dark:text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-[0_0_20px_-5px_rgba(249,115,22,0.5)] flex items-center gap-2 z-20">
                 <Zap className="w-4 h-4 text-primary"/> Instant Updates
               </motion.div>
-              <motion.div animate={{ y: [0, 6, 0] }} transition={{ duration: 4.2, repeat: Infinity, ease: "easeInOut", delay: 0.5 }} className="absolute -left-8 top-32 bg-black/80 backdrop-blur-xl border border-blue-500/30 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-[0_0_20px_-5px_rgba(59,130,246,0.5)] flex items-center gap-2 z-20">
+              <motion.div animate={{ y: [0, 6, 0] }} transition={{ duration: 4.2, repeat: Infinity, ease: "easeInOut", delay: 0.5 }} className="absolute -left-8 top-32 bg-white/90 dark:bg-black/80 backdrop-blur-xl border border-blue-500/30 text-foreground dark:text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-[0_0_20px_-5px_rgba(59,130,246,0.5)] flex items-center gap-2 z-20">
                 <TrendingUp className="w-4 h-4 text-blue-500"/> Smart Analytics
               </motion.div>
-              <motion.div animate={{ y: [0, -4, 0] }} transition={{ duration: 3.8, repeat: Infinity, ease: "easeInOut", delay: 1 }} className="absolute -right-2 bottom-20 bg-black/80 backdrop-blur-xl border border-purple-500/30 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-[0_0_20px_-5px_rgba(168,85,247,0.5)] flex items-center gap-2 z-20">
-                <Paintbrush className="w-4 h-4 text-purple-400"/> Custom Branding
+              <motion.div animate={{ y: [0, -4, 0] }} transition={{ duration: 3.8, repeat: Infinity, ease: "easeInOut", delay: 1 }} className="absolute -right-2 bottom-20 bg-white/90 dark:bg-black/80 backdrop-blur-xl border border-purple-500/30 text-foreground dark:text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-[0_0_20px_-5px_rgba(168,85,247,0.5)] flex items-center gap-2 z-20">
+                <Paintbrush className="w-4 h-4 text-purple-500 dark:text-purple-400"/> Custom Branding
               </motion.div>
             </div>
           </motion.div>
@@ -193,13 +193,13 @@ export function ProblemSolutionSection() {
           className="max-w-5xl mx-auto relative group mb-32"
         >
           <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-orange-500/10 to-primary/20 rounded-3xl blur-xl opacity-50 group-hover:opacity-100 transition-opacity duration-700" />
-          <div className="relative bg-zinc-900/90 backdrop-blur-xl border border-white/10 shadow-2xl rounded-3xl p-8 md:p-12 overflow-hidden">
+          <div className="relative bg-card/90 dark:bg-zinc-900/90 backdrop-blur-xl border border-border/50 dark:border-white/10 shadow-2xl rounded-3xl p-8 md:p-12 overflow-hidden">
             
             {/* Background Accent */}
             <div className="absolute -top-24 -right-24 w-48 h-48 bg-primary/20 rounded-full blur-3xl pointer-events-none" />
 
             <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-6 md:gap-12 text-base md:text-lg lg:text-xl font-medium relative z-10">
-              <div className="text-right text-zinc-500 space-y-6 md:space-y-8 font-semibold">
+              <div className="text-right text-muted-foreground dark:text-zinc-500 space-y-6 md:space-y-8 font-semibold">
                 <div className="group/item relative inline-block">
                   <span className="relative z-10">Print Again</span>
                   <div className="absolute top-1/2 left-0 w-full h-0.5 bg-red-500/50 -translate-y-1/2 scale-x-100 group-hover/item:scale-x-110 transition-transform origin-right" />
@@ -225,7 +225,7 @@ export function ProblemSolutionSection() {
                 <ArrowRight className="w-6 h-6" />
               </div>
               
-              <div className="text-left font-bold space-y-6 md:space-y-8 text-zinc-100">
+              <div className="text-left font-bold space-y-6 md:space-y-8 text-foreground dark:text-zinc-100">
                 <div className="flex items-center gap-3"><div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center"><CheckCircle className="w-3.5 h-3.5 text-primary" /></div> Update Instantly</div>
                 <div className="flex items-center gap-3"><div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center"><CheckCircle className="w-3.5 h-3.5 text-primary" /></div> Change Digitally</div>
                 <div className="flex items-center gap-3"><div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center"><CheckCircle className="w-3.5 h-3.5 text-primary" /></div> Share Everywhere</div>
