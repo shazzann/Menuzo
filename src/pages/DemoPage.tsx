@@ -33,7 +33,7 @@ export function DemoPage() {
           <div className="bg-card p-6 rounded-3xl border border-border/50 shadow-sm flex items-center gap-6 max-w-md">
             <div className="w-32 h-32 bg-white rounded-2xl p-2 shadow-inner border-2 border-primary overflow-hidden shrink-0">
                <QRCodeSVG 
-                 value={import.meta.env.VITE_MENU_DEMO_URL || "https://menuzo-six.vercel.app/menuzo/menu"}
+                 value={import.meta.env.VITE_MENU_DEMO_URL || `${typeof window !== 'undefined' ? window.location.origin : 'https://menuzo-six.vercel.app'}/cafe14`}
                  size={120}
                  fgColor="#f97316"
                  bgColor="transparent"
@@ -68,7 +68,7 @@ export function DemoPage() {
              {/* Screen */}
              <div className="w-full h-full bg-background rounded-[2.25rem] overflow-hidden relative">
                <iframe 
-                 src={import.meta.env.VITE_MENU_DEMO_URL || "https://menuzo-six.vercel.app/menuzo/menu"}
+                 src={import.meta.env.VITE_MENU_DEMO_URL || "/spicegardenkitchen"}
                  className="w-full h-full border-none"
                  title="Menuzo Demo Menu"
                />

@@ -148,7 +148,7 @@ export function HeroSection() {
               <div className="flex-1 w-full h-full relative z-10 pt-6 bg-black overflow-hidden rounded-[2rem]">
                 {loadIframe ? (
                   <iframe
-                    src={import.meta.env.VITE_MENU_DEMO_URL || "https://menuzo-six.vercel.app/menuzo/menu"}
+                    src={import.meta.env.VITE_MENU_DEMO_URL || "/spicegardenkitchen"}
                     className="border-none origin-top-left"
                     style={{
                       width: '125%',
