@@ -73,7 +73,7 @@ export const SmallQrPreview = forwardRef<SmallQrPreviewRef, SmallQrPreviewProps>
       height: size,
       type: 'svg',
       data: shopUrl,
-      image: shopLogo || undefined,
+      image: shopLogo ? `${shopLogo}?qr=1` : undefined,
       dotsOptions: {
         color: fgColor,
         type: config.value
@@ -118,7 +118,7 @@ export const SmallQrPreview = forwardRef<SmallQrPreviewRef, SmallQrPreviewProps>
 
     qrCode.current.update({
       data: shopUrl,
-      image: shopLogo || undefined,
+      image: shopLogo ? `${shopLogo}?qr=1` : undefined,
       dotsOptions: { color: fgColor, type: config.value },
       cornersSquareOptions: { color: fgColor, type: config.eyeFrame },
       cornersDotOptions: { color: fgColor, type: config.eyeBall },
