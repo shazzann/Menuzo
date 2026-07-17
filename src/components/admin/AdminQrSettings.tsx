@@ -86,6 +86,7 @@ export function AdminQrSettings({
         color: bgColor,
       },
       imageOptions: {
+        crossOrigin: 'anonymous',
         margin: 5,
         imageSize: 0.25
       },
@@ -111,6 +112,7 @@ export function AdminQrSettings({
       cornersSquareOptions: { color: fgColor, type: config.eyeFrame },
       cornersDotOptions: { color: fgColor, type: config.eyeBall },
       backgroundOptions: { color: bgColor },
+      imageOptions: { crossOrigin: 'anonymous', margin: 5, imageSize: 0.25 },
       qrOptions: { errorCorrectionLevel: 'H' }
     });
   }, [qrStyle, qrPattern, themePrimary, themeAccent, shopLogo]);
