@@ -66,9 +66,12 @@ export const SmallQrPreview = forwardRef<SmallQrPreviewRef, SmallQrPreviewProps>
     const { fgColor, bgColor } = getColors();
     const config = getPatternConfig(qrPattern);
     
-    qrCode.current = new QRCodeStyling({
-      width: 256, // Render large
-      height: 256,
+    const QRCodeConstructor = typeof QRCodeStyling === 'function' ? QRCodeStyling : (QRCodeStyling as any).default;
+
+    qrCode.current = new QRCodeConstructor({
+      width: size,
+      height: size,
+      type: 'svg',
       data: shopUrl,
       image: shopLogo || undefined,
       dotsOptions: {
@@ -97,13 +100,13 @@ export const SmallQrPreview = forwardRef<SmallQrPreviewRef, SmallQrPreviewProps>
 
     if (qrRef.current) {
       qrRef.current.innerHTML = '';
-      qrCode.current.append(qrRef.current);
+      qrCode.current?.append(qrRef.current);
       
-      // Make the internal canvas scale to our wrapper
-      const canvas = qrRef.current.querySelector('canvas');
-      if (canvas) {
-        canvas.style.width = '100%';
-        canvas.style.height = '100%';
+      // Make the internal canvas/svg scale to our wrapper
+      const element = qrRef.current.querySelector('canvas') || qrRef.current.querySelector('svg');
+      if (element) {
+        element.style.width = '100%';
+        element.style.height = '100%';
       }
     }
   }, []);
@@ -119,7 +122,9 @@ export const SmallQrPreview = forwardRef<SmallQrPreviewRef, SmallQrPreviewProps>
       dotsOptions: { color: fgColor, type: config.value },
       cornersSquareOptions: { color: fgColor, type: config.eyeFrame },
       cornersDotOptions: { color: fgColor, type: config.eyeBall },
-      backgroundOptions: { color: bgColor }
+      backgroundOptions: { color: bgColor },
+      imageOptions: { crossOrigin: 'anonymous', margin: 5, imageSize: 0.2 },
+      qrOptions: { errorCorrectionLevel: 'H' }
     });
     
     // Ensure styles persist after update

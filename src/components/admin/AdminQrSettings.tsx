@@ -65,9 +65,13 @@ export function AdminQrSettings({
     const { fgColor, bgColor } = getColors();
     const config = getPatternConfig(qrPattern);
     
-    qrCode.current = new QRCodeStyling({
+    // Fix for Vite production build CJS interop
+    const QRCodeConstructor = typeof QRCodeStyling === 'function' ? QRCodeStyling : (QRCodeStyling as any).default;
+    
+    qrCode.current = new QRCodeConstructor({
       width: 180,
       height: 180,
+      type: 'svg',
       data: shopUrl,
       image: shopLogo || undefined,
       dotsOptions: {
@@ -97,7 +101,7 @@ export function AdminQrSettings({
 
     if (qrRef.current) {
       qrRef.current.innerHTML = '';
-      qrCode.current.append(qrRef.current);
+      qrCode.current?.append(qrRef.current);
     }
   }, []);
 
