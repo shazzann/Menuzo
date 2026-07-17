@@ -127,6 +127,7 @@ export interface Database {
           website?: string | null
           theme?: Json | null
           username?: string | null
+          opening_hours?: Json | null
         }
         Update: {
           banner?: string | null
@@ -148,6 +149,7 @@ export interface Database {
           website?: string | null
           theme?: Json | null
           username?: string | null
+          opening_hours?: Json | null
         }
         Relationships: []
       }
