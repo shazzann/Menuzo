@@ -16,6 +16,7 @@ interface AdminQrSettingsProps {
   onChangePattern: (pattern: DotType) => void;
   shopName: string;
   isSaving?: boolean;
+  onDownload?: () => void;
 }
 
 const PATTERNS: { label: string, value: DotType, eyeFrame: CornerSquareType, eyeBall: CornerDotType }[] = [
@@ -37,7 +38,8 @@ export function AdminQrSettings({
   onChangeStyle,
   onChangePattern,
   shopName,
-  isSaving
+  isSaving,
+  onDownload
 }: AdminQrSettingsProps) {
   const qrRef = useRef<HTMLDivElement>(null);
   const qrCode = useRef<QRCodeStyling | null>(null);
@@ -128,10 +130,28 @@ export function AdminQrSettings({
           <div ref={qrRef} />
         </div>
         
-        <div className="text-center mt-2">
+        <div className="text-center mt-2 mb-4">
           <p className="font-semibold text-sm">Scan to View Menu</p>
           <p className="text-xs text-muted-foreground">{shopName}</p>
         </div>
+        
+        <Button 
+          variant="outline" 
+          className="w-full max-w-[200px]"
+          onClick={() => {
+            if (qrCode.current) {
+              qrCode.current.download({
+                name: `${shopName.replace(/\s+/g, '-').toLowerCase()}-qr-code`,
+                extension: 'png'
+              });
+              if (onDownload) {
+                onDownload();
+              }
+            }
+          }}
+        >
+          Download QR Code
+        </Button>
       </div>
 
       {/* QR Color Theme */}

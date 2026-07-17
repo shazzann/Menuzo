@@ -86,6 +86,14 @@ export function AdminQrPage() {
           qrPattern={qrPattern}
           onChangeStyle={setQrStyle}
           onChangePattern={setQrPattern}
+          onDownload={() => {
+            if (typeof window !== 'undefined' && shop.id) {
+              localStorage.setItem(`qr_generated_${shop.id}`, 'true');
+              toast.success('QR Code downloaded successfully!');
+              // Let the UI know something updated to re-render dashboard progress
+              dispatch({ type: 'UPDATE_SHOP', payload: { ...shop } });
+            }
+          }}
         />
       </div>
     </div>
