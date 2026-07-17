@@ -76,12 +76,12 @@ export function AdminShopDetailsPage() {
   const handleCropComplete = async (croppedFile: File) => {
     toast.loading(`Uploading ${cropType}...`, { id: `upload-${cropType}` });
     try {
-      const { url } = await StorageService.uploadImage(croppedFile, 'restaurant-assets', `${shop.id || 'default'}/${cropType}`);
+      const { url } = await StorageService.uploadImage(croppedFile);
       
       const oldUrl = formData[cropType];
       if (oldUrl && !oldUrl.startsWith('/')) {
         const path = oldUrl.split('restaurant-assets/')[1];
-        if (path) await StorageService.deleteImage('restaurant-assets', path);
+        if (path) await StorageService.deleteImage(path);
       }
 
       setFormData(prev => ({ ...prev, [cropType]: url }));
@@ -96,7 +96,7 @@ export function AdminShopDetailsPage() {
     const oldUrl = formData[type];
     if (oldUrl && !oldUrl.startsWith('/')) {
       const path = oldUrl.split('restaurant-assets/')[1];
-      if (path) await StorageService.deleteImage('restaurant-assets', path);
+      if (path) await StorageService.deleteImage(path);
     }
     setFormData(prev => ({ ...prev, [type]: '' }));
     toast.success(`${type === 'logo' ? 'Logo' : 'Banner'} removed.`);

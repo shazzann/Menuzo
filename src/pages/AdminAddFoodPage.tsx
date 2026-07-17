@@ -203,13 +203,13 @@ export function AdminAddFoodPage() {
   const handleCropComplete = async (croppedFile: File) => {
     toast.loading('Uploading image...', { id: 'upload-food' });
     try {
-      const { url } = await StorageService.uploadImage(croppedFile, 'restaurant-assets', `${state.shop.id || 'default'}/foods`);
+      const { url } = await StorageService.uploadImage(croppedFile);
       
       const oldUrl = formData.image;
       if (oldUrl && !oldUrl.startsWith('/')) {
         // Simple extraction for path (not perfect but OK for MVP)
         const path = oldUrl.split('restaurant-assets/')[1];
-        if (path) await StorageService.deleteImage('restaurant-assets', path);
+        if (path) await StorageService.deleteImage(path);
       }
 
       setFormData(prev => ({ ...prev, image: url }));
@@ -224,7 +224,7 @@ export function AdminAddFoodPage() {
     const oldUrl = formData.image;
     if (oldUrl && !oldUrl.startsWith('/')) {
       const path = oldUrl.split('restaurant-assets/')[1];
-      if (path) await StorageService.deleteImage('restaurant-assets', path);
+      if (path) await StorageService.deleteImage(path);
     }
     setFormData(prev => ({ ...prev, image: '' }));
     toast.success('Image removed.');

@@ -7,7 +7,7 @@ export const StorageService = {
    * @param bucket The storage bucket (ignored for Cloudinary, kept for API compatibility)
    * @param path The path inside the bucket (ignored for Cloudinary, kept for API compatibility)
    */
-  async uploadImage(file: File, bucket: string, path: string): Promise<{ url: string, path: string }> {
+  async uploadImage(file: File): Promise<{ url: string, path: string }> {
     try {
       const response = await uploadImageToCloudinary(file);
       return {
@@ -20,7 +20,7 @@ export const StorageService = {
     }
   },
 
-  async deleteImage(bucket: string, path: string): Promise<boolean> {
+  async deleteImage( path: string): Promise<boolean> {
     // Note: Cloudinary unsigned uploads cannot be securely deleted from the frontend.
     // This is a no-op for now to maintain API compatibility.
     console.log('Delete image requested for', path, '- skipped (unsupported for unsigned Cloudinary uploads)');

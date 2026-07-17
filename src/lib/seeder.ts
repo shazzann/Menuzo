@@ -13,9 +13,14 @@ export const loadDemoRestaurant = (dispatch: ReturnType<typeof useApp>['dispatch
       banner: '/food-burger.jpg', // Fallback to sample image
       location: '123 Spice Lane, Colombo 03',
       openingHours: [
-        { day: 'Monday - Friday', hours: '11:00 AM - 10:00 PM' },
-        { day: 'Saturday - Sunday', hours: '09:00 AM - 11:00 PM' }
-      ],
+        { type: 'regular', dayOfWeek: 1, isOpen: true, openTime: '11:00', closeTime: '22:00' },
+        { type: 'regular', dayOfWeek: 2, isOpen: true, openTime: '11:00', closeTime: '22:00' },
+        { type: 'regular', dayOfWeek: 3, isOpen: true, openTime: '11:00', closeTime: '22:00' },
+        { type: 'regular', dayOfWeek: 4, isOpen: true, openTime: '11:00', closeTime: '22:00' },
+        { type: 'regular', dayOfWeek: 5, isOpen: true, openTime: '11:00', closeTime: '22:00' },
+        { type: 'regular', dayOfWeek: 6, isOpen: true, openTime: '09:00', closeTime: '23:00' },
+        { type: 'regular', dayOfWeek: 0, isOpen: true, openTime: '09:00', closeTime: '23:00' }
+      ] as any, // Bypass full validation for demo shop
       contactNumber: '+94 11 234 5678',
       email: 'hello@thespicegarden.lk',
       isOpen: true,

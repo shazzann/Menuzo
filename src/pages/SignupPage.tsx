@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Loader2, Store, User, Mail, Lock } from 'lucide-react';
+import { ArrowLeft, Loader2, Store, Mail, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useApp } from '@/store';
 import { trackEvent } from '@/lib/analytics';
-import { AuthService, RestaurantService } from '@/services';
+import { AuthService } from '@/services';
 import { toast } from 'sonner';
 
 export function SignupPage() {
