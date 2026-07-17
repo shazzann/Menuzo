@@ -73,7 +73,7 @@ export function AdminQrSettings({
       height: 180,
       type: 'svg',
       data: shopUrl,
-      image: shopLogo ? `${shopLogo}?qr=1` : undefined,
+      image: shopLogo ? `${shopLogo.replace('http://', 'https://')}?qr=1` : undefined,
       dotsOptions: {
         color: fgColor,
         type: config.value
@@ -111,7 +111,7 @@ export function AdminQrSettings({
     const config = getPatternConfig(qrPattern);
 
     qrCode.current.update({
-      image: shopLogo ? `${shopLogo}?qr=1` : undefined,
+      image: shopLogo ? `${shopLogo.replace('http://', 'https://')}?qr=1` : undefined,
       dotsOptions: { color: fgColor, type: config.value },
       cornersSquareOptions: { color: fgColor, type: config.eyeFrame },
       cornersDotOptions: { color: fgColor, type: config.eyeBall },
