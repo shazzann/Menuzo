@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { useApp } from '@/store';
+import { supabase } from '@/lib/supabase';
 
 export function AdminSecurityPage() {
   const { state, dispatch } = useApp();
@@ -15,6 +16,15 @@ export function AdminSecurityPage() {
     new: '',
     confirm: '',
   });
+
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      dispatch({ type: 'LOGOUT' });
+    } catch (err) {
+      console.error('Error logging out:', err);
+    }
+  };
 
   const handlePasswordChange = (e: React.FormEvent) => {
     e.preventDefault();
@@ -117,7 +127,7 @@ export function AdminSecurityPage() {
           )}
 
           <div className="pt-8">
-            <Button variant="outline" onClick={() => dispatch({ type: 'LOGOUT' })} className="w-full border-destructive/30 text-destructive hover:bg-destructive/10">
+            <Button variant="outline" onClick={handleLogout} className="w-full border-destructive/30 text-destructive hover:bg-destructive/10">
               <LogOut className="w-4 h-4 mr-2" /> Log Out
             </Button>
           </div>

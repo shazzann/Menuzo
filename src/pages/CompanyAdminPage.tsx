@@ -165,8 +165,10 @@ export function CompanyAdminPage() {
     setMobileSidebarOpen(false);
   };
 
-  const handleLogout = () => {
-    dispatch({ type: 'SET_VIEW', payload: 'landing' });
+  const handleLogout = async () => {
+    const { supabase } = await import('@/lib/supabase');
+    await supabase.auth.signOut();
+    dispatch({ type: 'LOGOUT' });
   };
 
   const now = new Date();

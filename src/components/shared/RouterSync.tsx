@@ -44,13 +44,13 @@ export function RouterSync() {
 
   // Sync State -> URL
   useEffect(() => {
-    if (currentView !== lastView.current) {
+    const expectedUrl = getUrlForView(currentView, username);
+    if (expectedUrl && expectedUrl !== location.pathname) {
       lastView.current = currentView;
-      const expectedUrl = getUrlForView(currentView, username);
-      if (expectedUrl && expectedUrl !== location.pathname) {
-        lastPathname.current = expectedUrl;
-        navigate(expectedUrl);
-      }
+      lastPathname.current = expectedUrl;
+      navigate(expectedUrl, { replace: true });
+    } else {
+      lastView.current = currentView;
     }
   }, [currentView, username, navigate, location.pathname]);
 

@@ -9,10 +9,7 @@ export function AdminDataLoader() {
   const [loadedUserId, setLoadedUserId] = useState('');
 
   useEffect(() => {
-    // Only load if we are in an admin view (but not login)
-    const isAdminView = currentView.startsWith('admin-') || currentView === 'user-dashboard';
-    
-    if (!isAdminView) return;
+    // Load if user is logged in
     if (!user?.id || user.id === 'google-auth-bypass-id' || user.id === 'user-1') return;
     
     // If we already loaded data for this user, skip

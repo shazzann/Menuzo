@@ -103,10 +103,27 @@ export function AdminShopDetailsPage() {
   };
 
 
-  const addHoursRow = () => {
+  const addRegularHours = () => {
     setFormData((prev) => ({
       ...prev,
       openingHours: [...prev.openingHours, { type: 'regular', dayOfWeek: 1, isOpen: true, openTime: '09:00', closeTime: '22:00' }],
+    }));
+  };
+
+  const addSpecialHours = () => {
+    setFormData((prev) => ({
+      ...prev,
+      openingHours: [
+        ...prev.openingHours,
+        {
+          type: 'special',
+          date: new Date().toISOString().split('T')[0],
+          reason: '',
+          isOpen: false,
+          openTime: '09:00',
+          closeTime: '22:00',
+        },
+      ],
     }));
   };
 
@@ -548,67 +565,20 @@ export function AdminShopDetailsPage() {
             </div>
 
             {/* Opening Hours */}
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="font-semibold text-sm flex items-center gap-2">
-                  <Clock className="w-4 h-4" />
-                  Opening Hours
+            <div className="space-y-6">
+              <div>
+                <h3 className="font-semibold text-sm flex items-center gap-2 mb-3 px-1">
+                  <Clock className="w-4 h-4 text-muted-foreground" />
+                  Regular Hours
                 </h3>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={addHoursRow}
-                  className="gap-1"
-                  disabled={!isEditing}
-                >
-                  <Plus className="w-3 h-3" />
-                  Add
-                </Button>
-              </div>
-
-              <div className="space-y-3">
-                {formData.openingHours.map((schedule, index) => (
-                  <div key={index} className="space-y-3 p-4 border rounded-xl bg-card">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-4">
+                <div className="bg-card rounded-2xl border overflow-hidden shadow-sm divide-y divide-border/40">
+                  {formData.openingHours.map((schedule, i) => ({ ...schedule, originalIndex: i })).filter(h => h.type === 'regular').map((schedule) => (
+                    <div key={schedule.originalIndex} className="flex items-center justify-between p-3 relative hover:bg-muted/30 transition-colors group">
+                      <div className="flex items-center">
                         <select
-                          className="flex h-10 w-[120px] items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                          value={schedule.type}
-                          onChange={(e) => handleHoursChange(index, 'type', e.target.value)}
-                          disabled={!isEditing}
-                        >
-                          <option value="regular">Regular Day</option>
-                          <option value="special">Special Date</option>
-                        </select>
-                        <div className="flex items-center gap-2">
-                          <Switch
-                            checked={schedule.isOpen}
-                            onCheckedChange={(checked) => handleHoursChange(index, 'isOpen', checked)}
-                            disabled={!isEditing}
-                          />
-                          <Label className="text-xs font-semibold">{schedule.isOpen ? 'Open' : 'Closed'}</Label>
-                        </div>
-                      </div>
-                      {isEditing && (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => removeHoursRow(index)}
-                          className="text-muted-foreground hover:text-destructive h-8 w-8"
-                        >
-                          <X className="w-4 h-4" />
-                        </Button>
-                      )}
-                    </div>
-                    
-                    <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
-                      {schedule.type === 'regular' ? (
-                        <select
-                          className="flex h-10 w-full md:w-[150px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                          className="h-8 w-[100px] bg-transparent text-sm font-medium focus:outline-none focus:ring-0 cursor-pointer appearance-none px-1"
                           value={schedule.dayOfWeek}
-                          onChange={(e) => handleHoursChange(index, 'dayOfWeek', parseInt(e.target.value))}
+                          onChange={(e) => handleHoursChange(schedule.originalIndex, 'dayOfWeek', parseInt(e.target.value))}
                           disabled={!isEditing}
                         >
                           <option value={0}>Sunday</option>
@@ -619,48 +589,146 @@ export function AdminShopDetailsPage() {
                           <option value={5}>Friday</option>
                           <option value={6}>Saturday</option>
                         </select>
-                      ) : (
-                        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                          <Input
-                            type="date"
-                            value={schedule.date || ''}
-                            onChange={(e) => handleHoursChange(index, 'date', e.target.value)}
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        {schedule.isOpen ? (
+                          <div className="flex items-center gap-1 bg-muted/40 rounded-full px-2 py-1 border border-border/50">
+                            <Input
+                              type="time"
+                              value={schedule.openTime || ''}
+                              onChange={(e) => handleHoursChange(schedule.originalIndex, 'openTime', e.target.value)}
+                              disabled={!isEditing}
+                              className="h-6 w-[65px] px-1 py-0 text-[11px] text-center font-mono bg-transparent border-0 focus-visible:ring-0 shadow-none p-0"
+                            />
+                            <span className="text-muted-foreground/40 text-[10px]">-</span>
+                            <Input
+                              type="time"
+                              value={schedule.closeTime || ''}
+                              onChange={(e) => handleHoursChange(schedule.originalIndex, 'closeTime', e.target.value)}
+                              disabled={!isEditing}
+                              className="h-6 w-[65px] px-1 py-0 text-[11px] text-center font-mono bg-transparent border-0 focus-visible:ring-0 shadow-none p-0"
+                            />
+                          </div>
+                        ) : (
+                          <span className="text-[11px] text-muted-foreground uppercase font-semibold px-3 py-1.5">Closed</span>
+                        )}
+
+                        <Switch
+                          checked={schedule.isOpen}
+                          onCheckedChange={(checked) => handleHoursChange(schedule.originalIndex, 'isOpen', checked)}
+                          disabled={!isEditing}
+                          className="scale-[0.65] origin-right ml-1"
+                        />
+
+                        {isEditing && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => removeHoursRow(schedule.originalIndex)}
+                            className="h-7 w-7 text-muted-foreground/40 hover:text-destructive shrink-0 -mr-1"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {isEditing && (
+                    <button
+                      type="button"
+                      onClick={addRegularHours}
+                      className="w-full flex items-center justify-center gap-2 py-3.5 text-sm text-primary font-medium hover:bg-muted/30 transition-colors"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Add Regular Hours
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <h3 className="font-semibold text-sm flex items-center gap-2 mb-3 px-1 mt-6">
+                  <Clock className="w-4 h-4 text-muted-foreground" />
+                  Special Hours
+                </h3>
+                <div className="bg-card rounded-2xl border overflow-hidden shadow-sm divide-y divide-border/40">
+                  {formData.openingHours.map((schedule, i) => ({ ...schedule, originalIndex: i })).filter(h => h.type === 'special').map((schedule) => (
+                    <div key={schedule.originalIndex} className="flex flex-col gap-2 p-3 relative hover:bg-muted/30 transition-colors">
+                      <div className="flex items-center justify-between">
+                        <Input
+                          type="date"
+                          value={schedule.date || ''}
+                          onChange={(e) => handleHoursChange(schedule.originalIndex, 'date', e.target.value)}
+                          disabled={!isEditing}
+                          className="h-8 w-[130px] px-2 text-sm font-medium bg-transparent border-0 focus-visible:ring-0 shadow-none p-0"
+                        />
+                        
+                        <div className="flex items-center gap-2">
+                          <Switch
+                            checked={schedule.isOpen}
+                            onCheckedChange={(checked) => handleHoursChange(schedule.originalIndex, 'isOpen', checked)}
                             disabled={!isEditing}
-                            className="w-full sm:w-[150px]"
+                            className="scale-[0.65] origin-right"
                           />
-                          <Input
-                            type="text"
-                            placeholder="Reason (e.g. Poya Day)"
-                            value={schedule.reason || ''}
-                            onChange={(e) => handleHoursChange(index, 'reason', e.target.value)}
-                            disabled={!isEditing}
-                            className="w-full sm:w-[180px]"
-                          />
+                          {isEditing && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => removeHoursRow(schedule.originalIndex)}
+                              className="h-7 w-7 text-muted-foreground/40 hover:text-destructive shrink-0 -mr-1"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </Button>
+                          )}
                         </div>
-                      )}
+                      </div>
+                      
+                      <Input
+                        type="text"
+                        placeholder="Reason (e.g. Poya Day)"
+                        value={schedule.reason || ''}
+                        onChange={(e) => handleHoursChange(schedule.originalIndex, 'reason', e.target.value)}
+                        disabled={!isEditing}
+                        className="h-8 text-[13px] bg-muted/40 border-0 rounded-lg px-3 placeholder:text-muted-foreground/50"
+                      />
 
                       {schedule.isOpen && (
-                        <div className="flex items-center gap-2 w-full">
+                        <div className="flex items-center gap-1.5 mt-1 bg-muted/40 rounded-full px-2 py-1 w-fit border border-border/50">
                           <Input
                             type="time"
                             value={schedule.openTime || ''}
-                            onChange={(e) => handleHoursChange(index, 'openTime', e.target.value)}
+                            onChange={(e) => handleHoursChange(schedule.originalIndex, 'openTime', e.target.value)}
                             disabled={!isEditing}
-                            className="flex-1 md:w-[120px]"
+                            className="h-6 w-[70px] px-1 py-0 text-[11px] text-center font-mono bg-transparent border-0 focus-visible:ring-0 shadow-none p-0"
                           />
-                          <span className="text-muted-foreground text-sm">to</span>
+                          <span className="text-muted-foreground/40 text-[10px] font-semibold">-</span>
                           <Input
                             type="time"
                             value={schedule.closeTime || ''}
-                            onChange={(e) => handleHoursChange(index, 'closeTime', e.target.value)}
+                            onChange={(e) => handleHoursChange(schedule.originalIndex, 'closeTime', e.target.value)}
                             disabled={!isEditing}
-                            className="flex-1 md:w-[120px]"
+                            className="h-6 w-[70px] px-1 py-0 text-[11px] text-center font-mono bg-transparent border-0 focus-visible:ring-0 shadow-none p-0"
                           />
                         </div>
                       )}
                     </div>
-                  </div>
-                ))}
+                  ))}
+                  
+                  {isEditing && (
+                    <button
+                      type="button"
+                      onClick={addSpecialHours}
+                      className="w-full flex items-center justify-center gap-2 py-3.5 text-sm text-primary font-medium hover:bg-muted/30 transition-colors"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Add Special Date
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
 

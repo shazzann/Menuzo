@@ -4,9 +4,10 @@ import { Button } from '@/components/ui/button';
 import { useApp } from '@/store';
 import { ThemeToggle } from '@/components/shared/ThemeToggle';
 import { motion, AnimatePresence } from 'framer-motion';
+import { LayoutDashboard } from 'lucide-react';
 
 export function Navbar() {
-  const { dispatch } = useApp();
+  const { state, dispatch } = useApp();
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -79,21 +80,34 @@ export function Navbar() {
           <div className="hidden md:flex items-center gap-3">
             <ThemeToggle />
 
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => dispatch({ type: 'SET_VIEW', payload: 'login' })}
-              className="font-medium"
-            >
-              Log in
-            </Button>
-            <Button
-              size="sm"
-              onClick={() => dispatch({ type: 'SET_VIEW', payload: 'signup' })}
-              className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-[14px] font-semibold px-5 shadow-lg shadow-primary/20"
-            >
-              Start Free
-            </Button>
+            {state.user ? (
+              <Button
+                size="sm"
+                onClick={() => dispatch({ type: 'SET_VIEW', payload: 'user-dashboard' })}
+                className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-[14px] font-semibold px-5 shadow-lg shadow-primary/20 gap-2"
+              >
+                <LayoutDashboard className="w-4 h-4" />
+                Dashboard
+              </Button>
+            ) : (
+              <>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => dispatch({ type: 'SET_VIEW', payload: 'login' })}
+                  className="font-medium"
+                >
+                  Log in
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={() => dispatch({ type: 'SET_VIEW', payload: 'signup' })}
+                  className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-[14px] font-semibold px-5 shadow-lg shadow-primary/20"
+                >
+                  Start Free
+                </Button>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Toggle */}
@@ -133,28 +147,43 @@ export function Navbar() {
             </div>
             
             <div className="mt-auto flex flex-col gap-4 pt-6 border-t border-border/50">
-              <Button
-                variant="outline"
-                size="lg"
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  dispatch({ type: 'SET_VIEW', payload: 'login' });
-                }}
-                className="w-full text-base font-semibold h-12"
-              >
-                Log in
-              </Button>
-              <Button
-                size="lg"
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  dispatch({ type: 'SET_VIEW', payload: 'signup' });
-                }}
-                className="w-full bg-primary text-primary-foreground hover:bg-primary/90 rounded-[14px] text-base font-semibold h-12 shadow-lg shadow-primary/20"
-              >
-                Start Free
-              </Button>
-
+              {state.user ? (
+                <Button
+                  size="lg"
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    dispatch({ type: 'SET_VIEW', payload: 'user-dashboard' });
+                  }}
+                  className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-[14px] font-semibold shadow-lg shadow-primary/20 gap-2 w-full"
+                >
+                  <LayoutDashboard className="w-4 h-4" />
+                  Go to Dashboard
+                </Button>
+              ) : (
+                <>
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      dispatch({ type: 'SET_VIEW', payload: 'login' });
+                    }}
+                    className="rounded-[14px] font-semibold"
+                  >
+                    Log in
+                  </Button>
+                  <Button
+                    size="lg"
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      dispatch({ type: 'SET_VIEW', payload: 'signup' });
+                    }}
+                    className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-[14px] font-semibold shadow-lg shadow-primary/20"
+                  >
+                    Start for free
+                  </Button>
+                </>
+              )}
             </div>
           </motion.div>
         )}
