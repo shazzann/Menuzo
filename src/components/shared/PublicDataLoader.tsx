@@ -44,9 +44,7 @@ export function PublicDataLoader() {
             logo: shopData.logo || '',
             banner: shopData.banner || '',
             username: shop.username,
-            openingHours: [
-              { day: 'Monday - Saturday', hours: '10:00 AM - 10:00 PM' }
-            ],
+            openingHours: Array.isArray((shopData as any).opening_hours) ? (shopData as any).opening_hours : [],
             socialLinks: {
               instagram: shopData.instagram || '',
               facebook: shopData.facebook || '',

@@ -52,7 +52,7 @@ export function OnboardingPage() {
       });
       
       trackEvent('restaurant_created');
-      dispatch({ type: 'SET_VIEW', payload: 'admin-shop' });
+      dispatch({ type: 'SET_VIEW', payload: 'admin-shop-details' });
     } catch (err: any) {
       toast.error(`Error creating shop: ${err.message}`);
     } finally {

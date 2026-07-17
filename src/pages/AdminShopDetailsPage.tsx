@@ -103,17 +103,17 @@ export function AdminShopDetailsPage() {
   };
 
 
-  const handleHoursChange = (index: number, field: string, value: string | boolean) => {
-    const newHours = [...formData.openingHours];
-    newHours[index] = { ...newHours[index], [field]: value };
-    setFormData((prev) => ({ ...prev, openingHours: newHours }));
-  };
-
   const addHoursRow = () => {
     setFormData((prev) => ({
       ...prev,
-      openingHours: [...prev.openingHours, { day: '', hours: '', isSpecialDay: false, date: '' }],
+      openingHours: [...prev.openingHours, { type: 'regular', dayOfWeek: 1, isOpen: true, openTime: '09:00', closeTime: '22:00' }],
     }));
+  };
+
+  const handleHoursChange = (index: number, field: string, value: any) => {
+    const newHours = [...formData.openingHours];
+    newHours[index] = { ...newHours[index], [field]: value };
+    setFormData((prev) => ({ ...prev, openingHours: newHours }));
   };
 
   const removeHoursRow = (index: number) => {
@@ -145,6 +145,7 @@ export function AdminShopDetailsPage() {
         logo: formData.logo || null,
         banner: formData.banner || null,
         theme: formData.theme as any,
+        opening_hours: formData.openingHours as any,
       };
 
       let finalShopId = shop.id;
@@ -568,15 +569,26 @@ export function AdminShopDetailsPage() {
 
               <div className="space-y-3">
                 {formData.openingHours.map((schedule, index) => (
-                  <div key={index} className="space-y-2 p-3 border rounded-xl bg-card">
-                    <div className="flex items-center justify-between mb-1">
-                      <div className="flex items-center gap-2">
-                        <Switch
-                          checked={schedule.isSpecialDay}
-                          onCheckedChange={(checked) => handleHoursChange(index, 'isSpecialDay', checked)}
+                  <div key={index} className="space-y-3 p-4 border rounded-xl bg-card">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-4">
+                        <select
+                          className="flex h-10 w-[120px] items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                          value={schedule.type}
+                          onChange={(e) => handleHoursChange(index, 'type', e.target.value)}
                           disabled={!isEditing}
-                        />
-                        <Label className="text-xs">Special Day/Date</Label>
+                        >
+                          <option value="regular">Regular Day</option>
+                          <option value="special">Special Date</option>
+                        </select>
+                        <div className="flex items-center gap-2">
+                          <Switch
+                            checked={schedule.isOpen}
+                            onCheckedChange={(checked) => handleHoursChange(index, 'isOpen', checked)}
+                            disabled={!isEditing}
+                          />
+                          <Label className="text-xs font-semibold">{schedule.isOpen ? 'Open' : 'Closed'}</Label>
+                        </div>
                       </div>
                       {isEditing && (
                         <Button
@@ -584,37 +596,68 @@ export function AdminShopDetailsPage() {
                           variant="ghost"
                           size="icon"
                           onClick={() => removeHoursRow(index)}
-                          className="text-muted-foreground hover:text-destructive h-6 w-6"
+                          className="text-muted-foreground hover:text-destructive h-8 w-8"
                         >
                           <X className="w-4 h-4" />
                         </Button>
                       )}
                     </div>
-                    <div className="flex items-center gap-2">
-                      {schedule.isSpecialDay ? (
-                        <Input
-                          type="date"
-                          value={schedule.date || ''}
-                          onChange={(e) => handleHoursChange(index, 'date', e.target.value)}
+                    
+                    <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
+                      {schedule.type === 'regular' ? (
+                        <select
+                          className="flex h-10 w-full md:w-[150px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                          value={schedule.dayOfWeek}
+                          onChange={(e) => handleHoursChange(index, 'dayOfWeek', parseInt(e.target.value))}
                           disabled={!isEditing}
-                          className="flex-1"
-                        />
+                        >
+                          <option value={0}>Sunday</option>
+                          <option value={1}>Monday</option>
+                          <option value={2}>Tuesday</option>
+                          <option value={3}>Wednesday</option>
+                          <option value={4}>Thursday</option>
+                          <option value={5}>Friday</option>
+                          <option value={6}>Saturday</option>
+                        </select>
                       ) : (
-                        <Input
-                          value={schedule.day}
-                          onChange={(e) => handleHoursChange(index, 'day', e.target.value)}
-                          placeholder="Mon - Fri"
-                          disabled={!isEditing}
-                          className="flex-1"
-                        />
+                        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                          <Input
+                            type="date"
+                            value={schedule.date || ''}
+                            onChange={(e) => handleHoursChange(index, 'date', e.target.value)}
+                            disabled={!isEditing}
+                            className="w-full sm:w-[150px]"
+                          />
+                          <Input
+                            type="text"
+                            placeholder="Reason (e.g. Poya Day)"
+                            value={schedule.reason || ''}
+                            onChange={(e) => handleHoursChange(index, 'reason', e.target.value)}
+                            disabled={!isEditing}
+                            className="w-full sm:w-[180px]"
+                          />
+                        </div>
                       )}
-                      <Input
-                        value={schedule.hours}
-                        onChange={(e) => handleHoursChange(index, 'hours', e.target.value)}
-                        placeholder="9:00 AM - 10:00 PM"
-                        disabled={!isEditing}
-                        className="flex-1"
-                      />
+
+                      {schedule.isOpen && (
+                        <div className="flex items-center gap-2 w-full">
+                          <Input
+                            type="time"
+                            value={schedule.openTime || ''}
+                            onChange={(e) => handleHoursChange(index, 'openTime', e.target.value)}
+                            disabled={!isEditing}
+                            className="flex-1 md:w-[120px]"
+                          />
+                          <span className="text-muted-foreground text-sm">to</span>
+                          <Input
+                            type="time"
+                            value={schedule.closeTime || ''}
+                            onChange={(e) => handleHoursChange(index, 'closeTime', e.target.value)}
+                            disabled={!isEditing}
+                            className="flex-1 md:w-[120px]"
+                          />
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}

@@ -1,6 +1,7 @@
 import { Clock, MapPin, Phone, Store, Image as ImageIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Shop } from '@/types';
+import { checkShopStatus } from '@/lib/timeUtils';
 
 interface ShopHeaderProps {
   shop: Shop;
@@ -8,6 +9,9 @@ interface ShopHeaderProps {
 }
 
 export function ShopHeader({ shop, variant = 'full' }: ShopHeaderProps) {
+  const timeStatus = checkShopStatus(shop.openingHours);
+  const isCurrentlyOpen = shop.isOpen && timeStatus.isOpen;
+
   if (variant === 'compact') {
     return (
       <div className="flex items-center gap-3 p-4">
@@ -23,40 +27,48 @@ export function ShopHeader({ shop, variant = 'full' }: ShopHeaderProps) {
           )}
         </div>
         <div className="flex-1 min-w-0">
-          <h2 className="font-bold text-lg truncate">{shop.name}</h2>
-          <p className="text-xs text-muted-foreground truncate">{shop.tagline}</p>
+          <div className="flex items-center gap-2">
+            <h2 className="font-bold text-lg truncate">{shop.name}</h2>
+            <span
+              className={cn(
+                'px-2 py-0.5 text-[10px] font-mono uppercase tracking-wider rounded-full flex-shrink-0',
+                isCurrentlyOpen
+                  ? 'bg-primary/20 text-primary'
+                  : 'bg-muted text-muted-foreground'
+              )}
+            >
+              {isCurrentlyOpen ? 'Open' : 'Closed'}
+            </span>
+          </div>
+          <p className="text-sm text-muted-foreground truncate">{shop.tagline}</p>
         </div>
-        <span
-          className={cn(
-            'px-3 py-1 text-[10px] font-mono uppercase tracking-wider rounded-full',
-            shop.isOpen
-              ? 'bg-primary/20 text-primary'
-              : 'bg-muted text-muted-foreground'
-          )}
-        >
-          {shop.isOpen ? 'Open' : 'Closed'}
-        </span>
       </div>
     );
   }
 
   return (
     <div className="relative">
-      <div className="relative h-48 overflow-hidden bg-muted flex items-center justify-center">
+      {/* Banner Image */}
+      <div className="h-48 md:h-64 bg-muted relative overflow-hidden">
         {shop.banner ? (
           <img
             src={shop.banner}
-            alt={shop.name}
+            alt="Shop banner"
             className="w-full h-full object-cover"
           />
         ) : (
-          <ImageIcon className="w-12 h-12 text-muted-foreground/20" />
+          <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground/50">
+            <ImageIcon className="w-12 h-12 mb-2" />
+            <span>No Banner Uploaded</span>
+          </div>
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-background/90 to-transparent" />
       </div>
-      <div className="relative -mt-16 px-4 pb-4">
-        <div className="flex items-end gap-4">
-          <div className="w-24 h-24 rounded-2xl overflow-hidden border-4 border-background bg-muted flex-shrink-0 flex items-center justify-center">
+
+      {/* Content */}
+      <div className="max-w-3xl mx-auto px-4 -mt-16 relative z-10">
+        <div className="flex flex-col md:flex-row md:items-end gap-4 border-b border-border pb-6">
+          <div className="w-24 h-24 md:w-32 md:h-32 rounded-2xl border-4 border-background bg-card shadow-lg overflow-hidden flex items-center justify-center">
             {shop.logo ? (
               <img
                 src={shop.logo}
@@ -64,7 +76,7 @@ export function ShopHeader({ shop, variant = 'full' }: ShopHeaderProps) {
                 className="w-full h-full object-cover"
               />
             ) : (
-              <Store className="w-8 h-8 text-muted-foreground/30" />
+              <Store className="w-10 h-10 text-muted-foreground/50" />
             )}
           </div>
           <div className="flex-1 pb-2">
@@ -73,12 +85,12 @@ export function ShopHeader({ shop, variant = 'full' }: ShopHeaderProps) {
               <span
                 className={cn(
                   'px-2.5 py-0.5 text-[10px] font-mono uppercase tracking-wider rounded-full',
-                  shop.isOpen
+                  isCurrentlyOpen
                     ? 'bg-primary/20 text-primary'
                     : 'bg-muted text-muted-foreground'
                 )}
               >
-                {shop.isOpen ? 'Open' : 'Closed'}
+                {isCurrentlyOpen ? 'Open' : 'Closed'}
               </span>
             </div>
             <p className="text-sm text-muted-foreground mt-0.5">{shop.tagline}</p>
@@ -96,7 +108,12 @@ export function ShopHeader({ shop, variant = 'full' }: ShopHeaderProps) {
           </div>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Clock className="w-4 h-4 flex-shrink-0" />
-            <span>{shop.openingHours?.[0]?.hours || 'Opening hours not set'}</span>
+            <span>
+              {isCurrentlyOpen 
+                ? (timeStatus.nextActionTime ? `Open until ${timeStatus.nextActionTime}` : 'Open Now') 
+                : 'Closed Now'}
+              {timeStatus.reason && ` (${timeStatus.reason})`}
+            </span>
           </div>
         </div>
       </div>

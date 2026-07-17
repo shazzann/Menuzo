@@ -3,6 +3,7 @@ import { useApp } from '@/store';
 import { BottomNav } from '@/components/shared/BottomNav';
 import { LocationCard } from '@/components/shared/LocationCard';
 import type { AdminTab } from '@/types';
+import { checkShopStatus } from '@/lib/timeUtils';
 
 export function ShopDetailPage() {
   const { state, dispatch } = useApp();
@@ -13,6 +14,9 @@ export function ShopDetailPage() {
       dispatch({ type: 'SET_VIEW', payload: 'customer-menu' });
     }
   };
+
+  const timeStatus = checkShopStatus(shop.openingHours);
+  const isCurrentlyOpen = shop.isOpen && timeStatus.isOpen;
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -59,12 +63,12 @@ export function ShopDetailPage() {
                 <h1 className="text-xl font-bold">{shop.name}</h1>
                 <span
                   className={`px-2.5 py-0.5 text-[10px] font-mono uppercase tracking-wider rounded-full ${
-                    shop.isOpen
+                    isCurrentlyOpen
                       ? 'bg-primary/20 text-primary'
                       : 'bg-muted text-muted-foreground'
                   }`}
                 >
-                  {shop.isOpen ? 'Open' : 'Closed'}
+                  {isCurrentlyOpen ? 'Open' : 'Closed'}
                 </span>
               </div>
               <p className="text-sm text-muted-foreground mt-0.5">{shop.tagline}</p>
@@ -123,19 +127,33 @@ export function ShopDetailPage() {
               Opening Hours
             </h3>
             <div className="space-y-2">
-              {shop.openingHours.map((schedule, index) => (
-                <div
-                  key={index}
-                  className={`flex items-center justify-between p-4 rounded-[16px] ${schedule.isSpecialDay ? 'bg-primary/10 border border-primary/20' : 'bg-muted'}`}
-                >
-                  <span className={`text-[14px] ${schedule.isSpecialDay ? 'font-semibold text-primary' : 'font-semibold'}`}>
-                    {schedule.isSpecialDay ? (schedule.date || 'Special Day') : schedule.day}
-                  </span>
-                  <span className={`text-[13px] font-mono ${schedule.isSpecialDay ? 'text-primary font-medium' : 'text-muted-foreground'}`}>
-                    {schedule.hours}
-                  </span>
-                </div>
-              ))}
+              {shop.openingHours.length > 0 ? shop.openingHours.map((schedule, index) => {
+                const isSpecial = schedule.type === 'special';
+                
+                let dayName = isSpecial ? (schedule.date || 'Special Day') : ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][schedule.dayOfWeek ?? 0];
+                
+                if (isSpecial && schedule.reason) {
+                  dayName = `${schedule.reason} (${dayName})`;
+                }
+
+                const hoursText = schedule.isOpen ? `${schedule.openTime} - ${schedule.closeTime}` : 'Closed';
+
+                return (
+                  <div
+                    key={index}
+                    className={`flex items-center justify-between p-4 rounded-[16px] ${isSpecial ? 'bg-primary/10 border border-primary/20' : 'bg-muted'}`}
+                  >
+                    <span className={`text-[14px] ${isSpecial ? 'font-semibold text-primary' : 'font-semibold'}`}>
+                      {dayName}
+                    </span>
+                    <span className={`text-[13px] font-mono ${isSpecial ? 'text-primary font-medium' : 'text-muted-foreground'}`}>
+                      {hoursText}
+                    </span>
+                  </div>
+                );
+              }) : (
+                <div className="text-[14px] text-muted-foreground italic">No opening hours set</div>
+              )}
             </div>
           </div>
 

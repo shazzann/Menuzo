@@ -104,6 +104,7 @@ export interface Database {
           user_id: string
           website: string | null
           theme: Json | null
+          opening_hours: Json | null
           username: string | null
         }
         Insert: {

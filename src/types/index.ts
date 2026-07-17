@@ -13,6 +13,16 @@ export interface FoodItem {
   isAvailable: boolean;
 }
 
+export interface ShopSchedule {
+  type: 'regular' | 'special';
+  dayOfWeek?: number; // 0-6 (Sun-Sat) for regular days
+  date?: string; // YYYY-MM-DD for special days
+  reason?: string; // e.g. "Poya Day", "Renovation"
+  isOpen: boolean;
+  openTime: string; // "HH:mm" in 24h format
+  closeTime: string; // "HH:mm" in 24h format
+}
+
 export interface Shop {
   id: string;
   username: string;
@@ -22,12 +32,7 @@ export interface Shop {
   logo: string;
   banner: string;
   location: string;
-  openingHours: {
-    day: string;
-    hours: string;
-    isSpecialDay?: boolean;
-    date?: string;
-  }[];
+  openingHours: ShopSchedule[];
   contactNumber: string;
   contacts?: {
     id: string;

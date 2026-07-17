@@ -8,6 +8,7 @@ import { SpecialOffersCarousel } from '@/components/shared/SpecialOffersCarousel
 import { FoodCard } from '@/components/shared/FoodCard';
 import { BottomNav } from '@/components/shared/BottomNav';
 import { useSEO } from '@/hooks/useSEO';
+import { checkShopStatus } from '@/lib/timeUtils';
 import type { FoodItem } from '@/types';
 
 export function CustomerMenuPage() {
@@ -84,10 +85,19 @@ export function CustomerMenuPage() {
 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [categoriesWithItems, viewMode, activeTabId]);
+  }, [foodItems, activeTabId]);
 
-  const handleFoodClick = (item: FoodItem) => {
-    dispatch({ type: 'SELECT_FOOD_ITEM', payload: item });
+  const timeStatus = checkShopStatus(shop.openingHours);
+  const isCurrentlyOpen = shop.isOpen && timeStatus.isOpen;
+
+  useSEO({
+    title: `${shop.name} - Menu`,
+    description: shop.description || shop.tagline || `View the menu for ${shop.name}`,
+    image: shop.banner || shop.logo || undefined
+  });
+
+  const handleFoodClick = (food: FoodItem) => {
+    dispatch({ type: 'SELECT_FOOD_ITEM', payload: food });
     dispatch({ type: 'SET_VIEW', payload: 'customer-food-detail' });
   };
 
@@ -98,55 +108,67 @@ export function CustomerMenuPage() {
   };
 
   const handleShare = async () => {
-    const url = window.location.href;
-    if (navigator.share) {
-      try {
+    try {
+      if (navigator.share) {
         await navigator.share({
-          title: `${shop.name} Menu`,
-          text: `Check out ${shop.name}'s menu!`,
-          url: url,
+          title: shop.name,
+          text: `Check out the menu for ${shop.name}`,
+          url: window.location.href,
         });
-      } catch (err) {
-        if ((err as Error).name !== 'AbortError') {
-          console.error('Error sharing:', err);
-        }
+      } else {
+        await navigator.clipboard.writeText(window.location.href);
+        toast.success('Link copied to clipboard!');
       }
-    } else {
-      navigator.clipboard.writeText(url);
-      toast.success('Menu link copied to clipboard!');
+    } catch (err) {
+      console.error('Error sharing:', err);
     }
   };
 
   return (
-    <div className="min-h-screen bg-background pb-20">
-      <div className="relative h-48 overflow-hidden bg-muted flex items-center justify-center">
+    <div className="min-h-screen bg-muted/30 pb-20">
+      {/* Banner */}
+      <div className="h-40 sm:h-48 md:h-64 bg-muted relative">
         {shop.banner ? (
           <img
             src={shop.banner}
-            alt={shop.name}
+            alt="Shop banner"
             className="w-full h-full object-cover"
           />
         ) : (
-          <ImageIcon className="w-12 h-12 text-muted-foreground/20" />
+          <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground/50">
+            <ImageIcon className="w-8 h-8 mb-2" />
+            <span className="text-sm">No Banner</span>
+          </div>
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
-        <button
-          onClick={() => dispatch({ type: 'SET_VIEW', payload: 'landing' })}
-          className="absolute top-4 left-4 p-2 rounded-full bg-background/50 backdrop-blur-sm hover:bg-background/70 transition-colors text-foreground"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </button>
-        <button
-          onClick={handleShare}
-          className="absolute top-4 right-4 p-2 rounded-full bg-background/50 backdrop-blur-sm hover:bg-background/70 transition-colors text-foreground"
-        >
-          <Share2 className="w-5 h-5" />
-        </button>
+        <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/40 to-transparent" />
+        
+        {/* Navigation / Share */}
+        <div className="absolute top-4 left-4 right-4 flex justify-between">
+          <button
+            onClick={() => {
+              if (shop.id === 'shop-1') {
+                dispatch({ type: 'SET_VIEW', payload: 'landing' });
+              } else {
+                dispatch({ type: 'SET_VIEW', payload: 'customer-shop-detail' });
+              }
+            }}
+            className="w-10 h-10 rounded-full bg-background/80 backdrop-blur-sm shadow-sm flex items-center justify-center hover:bg-background transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          
+          <button
+            onClick={handleShare}
+            className="w-10 h-10 rounded-full bg-background/80 backdrop-blur-sm shadow-sm flex items-center justify-center hover:bg-background transition-colors"
+          >
+            <Share2 className="w-5 h-5" />
+          </button>
+        </div>
       </div>
 
-      {/* Shop Info */}
-      <div className="relative -mt-16 px-4">
-        <div className="flex items-end gap-4">
+      {/* Shop Info Card */}
+      <div className="mx-4 -mt-12 relative z-10 bg-card rounded-2xl p-4 shadow-sm border">
+        <div className="flex gap-4">
           <div className="w-24 h-24 rounded-2xl overflow-hidden border-4 border-background bg-muted flex-shrink-0 flex items-center justify-center">
             {shop.logo ? (
               <img
@@ -162,13 +184,13 @@ export function CustomerMenuPage() {
             <div className="flex items-center gap-2">
               <h1 className="font-bold text-xl">{shop.name}</h1>
               <span
-                className={`px-2.5 py-0.5 text-[10px] font-mono uppercase tracking-wider rounded-full ${
-                  shop.isOpen
+                className={`px-2.5 py-0.5 text-[10px] font-mono uppercase tracking-wider rounded-full flex-shrink-0 ${
+                  isCurrentlyOpen
                     ? 'bg-primary/20 text-primary'
                     : 'bg-muted text-muted-foreground'
                 }`}
               >
-                {shop.isOpen ? 'Open' : 'Closed'}
+                {isCurrentlyOpen ? 'Open' : 'Closed'}
               </span>
             </div>
             <p className="text-xs text-muted-foreground">{shop.tagline}</p>
@@ -186,8 +208,13 @@ export function CustomerMenuPage() {
             <span>{shop.contactNumber}</span>
           </div>
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <Clock className="w-3.5 h-3.5" />
-            <span>{shop.openingHours?.[0]?.hours || 'Opening hours not set'}</span>
+            <Clock className="w-3.5 h-3.5 flex-shrink-0" />
+            <span>
+              {isCurrentlyOpen 
+                ? (timeStatus.nextActionTime ? `Open until ${timeStatus.nextActionTime}` : 'Open Now') 
+                : 'Closed Now'}
+              {timeStatus.reason && ` (${timeStatus.reason})`}
+            </span>
           </div>
         </div>
       </div>
