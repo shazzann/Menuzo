@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useApp } from '@/store';
 import type { View } from '@/types';
 
-function getUrlForView(view: View, username: string): string | null {
+function getUrlForView(view: View, username: string, state: any): string | null {
   switch (view) {
     case 'landing': return '/';
     case 'login': return '/login';
@@ -20,6 +20,8 @@ function getUrlForView(view: View, username: string): string | null {
     case 'company-admin-login': return '/admin-login';
     case 'customer-menu': return `/${username}`;
     case 'customer-shop-detail': return `/${username}/shop`;
+    case 'customer-food-detail': 
+       return `/${username}/food${state.selectedFoodItem ? `/${state.selectedFoodItem.id}` : ''}`;
     case 'user-dashboard': return `/${username}/dashboard`;
     case 'admin-preview': return `/${username}/menupreview`;
     case 'admin-settings': return `/${username}/settings`;
@@ -53,7 +55,7 @@ export function RouterSync() {
       return;
     }
 
-    const expectedUrl = getUrlForView(currentView, username);
+    const expectedUrl = getUrlForView(currentView, username, state);
     if (expectedUrl && expectedUrl !== location.pathname) {
       if (currentView === lastView.current && lastPathname.current !== location.pathname) {
         // Browser back/forward navigation occurred. Let URL->State handle it.
@@ -115,6 +117,7 @@ export function RouterSync() {
           switch (page) {
             case 'menu': nextView = 'customer-menu'; break;
             case 'shop': nextView = 'customer-shop-detail'; break;
+            case 'food': nextView = 'customer-food-detail'; break;
             case 'dashboard': nextView = 'user-dashboard'; break;
             case 'menupreview': nextView = 'admin-preview'; break;
             case 'settings':

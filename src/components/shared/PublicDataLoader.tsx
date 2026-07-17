@@ -71,6 +71,16 @@ export function PublicDataLoader() {
               isAvailable: !!item.is_available,
             }));
             dispatch({ type: 'SET_FOOD_ITEMS', payload: formattedFood });
+
+            // Check if we are deeply linked to a food item
+            const pathParts = window.location.pathname.split('/').filter(Boolean);
+            if (pathParts[1] === 'food' && pathParts[2]) {
+               const deepLinkedFoodId = pathParts[2];
+               const foodToSelect = formattedFood.find(f => f.id === deepLinkedFoodId);
+               if (foodToSelect) {
+                 dispatch({ type: 'SELECT_FOOD_ITEM', payload: foodToSelect });
+               }
+            }
           }
         } else {
           dispatch({ type: 'SET_SHOP_NOT_FOUND', payload: true });

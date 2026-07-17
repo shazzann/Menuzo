@@ -46,41 +46,69 @@ export default async function handler(req, res) {
 
   // If there's a first segment and it's not reserved, treat it as a username
   const possibleUsername = segments[0];
+  const isFoodDetail = segments[1] === 'food' && segments[2];
+  const foodId = isFoodDetail ? segments[2] : null;
+
   if (possibleUsername && !reservedPaths.includes(possibleUsername) && !possibleUsername.includes('.')) {
-    // Fetch shop details from Supabase using the REST API
     const supabaseUrl = process.env.VITE_SUPABASE_URL;
     const anonKey = process.env.VITE_SUPABASE_ANON_KEY;
     
     if (supabaseUrl && anonKey) {
       try {
-        const url = `${supabaseUrl}/rest/v1/shops?username=eq.${possibleUsername}&select=name,description,logo,banner,tagline`;
-        const shopRes = await fetch(url, {
-          headers: {
-            'apikey': anonKey,
-            'Authorization': `Bearer ${anonKey}`,
-            'Content-Type': 'application/json'
-          }
-        });
-        
+        const headers = {
+          'apikey': anonKey,
+          'Authorization': `Bearer ${anonKey}`,
+          'Content-Type': 'application/json'
+        };
+
+        const shopUrl = `${supabaseUrl}/rest/v1/shops?username=eq.${possibleUsername}&select=name,description,logo,banner,tagline`;
+        const shopPromise = fetch(shopUrl, { headers });
+
+        let foodPromise = null;
+        if (foodId) {
+          const foodUrl = `${supabaseUrl}/rest/v1/menu_items?id=eq.${foodId}&select=name,description,tagline,image`;
+          foodPromise = fetch(foodUrl, { headers });
+        }
+
+        const [shopRes, foodRes] = await Promise.all([shopPromise, foodPromise]);
+
+        let shop = null;
         if (shopRes.ok) {
           const shops = await shopRes.json();
-          if (shops && shops.length > 0) {
-            const shop = shops[0];
-            const title = `${shop.name} | Digital Menu`;
-            const description = shop.description || shop.tagline || `View the digital menu for ${shop.name} on Menuzo.`;
-            const image = shop.logo || shop.banner || '/food-burger.jpg';
-            
-            // Replace the default tags in the HTML
-            html = html
-              .replace(/<title>.*?<\/title>/, `<title>${title}</title>`)
-              .replace(/<meta name="description" content=".*?" \/>/, `<meta name="description" content="${description}" />`)
-              .replace(/<meta property="og:title" content=".*?" \/>/, `<meta property="og:title" content="${title}" />`)
-              .replace(/<meta property="og:description" content=".*?" \/>/, `<meta property="og:description" content="${description}" />`)
-              .replace(/<meta property="og:image" content=".*?" \/>/, `<meta property="og:image" content="${image}" />`);
-          }
+          if (shops && shops.length > 0) shop = shops[0];
+        }
+
+        let food = null;
+        if (foodRes && foodRes.ok) {
+          const foods = await foodRes.json();
+          if (foods && foods.length > 0) food = foods[0];
+        }
+
+        let title = 'Menuzo | Digital Menu';
+        let description = 'Create premium QR menus for your restaurant in minutes.';
+        let image = '/food-burger.jpg';
+
+        if (food && shop) {
+          title = `${food.name} | ${shop.name}`;
+          description = food.description || food.tagline || `Check out ${food.name} at ${shop.name}!`;
+          image = food.image || shop.logo || shop.banner || '/food-burger.jpg';
+        } else if (shop) {
+          title = `${shop.name} | Digital Menu`;
+          description = shop.description || shop.tagline || `View the digital menu for ${shop.name} on Menuzo.`;
+          image = shop.logo || shop.banner || '/food-burger.jpg';
+        }
+
+        if (shop || food) {
+          // Replace the default tags in the HTML
+          html = html
+            .replace(/<title>.*?<\/title>/, `<title>${title}</title>`)
+            .replace(/<meta name="description" content=".*?" \/>/, `<meta name="description" content="${description}" />`)
+            .replace(/<meta property="og:title" content=".*?" \/>/, `<meta property="og:title" content="${title}" />`)
+            .replace(/<meta property="og:description" content=".*?" \/>/, `<meta property="og:description" content="${description}" />`)
+            .replace(/<meta property="og:image" content=".*?" \/>/, `<meta property="og:image" content="${image}" />`);
         }
       } catch (error) {
-        console.error('Error fetching shop for OG tags:', error);
+        console.error('Error fetching data for OG tags:', error);
       }
     }
   }

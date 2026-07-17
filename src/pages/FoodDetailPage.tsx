@@ -12,12 +12,12 @@ export function FoodDetailPage() {
   if (state.currentView === 'admin-food-detail') backView = 'admin-preview';
   if (state.currentView === 'admin-add-food-detail') backView = 'admin-add-food';
 
-  // Redirect back if no food item is selected — must be in useEffect, not during render
+  // Redirect back if no food item is selected and we have finished loading food items
   useEffect(() => {
-    if (!selectedFoodItem) {
+    if (!selectedFoodItem && state.foodItems.length > 0) {
       dispatch({ type: 'SET_VIEW', payload: backView });
     }
-  }, [selectedFoodItem, backView, dispatch]);
+  }, [selectedFoodItem, state.foodItems.length, backView, dispatch]);
 
   useSEO({
     title: selectedFoodItem ? `${selectedFoodItem.name} | ${shop.name}` : shop.name,
@@ -26,6 +26,13 @@ export function FoodDetailPage() {
   });
 
   if (!selectedFoodItem) {
+    if (state.foodItems.length === 0) {
+      return (
+        <div className="min-h-screen bg-background flex items-center justify-center">
+          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      );
+    }
     return null;
   }
 
