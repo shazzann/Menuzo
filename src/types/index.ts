@@ -49,6 +49,8 @@ export interface Shop {
   };
   categoryOrder?: string[];
   theme?: ThemeConfig;
+  view_count?: number;
+  qr_scan_count?: number;
 }
 
 export interface ThemeConfig {

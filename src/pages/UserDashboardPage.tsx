@@ -180,7 +180,7 @@ export function UserDashboardPage() {
               <p className="text-sm text-muted-foreground">Last 7 days</p>
             </div>
             <div className="text-right">
-              <p className="text-2xl font-bold">5,000</p>
+              <p className="text-2xl font-bold">{(shop.view_count || 0).toLocaleString()}</p>
               <span className="inline-flex items-center gap-1 text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-full text-[10px] font-medium mt-1">
                 <TrendingUp className="w-3 h-3" />
                 +24%
@@ -227,8 +227,8 @@ export function UserDashboardPage() {
             <div className="w-10 h-10 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center mb-2">
               <QrCode className="w-5 h-5" />
             </div>
-            <p className="text-2xl font-bold">12</p>
-            <p className="text-xs text-muted-foreground">QR Scans Today</p>
+            <p className="text-2xl font-bold">{(shop.qr_scan_count || 0).toLocaleString()}</p>
+            <p className="text-xs text-muted-foreground">Total QR Scans</p>
           </div>
         </div>
 

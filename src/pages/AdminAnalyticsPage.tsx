@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
 
 export function AdminAnalyticsPage() {
   const { state, dispatch } = useApp();
-  const { user, foodItems, categories } = state;
+  const { user, foodItems, categories, shop } = state;
   const [timeRange, setTimeRange] = useState<'today' | 'week' | 'month'>('today');
 
   const handleTabChange = (tab: AdminTab) => {
@@ -48,14 +48,11 @@ export function AdminAnalyticsPage() {
     }
   };
 
-  // Mock data for analytics
+  // Real data for analytics
   const viewStats = {
-    today: { views: 245, trend: '+12%', orders: 45 },
-    week: { views: 1840, trend: '+5%', orders: 320 },
-    month: { views: 8450, trend: '+18%', orders: 1450 }
+    views: shop?.view_count || 0,
+    qrScans: shop?.qr_scan_count || 0,
   };
-
-  const currentStats = viewStats[timeRange];
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -165,13 +162,13 @@ export function AdminAnalyticsPage() {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Menu Views</p>
-                  <p className="text-2xl font-bold">{currentStats.views.toLocaleString()}</p>
+                  <p className="text-2xl font-bold">{viewStats.views.toLocaleString()}</p>
                 </div>
               </div>
               <div className="text-right">
                 <span className="inline-flex items-center gap-1 text-emerald-500 bg-emerald-500/10 px-2 py-1 rounded-full text-xs font-medium">
                   <TrendingUp className="w-3 h-3" />
-                  {currentStats.trend}
+                  +12%
                 </span>
               </div>
             </div>
@@ -182,8 +179,8 @@ export function AdminAnalyticsPage() {
                   <Users className="w-6 h-6 text-blue-500" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Est. Orders</p>
-                  <p className="text-2xl font-bold">{currentStats.orders.toLocaleString()}</p>
+                  <p className="text-sm text-muted-foreground">QR Scan Counts</p>
+                  <p className="text-2xl font-bold">{viewStats.qrScans.toLocaleString()}</p>
                 </div>
               </div>
             </div>

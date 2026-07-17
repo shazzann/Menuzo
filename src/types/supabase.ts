@@ -106,6 +106,8 @@ export interface Database {
           theme: Json | null
           opening_hours: Json | null
           username: string | null
+          view_count: number | null
+          qr_scan_count: number | null
         }
         Insert: {
           banner?: string | null
@@ -128,6 +130,8 @@ export interface Database {
           theme?: Json | null
           username?: string | null
           opening_hours?: Json | null
+          view_count?: number | null
+          qr_scan_count?: number | null
         }
         Update: {
           banner?: string | null
@@ -150,12 +154,22 @@ export interface Database {
           theme?: Json | null
           username?: string | null
           opening_hours?: Json | null
+          view_count?: number | null
+          qr_scan_count?: number | null
         }
         Relationships: []
       }
     }
     Views: Record<string, never>
-    Functions: Record<string, never>
+    Functions: {
+      increment_shop_visits: {
+        Args: {
+          p_shop_id: string
+          p_is_qr: boolean
+        }
+        Returns: undefined
+      }
+    }
     Enums: Record<string, never>
     CompositeTypes: Record<string, never>
   }

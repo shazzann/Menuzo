@@ -72,7 +72,7 @@ export function AdminQrSettings({
       width: 180,
       height: 180,
       type: 'svg',
-      data: shopUrl,
+      data: shopUrl.includes('?') ? `${shopUrl}&source=qr` : `${shopUrl}?source=qr`,
       image: shopLogo ? `${shopLogo.replace('http://', 'https://')}?qr=1` : undefined,
       dotsOptions: {
         color: fgColor,

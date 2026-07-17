@@ -9,6 +9,7 @@ import { FoodCard } from '@/components/shared/FoodCard';
 import { BottomNav } from '@/components/shared/BottomNav';
 import { useSEO } from '@/hooks/useSEO';
 import { checkShopStatus } from '@/lib/timeUtils';
+import { supabase } from '@/lib/supabase';
 import type { FoodItem } from '@/types';
 
 export function CustomerMenuPage() {
@@ -52,6 +53,31 @@ export function CustomerMenuPage() {
     description: shop.tagline || shop.description,
     image: shop.banner || shop.logo,
   });
+
+  useEffect(() => {
+    if (shop?.id && typeof window !== 'undefined') {
+      const searchParams = new URLSearchParams(window.location.search);
+      const isQr = searchParams.get('source') === 'qr';
+      
+      const trackVisit = async () => {
+        try {
+          await supabase.rpc('increment_shop_visits', {
+            p_shop_id: shop.id,
+            p_is_qr: isQr
+          });
+        } catch (e) {
+          console.error('Analytics tracking failed:', e);
+        }
+      };
+
+      // Ensure we only track once per session to avoid double counting from React Strict Mode
+      const trackedKey = `tracked_visit_${shop.id}_${isQr}`;
+      if (!sessionStorage.getItem(trackedKey)) {
+        sessionStorage.setItem(trackedKey, 'true');
+        trackVisit();
+      }
+    }
+  }, [shop?.id]);
 
   useEffect(() => {
     if (viewMode === 'list') return;

@@ -72,7 +72,7 @@ export const SmallQrPreview = forwardRef<SmallQrPreviewRef, SmallQrPreviewProps>
       width: size,
       height: size,
       type: 'svg',
-      data: shopUrl,
+      data: shopUrl.includes('?') ? `${shopUrl}&source=qr` : `${shopUrl}?source=qr`,
       image: shopLogo ? `${shopLogo.replace('http://', 'https://')}?qr=1` : undefined,
       dotsOptions: {
         color: fgColor,
@@ -117,7 +117,7 @@ export const SmallQrPreview = forwardRef<SmallQrPreviewRef, SmallQrPreviewProps>
     const config = getPatternConfig(qrPattern);
 
     qrCode.current.update({
-      data: shopUrl,
+      data: shopUrl.includes('?') ? `${shopUrl}&source=qr` : `${shopUrl}?source=qr`,
       image: shopLogo ? `${shopLogo.replace('http://', 'https://')}?qr=1` : undefined,
       dotsOptions: { color: fgColor, type: config.value },
       cornersSquareOptions: { color: fgColor, type: config.eyeFrame },
