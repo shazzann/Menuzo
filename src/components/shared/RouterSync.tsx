@@ -38,24 +38,46 @@ export function RouterSync() {
   const navigate = useNavigate();
   const location = useLocation();
   const { shop, currentView } = state;
-  const username = shop.username || 'menuzo';
+  const username = shop.username;
   const lastPathname = useRef('');
   const lastView = useRef(currentView);
+  const isNavigating = useRef(false);
 
   // Sync State -> URL
   useEffect(() => {
+    const isPrivateAdminView = currentView.startsWith('admin-') || currentView === 'user-dashboard';
+    if (state.user && isPrivateAdminView && !shop.id) {
+      // Wait for AdminDataLoader to fetch the shop and its username before syncing URL
+      lastView.current = currentView;
+      lastPathname.current = location.pathname;
+      return;
+    }
+
     const expectedUrl = getUrlForView(currentView, username);
     if (expectedUrl && expectedUrl !== location.pathname) {
+      if (currentView === lastView.current && lastPathname.current !== location.pathname) {
+        // Browser back/forward navigation occurred. Let URL->State handle it.
+        return;
+      }
       lastView.current = currentView;
       lastPathname.current = expectedUrl;
+      isNavigating.current = true;
       navigate(expectedUrl, { replace: true });
     } else {
       lastView.current = currentView;
     }
-  }, [currentView, username, navigate, location.pathname]);
+  }, [currentView, username, navigate, location.pathname, state.user, shop.id]);
 
   // Sync URL -> State
   useEffect(() => {
+    if (isNavigating.current) {
+      if (location.pathname === lastPathname.current) {
+        isNavigating.current = false; // Navigation completed
+      } else {
+        return; // Navigation is still pending, skip URL->State sync
+      }
+    }
+
     if (location.pathname !== lastPathname.current) {
       lastPathname.current = location.pathname;
       const path = location.pathname;

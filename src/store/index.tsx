@@ -163,7 +163,7 @@ function appReducer(state: AppState, action: Action): AppState {
       return { ...state, foodItems: items, categories: extractCategories(items, state.shop.categoryOrder) };
     }
     case 'LOGIN': {
-      const shouldRedirect = state.currentView === 'login' || state.currentView === 'signup';
+      const shouldRedirect = state.currentView === 'login' || state.currentView === 'signup' || state.currentView === 'landing';
       return {
         ...state,
         user: action.payload,
