@@ -66,7 +66,7 @@ export default async function handler(req, res) {
 
         let foodPromise = null;
         if (foodId) {
-          const foodUrl = `${supabaseUrl}/rest/v1/menu_items?id=eq.${foodId}&select=name,description,tagline,image`;
+          const foodUrl = `${supabaseUrl}/rest/v1/food_items?id=eq.${foodId}&select=name,description,tagline,image`;
           foodPromise = fetch(foodUrl, { headers });
         }
 
@@ -105,7 +105,7 @@ export default async function handler(req, res) {
             .replace(/<meta name="description" content=".*?" \/>/, `<meta name="description" content="${description}" />`)
             .replace(/<meta property="og:title" content=".*?" \/>/, `<meta property="og:title" content="${title}" />`)
             .replace(/<meta property="og:description" content=".*?" \/>/, `<meta property="og:description" content="${description}" />`)
-            .replace(/<meta property="og:image" content=".*?" \/>/, `<meta property="og:image" content="${image}" />`);
+            .replace(/<meta property="og:image" content=".*?" \/>/, `<meta property="og:image" content="${image}" />\n    <meta name="twitter:card" content="summary_large_image" />\n    <meta name="twitter:image" content="${image}" />`);
         }
       } catch (error) {
         console.error('Error fetching data for OG tags:', error);
