@@ -50,6 +50,8 @@ export function AdminDataLoader() {
               website: shopData.website || '',
             },
             categoryOrder: shopData.category_order || undefined,
+            view_count: shopData.view_count || 0,
+            qr_scan_count: shopData.qr_scan_count || 0,
           };
           dispatch({ type: 'UPDATE_SHOP', payload: formattedShop });
 
