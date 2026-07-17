@@ -256,7 +256,7 @@ export function UserDashboardPage() {
                 <p className="text-xs text-muted-foreground mb-1.5 font-medium">Your Menu Link</p>
                 <div className="flex items-center gap-2 bg-muted/70 p-2 rounded-xl border border-border/50">
                   <span className="text-sm text-foreground truncate flex-1 ml-2 font-medium select-all">
-                    {typeof window !== 'undefined' ? `${window.location.host}/${shop.username || 'menuzo'}/menu` : `menuzo.com/${shop.username || 'menuzo'}/menu`}
+                    {typeof window !== 'undefined' ? `${window.location.host}/${shop.username || 'menuzo'}` : `menuzo.com/${shop.username || 'menuzo'}`}
                   </span>
                   <div className="flex items-center gap-1">
                     <Button size="icon" variant="ghost" className="h-8 w-8 hover:bg-background rounded-lg flex-shrink-0 text-muted-foreground hover:text-foreground shadow-sm" onClick={() => {
