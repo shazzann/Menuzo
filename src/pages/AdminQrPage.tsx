@@ -29,6 +29,9 @@ export function AdminQrPage() {
       }
 
       dispatch({ type: 'UPDATE_SHOP', payload: { theme: updatedTheme } });
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(`qr_generated_${shop.id}`, 'true');
+      }
       toast.success('QR settings saved!');
     } catch (err: any) {
       console.error('Error saving QR settings:', err);

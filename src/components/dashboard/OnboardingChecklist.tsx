@@ -4,20 +4,21 @@ import { useApp } from '@/store';
 import { motion } from 'framer-motion';
 
 export function OnboardingChecklist() {
-  const { state } = useApp();
+  const { state, dispatch } = useApp();
   
   // Calculate completion
-  const hasRestaurant = !!state.shop?.name;
+  const hasRestaurant = !!state.shop?.name && state.shop.name !== 'My Kitchen' && state.shop.name !== 'My Awesome Shop';
   const hasTheme = !!state.shop?.theme;
   const hasFood = state.foodItems && state.foodItems.length > 0;
+  const hasGeneratedQR = typeof window !== 'undefined' && localStorage.getItem(`qr_generated_${state.shop?.id}`) === 'true';
   
   // For the sake of MVP dashboard empty state:
   const steps = [
-    { label: 'Restaurant created', completed: hasRestaurant },
-    { label: 'Theme selected', completed: hasTheme },
-    { label: 'Add first menu item', completed: hasFood },
-    { label: 'Generate QR', completed: false } // In MVP they just view it on Dashboard
-  ];
+    { label: 'Restaurant created', completed: hasRestaurant, view: 'admin-settings' },
+    { label: 'Theme selected', completed: hasTheme, view: 'admin-theme' },
+    { label: 'Add first menu item', completed: hasFood, view: 'admin-add-food' },
+    { label: 'Generate QR', completed: hasGeneratedQR, view: 'admin-qr' } 
+  ] as const;
   
   const completedCount = steps.filter(s => s.completed).length;
   const progress = Math.round((completedCount / steps.length) * 100);
@@ -58,7 +59,12 @@ export function OnboardingChecklist() {
               {step.label}
             </span>
             {!step.completed && idx === completedCount && (
-              <Button size="sm" variant="ghost" className="ml-auto p-0 h-auto hover:bg-transparent text-primary hover:text-primary/80">
+              <Button 
+                size="sm" 
+                variant="ghost" 
+                className="ml-auto p-0 h-auto hover:bg-transparent text-primary hover:text-primary/80"
+                onClick={() => dispatch({ type: 'SET_VIEW', payload: step.view })}
+              >
                 Start <ArrowRight className="w-4 h-4 ml-1" />
               </Button>
             )}

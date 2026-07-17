@@ -262,6 +262,11 @@ export function UserDashboardPage() {
                     <Button size="icon" variant="ghost" className="h-8 w-8 hover:bg-background rounded-lg flex-shrink-0 text-muted-foreground hover:text-foreground shadow-sm" onClick={() => {
                       if (qrRef.current) {
                         qrRef.current.download(`${shop.name.toLowerCase().replace(/\s+/g, '-')}-qr`);
+                        if (typeof window !== 'undefined') {
+                          localStorage.setItem(`qr_generated_${shop.id}`, 'true');
+                          // Force a tiny re-render for the checklist if it's visible by dispatching a dummy action
+                          dispatch({ type: 'UPDATE_SHOP', payload: { ...shop } });
+                        }
                         toast.success('QR Code downloaded!');
                       }
                     }}>
