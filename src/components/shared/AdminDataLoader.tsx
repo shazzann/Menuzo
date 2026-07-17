@@ -29,6 +29,8 @@ export function AdminDataLoader() {
         }
 
         if (shopData) {
+          const dailyStats = await RestaurantService.getShopDailyStats(shopData.id);
+
           const formattedShop: Shop = {
             id: shopData.id,
             username: shopData.username || `menuzo${Math.floor(100 + Math.random() * 900)}`,
@@ -52,6 +54,7 @@ export function AdminDataLoader() {
             categoryOrder: shopData.category_order || undefined,
             view_count: shopData.view_count || 0,
             qr_scan_count: shopData.qr_scan_count || 0,
+            daily_stats: dailyStats || [],
           };
           dispatch({ type: 'UPDATE_SHOP', payload: formattedShop });
 

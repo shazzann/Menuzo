@@ -51,6 +51,13 @@ export interface Shop {
   theme?: ThemeConfig;
   view_count?: number;
   qr_scan_count?: number;
+  daily_stats?: DailyStat[];
+}
+
+export interface DailyStat {
+  date: string;
+  views: number;
+  qr_scans: number;
 }
 
 export interface ThemeConfig {

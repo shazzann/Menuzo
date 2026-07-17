@@ -159,6 +159,38 @@ export interface Database {
         }
         Relationships: []
       }
+      shop_daily_stats: {
+        Row: {
+          id: string
+          shop_id: string
+          date: string
+          views: number
+          qr_scans: number
+        }
+        Insert: {
+          id?: string
+          shop_id: string
+          date: string
+          views?: number
+          qr_scans?: number
+        }
+        Update: {
+          id?: string
+          shop_id?: string
+          date?: string
+          views?: number
+          qr_scans?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shop_daily_stats_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
     }
     Views: Record<string, never>
     Functions: {

@@ -16,7 +16,7 @@ import { Button } from '@/components/ui/button';
 import { useApp } from '@/store';
 import { BottomNav } from '@/components/shared/BottomNav';
 import { OnboardingChecklist } from '@/components/dashboard/OnboardingChecklist';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useMemo } from 'react';
 import { toast } from 'sonner';
 import { SmallQrPreview, type SmallQrPreviewRef } from '@/components/admin/SmallQrPreview';
 import type { AdminTab } from '@/types';
@@ -30,22 +30,36 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 
-// Mock data for the chart
-const chartData = [
-  { name: 'Mon', views: 400 },
-  { name: 'Tue', views: 300 },
-  { name: 'Wed', views: 550 },
-  { name: 'Thu', views: 450 },
-  { name: 'Fri', views: 700 },
-  { name: 'Sat', views: 1200 },
-  { name: 'Sun', views: 1400 },
-];
+
 
 export function UserDashboardPage() {
   const { state, dispatch } = useApp();
   const { shop, foodItems, user } = state;
   const [isLoadingData, setIsLoadingData] = useState(true);
   const qrRef = useRef<SmallQrPreviewRef>(null);
+
+  const chartData = useMemo(() => {
+    const data = [];
+    const today = new Date();
+    
+    // Create an array of the last 7 days
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(today);
+      d.setDate(d.getDate() - i);
+      const dateString = d.toISOString().split('T')[0];
+      const dayName = d.toLocaleDateString('en-US', { weekday: 'short' });
+      
+      const statForDay = shop?.daily_stats?.find(s => s.date === dateString);
+      
+      data.push({
+        name: dayName,
+        views: statForDay ? statForDay.views : 0,
+        qrScans: statForDay ? statForDay.qr_scans : 0,
+      });
+    }
+    
+    return data;
+  }, [shop?.daily_stats]);
 
   useEffect(() => {
     // Data is now loaded globally by AdminDataLoader

@@ -74,5 +74,21 @@ export const RestaurantService = {
       
     if (error) throw error;
     return data;
+  },
+
+  async getShopDailyStats(shopId: string) {
+    const today = new Date();
+    const sevenDaysAgo = new Date(today);
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    const { data, error } = await supabase
+      .from('shop_daily_stats')
+      .select('*')
+      .eq('shop_id', shopId)
+      .gte('date', sevenDaysAgo.toISOString().split('T')[0])
+      .order('date', { ascending: true });
+
+    if (error) throw error;
+    return data;
   }
 };
