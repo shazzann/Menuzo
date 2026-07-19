@@ -111,6 +111,7 @@ export type View =
   | 'admin-theme'
   | 'admin-qr'
   | 'admin-security'
+  | 'brand-book'
   | 'company-admin'
   | 'company-admin-login';
 

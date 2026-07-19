@@ -205,3 +205,58 @@
 .animate-pulse-glow {
   animation: pulse-glow 2s ease-in-out infinite;
 }
+
+/* ── Print Styles (Brand Book) ──────────────────────────── */
+@media print {
+  /* Hide interactive/nav elements */
+  aside,
+  .lg\:ml-64,
+  nav,
+  button,
+  .fixed,
+  .sticky {
+    position: static !important;
+  }
+
+  aside,
+  [aria-label="Brand Book navigation"],
+  [aria-label="Back to top"],
+  [aria-label="Toggle navigation"] {
+    display: none !important;
+  }
+
+  main {
+    margin-left: 0 !important;
+  }
+
+  /* Force light backgrounds */
+  body,
+  .bg-background,
+  .bg-card {
+    background: white !important;
+    color: black !important;
+  }
+
+  /* Remove shadows and transforms */
+  * {
+    box-shadow: none !important;
+    text-shadow: none !important;
+    transform: none !important;
+  }
+
+  /* Ensure color swatches print */
+  [style*="background-color"] {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Page breaks */
+  section {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  h2, h3 {
+    page-break-after: avoid;
+  }
+}

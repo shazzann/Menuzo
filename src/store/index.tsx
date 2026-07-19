@@ -38,6 +38,7 @@ const getInitialView = (): View => {
     const path = window.location.pathname;
     if (path === '/' || path === '') return 'landing';
     if (path === '/login') return 'login';
+    if (path === '/brand-book') return 'brand-book';
     if (path === '/admin') return 'company-admin-login';
     if (path.startsWith('/admin-portal') || path === '/admin-login') return 'company-admin';
     

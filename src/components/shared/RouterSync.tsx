@@ -16,6 +16,7 @@ function getUrlForView(view: View, username: string, state: any): string | null 
     case 'seo-qr-menu': return '/qr-menu';
     case 'seo-digital-menu': return '/digital-menu';
     case 'seo-restaurant-menu': return '/restaurant-menu';
+    case 'brand-book': return '/brand-book';
     case 'company-admin': return '/admin-portal';
     case 'company-admin-login': return '/admin-login';
     case 'customer-menu': return `/${username}`;
@@ -96,6 +97,7 @@ export function RouterSync() {
         '/qr-menu': 'seo-qr-menu',
         '/digital-menu': 'seo-digital-menu',
         '/restaurant-menu': 'seo-restaurant-menu',
+        '/brand-book': 'brand-book',
         '/admin-portal': 'company-admin',
         '/admin-login': 'company-admin-login',
       };

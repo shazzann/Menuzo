@@ -23,6 +23,7 @@ import { UserDashboardPage } from '@/pages/UserDashboardPage';
 import { CompanyAdminPage } from '@/pages/CompanyAdminPage';
 import { CompanyAdminLoginPage } from '@/pages/CompanyAdminLoginPage';
 import { ShopNotFoundPage } from '@/pages/ShopNotFoundPage';
+import { BrandBookPage } from '@/pages/BrandBookPage';
 import { Toaster } from '@/components/ui/sonner';
 
 import { useEffect, useState } from 'react';
@@ -173,6 +174,8 @@ function AppContent() {
       return <CompanyAdminPage />;
     case 'company-admin-login':
       return <CompanyAdminLoginPage />;
+    case 'brand-book':
+      return <BrandBookPage />;
     default:
       return <LandingPage />;
   }
