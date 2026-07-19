@@ -1,34 +1,62 @@
-import { CheckCircle2, ArrowRight } from 'lucide-react';
+import { CheckCircle2, XCircle, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 
+interface PricingPlan {
+  name: string;
+  price: string;
+  period?: string;
+  description: string;
+  features: string[];
+  notIncluded?: string[];
+  cta: string;
+  popular: boolean;
+  badge?: string;
+}
+
 export function PricingSection() {
-  const plans = [
+  const plans: PricingPlan[] = [
     {
       name: 'Free',
-      price: '$0',
-      description: 'Perfect for getting started.',
-      features: ['Up to 50 menu items', '1 location', 'Basic QR code', 'Standard themes', 'Community support'],
-      cta: 'Get Started',
+      price: 'Free',
+      period: 'Forever',
+      description: 'Perfect for cafés and small restaurants getting started with digital menus.',
+      features: [
+        'Up to 10 Menu Items',
+        'Up to 2 Categories',
+        'QR Code Menu',
+        'Custom Theme Designer',
+        'Custom QR Code Branding',
+        'Analytics Dashboard',
+        'Restaurant Profile',
+        'Shareable Menu Link'
+      ],
+      notIncluded: [
+        'Custom Menu URL',
+        'Priority Support'
+      ],
+      cta: 'Get Started Free',
       popular: false,
     },
     {
-      name: 'Starter',
+      name: 'Pro',
       price: '$19',
       period: '/mo',
-      description: 'Everything you need to grow.',
-      features: ['Unlimited menu items', 'Custom QR code', 'Premium themes', 'Basic analytics', 'Priority support'],
-      cta: 'Start 14-day trial',
+      description: 'Everything you need to run a professional digital menu with your own branding, advanced analytics, and higher limits.',
+      features: [
+        'Up to 100 Menu Items',
+        'Up to 20 Categories',
+        'QR Code Menu',
+        'Custom Theme Designer',
+        'Custom QR Code Branding',
+        'Custom Menu URL',
+        'Advanced Analytics Dashboard',
+        'Priority Support',
+        'Restaurant Profile',
+        'Shareable Menu Link'
+      ],
+      cta: 'Upgrade to Pro',
       popular: true,
-    },
-    {
-      name: 'Business',
-      price: '$49',
-      period: '/mo',
-      description: 'For multi-location restaurants.',
-      features: ['Up to 5 locations', 'Advanced analytics', 'Remove Menuzo branding', 'API access', 'Dedicated manager'],
-      cta: 'Contact Sales',
-      popular: false,
     }
   ];
 
@@ -51,7 +79,15 @@ export function PricingSection() {
           </p>
         </motion.div>
 
-        <div className="grid md:grid-cols-3 gap-8 items-center">
+        <div 
+          className={`grid gap-8 items-center mx-auto max-w-5xl ${
+            plans.length === 1
+              ? "grid-cols-1 max-w-md"
+              : plans.length === 2
+              ? "grid-cols-1 md:grid-cols-2"
+              : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
+          }`}
+        >
           {plans.map((plan, i) => (
             <motion.div 
               key={i} 
@@ -62,9 +98,9 @@ export function PricingSection() {
               whileHover={{ y: -10 }}
               className={`relative p-10 rounded-[2.5rem] border ${plan.popular ? 'border-primary bg-primary/5 shadow-2xl scale-105 z-10' : 'border-border/50 bg-card shadow-lg hover:shadow-xl'}`}
             >
-              {plan.popular && (
+              {plan.badge && (
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1.5 bg-primary text-primary-foreground text-xs font-bold uppercase tracking-widest rounded-full shadow-lg">
-                  Most Popular
+                  {plan.badge}
                 </div>
               )}
               <h3 className="text-2xl font-bold mb-2">{plan.name}</h3>
@@ -82,8 +118,17 @@ export function PricingSection() {
                     {feat}
                   </li>
                 ))}
+                {plan.notIncluded?.map((feat, idx) => (
+                  <li key={`not-${idx}`} className="flex items-center gap-4 text-base font-medium text-muted-foreground/40">
+                    <XCircle className="w-6 h-6 shrink-0 text-muted-foreground/30" />
+                    {feat}
+                  </li>
+                ))}
               </ul>
-              <Button className="w-full h-14 rounded-2xl text-lg font-semibold" variant={plan.popular ? 'default' : 'outline'}>
+              <Button 
+                className="w-full h-14 rounded-2xl text-lg font-semibold" 
+                variant={plan.popular ? 'default' : 'outline'}
+              >
                 {plan.cta}
                 {plan.popular && <ArrowRight className="w-5 h-5 ml-2" />}
               </Button>
