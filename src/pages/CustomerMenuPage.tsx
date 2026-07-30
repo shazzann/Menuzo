@@ -262,6 +262,7 @@ export function CustomerMenuPage() {
 
       {/* Categories */}
       <CategoryTabs
+        className="top-0"
         categories={categoriesWithItems}
         selectedCategory={viewMode === 'rows' ? activeTabId : selectedCategory}
         onSelectCategory={(categoryId) => {
