@@ -3,22 +3,44 @@ import type { ShopSchedule } from '@/types';
 // Sri Lanka Standard Time (GMT+5:30)
 const TIMEZONE = 'Asia/Colombo';
 
-export function checkShopStatus(schedules: ShopSchedule[] | undefined): { isOpen: boolean; nextActionTime?: string; reason?: string } {
-  if (!schedules || schedules.length === 0) {
-    return { isOpen: true }; // Default to open if no schedule is set
-  }
-
-  // Get current time in Sri Lankan timezone
+export function getTodayDateString(): string {
   const now = new Date();
-  
-  // Format current date as YYYY-MM-DD in the target timezone
   const formatterDate = new Intl.DateTimeFormat('en-CA', { 
     timeZone: TIMEZONE, 
     year: 'numeric', 
     month: '2-digit', 
     day: '2-digit' 
   });
-  const currentDateStr = formatterDate.format(now); // e.g. "2024-12-25"
+  return formatterDate.format(now);
+}
+
+/**
+ * Automatically removes special dates that have already passed.
+ * Retains all regular schedules and only special dates for today or the future.
+ */
+export function filterExpiredSpecialDates(schedules: ShopSchedule[] | undefined): ShopSchedule[] {
+  if (!schedules || !Array.isArray(schedules)) return [];
+  const todayStr = getTodayDateString();
+  return schedules.filter((schedule) => {
+    if (schedule.type === 'special') {
+      if (!schedule.date) return false;
+      return schedule.date >= todayStr;
+    }
+    return true;
+  });
+}
+
+export function checkShopStatus(schedules: ShopSchedule[] | undefined): { isOpen: boolean; nextActionTime?: string; reason?: string } {
+  if (!schedules || schedules.length === 0) {
+    return { isOpen: true }; // Default to open if no schedule is set
+  }
+
+  const activeSchedules = filterExpiredSpecialDates(schedules);
+
+  // Get current time in Sri Lankan timezone
+  const now = new Date();
+  
+  const currentDateStr = getTodayDateString(); // e.g. "2024-12-25"
   
   // Format current day of week (0 = Sunday, 1 = Monday)
   const formatterDay = new Intl.DateTimeFormat('en-US', {
@@ -39,7 +61,7 @@ export function checkShopStatus(schedules: ShopSchedule[] | undefined): { isOpen
   const currentTimeStr = formatterTime.format(now); // e.g. "14:30"
 
   // 1. Check for a special day match
-  const specialSchedule = schedules.find(s => s.type === 'special' && s.date === currentDateStr);
+  const specialSchedule = activeSchedules.find(s => s.type === 'special' && s.date === currentDateStr);
   
   if (specialSchedule) {
     if (!specialSchedule.isOpen) {
@@ -55,7 +77,7 @@ export function checkShopStatus(schedules: ShopSchedule[] | undefined): { isOpen
   }
 
   // 2. Check regular schedule for today
-  const regularSchedule = schedules.find(s => s.type === 'regular' && s.dayOfWeek === currentDayOfWeek);
+  const regularSchedule = activeSchedules.find(s => s.type === 'regular' && s.dayOfWeek === currentDayOfWeek);
   
   if (regularSchedule) {
     if (!regularSchedule.isOpen) {

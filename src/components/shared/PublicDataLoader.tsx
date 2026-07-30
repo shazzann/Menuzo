@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useApp } from '@/store';
 import { RestaurantService, MenuService } from '@/services';
+import { filterExpiredSpecialDates } from '@/lib/timeUtils';
 import type { Shop, FoodItem } from '@/types';
 
 export function PublicDataLoader() {
@@ -44,7 +45,7 @@ export function PublicDataLoader() {
             logo: shopData.logo || '',
             banner: shopData.banner || '',
             username: shop.username,
-            openingHours: Array.isArray((shopData as any).opening_hours) ? (shopData as any).opening_hours : [],
+            openingHours: filterExpiredSpecialDates(Array.isArray((shopData as any).opening_hours) ? (shopData as any).opening_hours : []),
             socialLinks: {
               instagram: shopData.instagram || '',
               facebook: shopData.facebook || '',

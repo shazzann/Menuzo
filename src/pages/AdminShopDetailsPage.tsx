@@ -10,6 +10,7 @@ import { useApp } from '@/store';
 
 import type { Database } from '@/types/supabase';
 import { StorageService, RestaurantService } from '@/services';
+import { filterExpiredSpecialDates, getTodayDateString } from '@/lib/timeUtils';
 import { ImageCropperModal } from '@/components/shared/ImageCropperModal';
 import { ThemedMap } from '@/components/shared/ThemedMap';
 import {
@@ -39,7 +40,7 @@ export function AdminShopDetailsPage() {
     contacts: shop.contacts || [],
     email: shop.email || user?.email || '',
     isOpen: shop.isOpen,
-    openingHours: [...shop.openingHours],
+    openingHours: filterExpiredSpecialDates(shop.openingHours),
     instagram: shop.socialLinks?.instagram || '',
     facebook: shop.socialLinks?.facebook || '',
     website: shop.socialLinks?.website || '',
@@ -117,7 +118,7 @@ export function AdminShopDetailsPage() {
         ...prev.openingHours,
         {
           type: 'special',
-          date: new Date().toISOString().split('T')[0],
+          date: getTodayDateString(),
           reason: '',
           isOpen: false,
           openTime: '09:00',
@@ -147,6 +148,7 @@ export function AdminShopDetailsPage() {
     try {
       type ShopUpdate = Database['public']['Tables']['shops']['Update'];
       
+      const cleanedHours = filterExpiredSpecialDates(formData.openingHours);
       const updatePayload: ShopUpdate = {
         name: formData.name,
         tagline: formData.tagline || null,
@@ -162,7 +164,7 @@ export function AdminShopDetailsPage() {
         logo: formData.logo || null,
         banner: formData.banner || null,
         theme: formData.theme as any,
-        opening_hours: formData.openingHours as any,
+        opening_hours: cleanedHours as any,
       };
 
       let finalShopId = shop.id;
@@ -187,10 +189,12 @@ export function AdminShopDetailsPage() {
         await RestaurantService.updateRestaurant(finalShopId, updatePayload);
       }
 
+      setFormData(prev => ({ ...prev, openingHours: cleanedHours }));
       dispatch({ 
         type: 'UPDATE_SHOP', 
         payload: { 
           ...formData,
+          openingHours: cleanedHours,
           socialLinks: {
             instagram: formData.instagram,
             facebook: formData.facebook,
@@ -660,6 +664,7 @@ export function AdminShopDetailsPage() {
                       <div className="flex items-center justify-between">
                         <Input
                           type="date"
+                          min={getTodayDateString()}
                           value={schedule.date || ''}
                           onChange={(e) => handleHoursChange(schedule.originalIndex, 'date', e.target.value)}
                           disabled={!isEditing}

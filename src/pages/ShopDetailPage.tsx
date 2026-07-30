@@ -3,7 +3,7 @@ import { useApp } from '@/store';
 import { BottomNav } from '@/components/shared/BottomNav';
 import { LocationCard } from '@/components/shared/LocationCard';
 import type { AdminTab } from '@/types';
-import { checkShopStatus } from '@/lib/timeUtils';
+import { checkShopStatus, filterExpiredSpecialDates } from '@/lib/timeUtils';
 
 export function ShopDetailPage() {
   const { state, dispatch } = useApp();
@@ -188,7 +188,7 @@ export function ShopDetailPage() {
 
                 {/* Special Hours */}
                 {(() => {
-                  const specialHours = [...shop.openingHours]
+                  const specialHours = filterExpiredSpecialDates([...shop.openingHours])
                     .filter(s => s.type === 'special')
                     .sort((a, b) => (a.date || '').localeCompare(b.date || ''));
 

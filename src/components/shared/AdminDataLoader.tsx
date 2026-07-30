@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useApp } from '@/store';
 import { RestaurantService, MenuService } from '@/services';
+import { filterExpiredSpecialDates } from '@/lib/timeUtils';
 import type { Shop, FoodItem } from '@/types';
 
 export function AdminDataLoader() {
@@ -31,6 +32,16 @@ export function AdminDataLoader() {
         if (shopData) {
           const dailyStats = await RestaurantService.getShopDailyStats(shopData.id);
 
+          const rawOpeningHours = Array.isArray((shopData as any).opening_hours) ? (shopData as any).opening_hours : [];
+          const activeOpeningHours = filterExpiredSpecialDates(rawOpeningHours);
+
+          // Automatically delete expired special dates from the database if any have passed
+          if (activeOpeningHours.length !== rawOpeningHours.length && shopData.id) {
+            RestaurantService.updateRestaurant(shopData.id, { opening_hours: activeOpeningHours as any }).catch(err => {
+              console.error('Failed to clean up expired special dates:', err);
+            });
+          }
+
           const formattedShop: Shop = {
             id: shopData.id,
             username: shopData.username || `menuzo${Math.floor(100 + Math.random() * 900)}`,
@@ -45,7 +56,7 @@ export function AdminDataLoader() {
             logo: shopData.logo || '',
             banner: shopData.banner || '',
             theme: (shopData.theme as any) || undefined,
-            openingHours: Array.isArray((shopData as any).opening_hours) ? (shopData as any).opening_hours : [],
+            openingHours: activeOpeningHours,
             socialLinks: {
               instagram: shopData.instagram || '',
               facebook: shopData.facebook || '',
