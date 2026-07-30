@@ -32,6 +32,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { RouterSync } from '@/components/shared/RouterSync';
 import { PublicDataLoader } from '@/components/shared/PublicDataLoader';
 import { AdminDataLoader } from '@/components/shared/AdminDataLoader';
+import { ShopThemeApplier } from '@/components/shared/ShopThemeApplier';
 
 function AppContent() {
   const { state, dispatch } = useApp();
@@ -189,6 +190,7 @@ function App() {
           <RouterSync />
           <PublicDataLoader />
           <AdminDataLoader />
+          <ShopThemeApplier />
           <AppContent />
         </BrowserRouter>
         <Toaster />
