@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useApp } from '@/store';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Store, Loader2, User, ChevronRight } from 'lucide-react';
+import { Store, Loader2, User, ChevronRight, ArrowLeft } from 'lucide-react';
 import { trackEvent } from '@/lib/analytics';
 import { RestaurantService } from '@/services/restaurant.service';
 import { toast } from 'sonner';
@@ -61,7 +61,13 @@ export function OnboardingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-muted/20 py-12 px-4 flex flex-col items-center justify-center">
+    <div className="min-h-screen bg-muted/20 py-12 px-4 flex flex-col items-center justify-center relative">
+      <div className="absolute top-6 left-6">
+        <Button variant="ghost" onClick={() => window.location.href = '/'} className="gap-2 text-muted-foreground hover:text-foreground">
+          <ArrowLeft className="w-4 h-4" />
+          Back to Home
+        </Button>
+      </div>
       <div className="w-full max-w-3xl bg-card border border-border shadow-xl rounded-3xl p-8 md:p-12">
         <div className="space-y-6">
           <h2 className="text-3xl font-bold flex items-center gap-3">

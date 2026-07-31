@@ -15,6 +15,7 @@ import { CompanyShopDetail } from '@/components/company-admin/CompanyShopDetail'
 import { CompanyPlans } from '@/components/company-admin/CompanyPlans';
 import { CompanyReports } from '@/components/company-admin/CompanyReports';
 import { CompanySupport } from '@/components/company-admin/CompanySupport';
+import { CompanyThemeLibrary } from '@/components/company-admin/CompanyThemeLibrary';
 import { CompanySettings } from '@/components/company-admin/CompanySettings';
 import { CompanyAuditLogs } from '@/components/company-admin/CompanyAuditLogs';
 import { CompanySystemHealth } from '@/components/company-admin/CompanySystemHealth';
@@ -180,6 +181,9 @@ export function CompanyAdminPage() {
     if (currentSection === 'shop-detail' && state.selectedManagedShop) {
       return <CompanyShopDetail />;
     }
+    
+    // Force Vite to re-compile
+    console.log('Rendering section:', currentSection);
 
     switch (currentSection) {
       case 'dashboard':
@@ -201,6 +205,9 @@ export function CompanyAdminPage() {
       case 'live-chat':
       case 'messages':
         return <CompanySupport />;
+      case 'theme-library':
+      case 'theme-marketplace':
+        return <CompanyThemeLibrary />;
       case 'settings-general':
       case 'settings-security':
       case 'settings-billing':

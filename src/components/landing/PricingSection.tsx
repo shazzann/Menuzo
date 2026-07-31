@@ -2,63 +2,20 @@ import { CheckCircle2, XCircle, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 
-interface PricingPlan {
-  name: string;
-  price: string;
-  period?: string;
-  description: string;
-  features: string[];
-  notIncluded?: string[];
-  cta: string;
-  popular: boolean;
-  badge?: string;
-}
+import { useEffect, useState } from 'react';
+import { PricingService, type PricingPlan } from '@/services/pricing.service';
 
 export function PricingSection() {
-  const plans: PricingPlan[] = [
-    {
-      name: 'Free',
-      price: 'Free',
-      period: 'Forever',
-      description: 'Perfect for cafés and small restaurants getting started with digital menus.',
-      features: [
-        'Up to 10 Menu Items',
-        'Up to 2 Categories',
-        'QR Code Menu',
-        'Custom Theme Designer',
-        'Custom QR Code Branding',
-        'Analytics Dashboard',
-        'Restaurant Profile',
-        'Shareable Menu Link'
-      ],
-      notIncluded: [
-        'Custom Menu URL',
-        'Priority Support'
-      ],
-      cta: 'Get Started Free',
-      popular: false,
-    },
-    {
-      name: 'Pro',
-      price: '$19',
-      period: '/mo',
-      description: 'Everything you need to run a professional digital menu with your own branding, advanced analytics, and higher limits.',
-      features: [
-        'Up to 100 Menu Items',
-        'Up to 20 Categories',
-        'QR Code Menu',
-        'Custom Theme Designer',
-        'Custom QR Code Branding',
-        'Custom Menu URL',
-        'Advanced Analytics Dashboard',
-        'Priority Support',
-        'Restaurant Profile',
-        'Shareable Menu Link'
-      ],
-      cta: 'Upgrade to Pro',
-      popular: true,
-    }
-  ];
+  const [plans, setPlans] = useState<PricingPlan[]>([]);
+
+  useEffect(() => {
+    const loadPlans = () => setPlans(PricingService.getPlans());
+    loadPlans();
+
+    const handleUpdate = () => loadPlans();
+    window.addEventListener('pricing_updated', handleUpdate);
+    return () => window.removeEventListener('pricing_updated', handleUpdate);
+  }, []);
 
   return (
     <section id="pricing" className="py-32 px-4 bg-muted/20 relative overflow-hidden border-t border-border/50">
