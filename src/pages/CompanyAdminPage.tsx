@@ -19,6 +19,7 @@ import { CompanyThemeLibrary } from '@/components/company-admin/CompanyThemeLibr
 import { CompanySettings } from '@/components/company-admin/CompanySettings';
 import { CompanyAuditLogs } from '@/components/company-admin/CompanyAuditLogs';
 import { CompanySystemHealth } from '@/components/company-admin/CompanySystemHealth';
+import { CompanyPaymentQueue } from '@/components/company-admin/CompanyPaymentQueue';
 
 interface NavGroup {
   label: string;
@@ -32,17 +33,14 @@ const navGroups: NavGroup[] = [
     icon: <Store className="w-4 h-4" />,
     items: [
       { label: 'Shops', section: 'shops', icon: <Store className="w-4 h-4" /> },
-      { label: 'Verification', section: 'shop-verification', icon: <ShieldCheck className="w-4 h-4" /> },
-      { label: 'Requests', section: 'shop-requests', icon: <FileText className="w-4 h-4" /> },
     ],
   },
   {
-    label: 'Plans',
+    label: 'Payments',
     icon: <CreditCard className="w-4 h-4" />,
     items: [
-      { label: 'Subscription Plans', section: 'subscription-plans', icon: <CreditCard className="w-4 h-4" /> },
-      { label: 'Coupons', section: 'coupons', icon: <Tag className="w-4 h-4" /> },
-      { label: 'Promotions', section: 'promotions', icon: <Megaphone className="w-4 h-4" /> },
+      { label: 'Pending Requests', section: 'payments-pending', icon: <CreditCard className="w-4 h-4" /> },
+      { label: 'Payment History', section: 'payments-history', icon: <FileText className="w-4 h-4" /> },
     ],
   },
   {
@@ -50,55 +48,6 @@ const navGroups: NavGroup[] = [
     icon: <Palette className="w-4 h-4" />,
     items: [
       { label: 'Theme Library', section: 'theme-library', icon: <Palette className="w-4 h-4" /> },
-      { label: 'Marketplace', section: 'theme-marketplace', icon: <Globe className="w-4 h-4" /> },
-    ],
-  },
-  {
-    label: 'Marketing',
-    icon: <Megaphone className="w-4 h-4" />,
-    items: [
-      { label: 'Campaigns', section: 'campaigns', icon: <Zap className="w-4 h-4" /> },
-      { label: 'Notifications', section: 'notifications', icon: <Bell className="w-4 h-4" /> },
-    ],
-  },
-  {
-    label: 'Reports',
-    icon: <BarChart3 className="w-4 h-4" />,
-    items: [
-      { label: 'Revenue', section: 'revenue-reports', icon: <TrendingUp className="w-4 h-4" /> },
-      { label: 'Shops', section: 'shop-reports', icon: <PieChart className="w-4 h-4" /> },
-      { label: 'Usage Analytics', section: 'usage-analytics', icon: <BarChart3 className="w-4 h-4" /> },
-      { label: 'Growth', section: 'growth', icon: <TrendingUp className="w-4 h-4" /> },
-    ],
-  },
-  {
-    label: 'Support',
-    icon: <Headphones className="w-4 h-4" />,
-    items: [
-      { label: 'Tickets', section: 'tickets', icon: <Ticket className="w-4 h-4" /> },
-      { label: 'Live Chat', section: 'live-chat', icon: <MessageSquare className="w-4 h-4" /> },
-      { label: 'Messages', section: 'messages', icon: <Mail className="w-4 h-4" /> },
-    ],
-  },
-  {
-    label: 'Content',
-    icon: <BookOpen className="w-4 h-4" />,
-    items: [
-      { label: 'Blog', section: 'blog', icon: <BookOpen className="w-4 h-4" /> },
-      { label: 'Help Center', section: 'help-center', icon: <HelpCircle className="w-4 h-4" /> },
-      { label: 'FAQ', section: 'faq', icon: <FileText className="w-4 h-4" /> },
-    ],
-  },
-  {
-    label: 'Settings',
-    icon: <Settings className="w-4 h-4" />,
-    items: [
-      { label: 'General', section: 'settings-general', icon: <Settings className="w-4 h-4" /> },
-      { label: 'Security', section: 'settings-security', icon: <ShieldCheck className="w-4 h-4" /> },
-      { label: 'Billing', section: 'settings-billing', icon: <CreditCard className="w-4 h-4" /> },
-      { label: 'Integrations', section: 'settings-integrations', icon: <Zap className="w-4 h-4" /> },
-      { label: 'Email Templates', section: 'settings-email', icon: <Mail className="w-4 h-4" /> },
-      { label: 'Notifications', section: 'settings-notifications', icon: <Bell className="w-4 h-4" /> },
     ],
   },
   {
@@ -106,7 +55,14 @@ const navGroups: NavGroup[] = [
     icon: <Server className="w-4 h-4" />,
     items: [
       { label: 'Audit Logs', section: 'audit-logs', icon: <Activity className="w-4 h-4" /> },
-      { label: 'System Health', section: 'system-health', icon: <Server className="w-4 h-4" /> },
+    ],
+  },
+  {
+    label: 'Settings',
+    icon: <Settings className="w-4 h-4" />,
+    items: [
+      { label: 'Admin Users', section: 'settings-admins', icon: <Users className="w-4 h-4" /> },
+      { label: 'Platform Settings', section: 'settings-platform', icon: <Settings className="w-4 h-4" /> },
     ],
   },
 ];
@@ -114,6 +70,7 @@ const navGroups: NavGroup[] = [
 export function CompanyAdminPage() {
   const { state, dispatch } = useApp();
   const { theme, setTheme } = useTheme();
+  const [isVerifying, setIsVerifying] = useState(true);
   
   useEffect(() => {
     const verifyAdmin = async () => {
@@ -121,19 +78,27 @@ export function CompanyAdminPage() {
         const { supabase } = await import('@/lib/supabase');
         const { data: { session } } = await supabase.auth.getSession();
         
-        if (!session?.user?.email) {
+        if (!session?.user) {
           throw new Error('Not authenticated');
         }
 
+        // Verify by user ID (more secure than email — email can be changed)
         const { data, error } = await supabase
           .from('admins')
-          .select('role')
-          .eq('email', session.user.email)
+          .select('role, is_active')
+          .eq('id', session.user.id)
           .maybeSingle();
 
         if (error || !data) {
           throw new Error('Unauthorized');
         }
+
+        if (!data.is_active) {
+          throw new Error('Admin account deactivated');
+        }
+
+        // Admin verified successfully
+        setIsVerifying(false);
       } catch (err: any) {
         console.error('Admin access denied:', err);
         const { toast } = await import('sonner');
@@ -142,6 +107,7 @@ export function CompanyAdminPage() {
         const { supabase } = await import('@/lib/supabase');
         await supabase.auth.signOut();
         
+        dispatch({ type: 'LOGOUT' });
         dispatch({ type: 'SET_VIEW', payload: 'company-admin-login' });
       }
     };
@@ -182,43 +148,32 @@ export function CompanyAdminPage() {
       return <CompanyShopDetail />;
     }
     
-    // Force Vite to re-compile
-    console.log('Rendering section:', currentSection);
-
     switch (currentSection) {
       case 'dashboard':
         return <CompanyDashboard />;
       case 'shops':
-      case 'shop-verification':
-      case 'shop-requests':
         return <CompanyShopList />;
-      case 'subscription-plans':
-      case 'coupons':
-      case 'promotions':
-        return <CompanyPlans />;
-      case 'revenue-reports':
-      case 'shop-reports':
-      case 'usage-analytics':
-      case 'growth':
-        return <CompanyReports />;
-      case 'tickets':
-      case 'live-chat':
-      case 'messages':
-        return <CompanySupport />;
       case 'theme-library':
-      case 'theme-marketplace':
         return <CompanyThemeLibrary />;
-      case 'settings-general':
-      case 'settings-security':
-      case 'settings-billing':
-      case 'settings-integrations':
-      case 'settings-email':
-      case 'settings-notifications':
-        return <CompanySettings />;
       case 'audit-logs':
         return <CompanyAuditLogs />;
-      case 'system-health':
-        return <CompanySystemHealth />;
+      case 'settings-admins':
+      case 'settings-platform':
+        return <CompanySettings />;
+      case 'payments-pending':
+        return <CompanyPaymentQueue />;
+      case 'payments-history':
+        return (
+          <div className="flex flex-col items-center justify-center h-full text-center p-8 animate-fade-in-up">
+            <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-6">
+              <CreditCard className="w-8 h-8 text-primary" />
+            </div>
+            <h2 className="text-2xl font-bold mb-2">Payments Coming Soon</h2>
+            <p className="text-muted-foreground max-w-md">
+              The payment history view is currently under construction.
+            </p>
+          </div>
+        );
       default:
         return <CompanyDashboard />;
     }
@@ -314,6 +269,16 @@ export function CompanyAdminPage() {
   );
 
   return (
+    <>
+      {/* Block UI until admin role is verified */}
+      {isVerifying ? (
+        <div className="flex h-screen bg-background items-center justify-center">
+          <div className="flex flex-col items-center gap-4">
+            <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+            <p className="text-sm text-muted-foreground">Verifying admin access...</p>
+          </div>
+        </div>
+      ) : (
     <div className="flex h-screen bg-background overflow-hidden">
       {/* Mobile Sidebar Overlay */}
       {mobileSidebarOpen && (
@@ -446,5 +411,7 @@ export function CompanyAdminPage() {
         </footer>
       </div>
     </div>
+      )}
+    </>
   );
 }

@@ -4,6 +4,10 @@ import { useApp } from '@/store';
 import type { View } from '@/types';
 
 function getUrlForView(view: View, username: string, state: any): string | null {
+  // Free users use /shop/[username], Pro/Enterprise use /[username]
+  const isPro = state.shop.plan === 'pro' || state.shop.plan === 'enterprise';
+  const base = isPro ? `/${username}` : `/shop/${username}`;
+
   switch (view) {
     case 'landing': return '/';
     case 'login': return '/login';
@@ -19,19 +23,19 @@ function getUrlForView(view: View, username: string, state: any): string | null 
     case 'brand-book': return '/brand-book';
     case 'company-admin': return '/admin-portal';
     case 'company-admin-login': return '/admin-login';
-    case 'customer-menu': return `/${username}`;
-    case 'customer-shop-detail': return `/${username}/shop`;
+    case 'customer-menu': return base;
+    case 'customer-shop-detail': return `${base}/shop`;
     case 'customer-food-detail': 
-       return `/${username}/food${state.selectedFoodItem ? `/${state.selectedFoodItem.id}` : ''}`;
-    case 'user-dashboard': return `/${username}/dashboard`;
-    case 'admin-preview': return `/${username}/menupreview`;
-    case 'admin-settings': return `/${username}/settings`;
-    case 'admin-add-food': return `/${username}/add-food`;
-    case 'admin-analytics': return `/${username}/analytics`;
-    case 'admin-theme': return `/${username}/settings/theme`;
-    case 'admin-qr': return `/${username}/settings/qr`;
-    case 'admin-security': return `/${username}/settings/security`;
-    case 'admin-shop-details': return `/${username}/settings/shop`;
+       return `${base}/food${state.selectedFoodItem ? `/${state.selectedFoodItem.id}` : ''}`;
+    case 'user-dashboard': return `${base}/dashboard`;
+    case 'admin-preview': return `${base}/menupreview`;
+    case 'admin-settings': return `${base}/settings`;
+    case 'admin-add-food': return `${base}/add-food`;
+    case 'admin-analytics': return `${base}/analytics`;
+    case 'admin-theme': return `${base}/settings/theme`;
+    case 'admin-qr': return `${base}/settings/qr`;
+    case 'admin-security': return `${base}/settings/security`;
+    case 'admin-shop-details': return `${base}/settings/shop`;
     default: return null;
   }
 }
@@ -100,6 +104,8 @@ export function RouterSync() {
         '/brand-book': 'brand-book',
         '/admin-portal': 'company-admin',
         '/admin-login': 'company-admin-login',
+        '/admin': 'company-admin-login',
+        '/admin/dashboard': 'company-admin',
       };
 
       if (exactRoutes[path]) {
@@ -108,23 +114,27 @@ export function RouterSync() {
       } else {
         const parts = path.split('/').filter(Boolean);
         if (parts.length >= 1) {
-          const urlUsername = parts[0];
-          const page = parts[1] || 'menu';
+          const isFreeFormat = parts[0] === 'shop';
+          const urlUsername = isFreeFormat ? parts[1] : parts[0];
+          const page = isFreeFormat ? parts[2] : parts[1];
+          const settingsSubPage = isFreeFormat ? parts[3] : parts[2];
+
+          if (!urlUsername) return; // Ignore incomplete URLs like just "/shop"
           
           if (shop.username !== urlUsername) {
              dispatch({ type: 'UPDATE_SHOP', payload: { username: urlUsername } });
           }
           
           let nextView: View | null = null;
-          switch (page) {
+          switch (page || 'menu') {
             case 'menu': nextView = 'customer-menu'; break;
             case 'shop': nextView = 'customer-shop-detail'; break;
             case 'food': nextView = 'customer-food-detail'; break;
             case 'dashboard': nextView = 'user-dashboard'; break;
             case 'menupreview': nextView = 'admin-preview'; break;
             case 'settings':
-              if (parts.length >= 3) {
-                switch (parts[2]) {
+              if (settingsSubPage) {
+                switch (settingsSubPage) {
                   case 'shop': nextView = 'admin-shop-details'; break;
                   case 'theme': nextView = 'admin-theme'; break;
                   case 'qr': nextView = 'admin-qr'; break;

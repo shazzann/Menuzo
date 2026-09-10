@@ -1,6 +1,6 @@
 import type { ManagedShop, ActivityItem, SubscriptionPlan, SupportTicket, KPICard } from '@/types';
 
-export const mockManagedShops: ManagedShop[] = [
+export const mockManagedShops: any[] = [
   {
     id: 'shop-1',
     name: 'Colombo Spice Garden',

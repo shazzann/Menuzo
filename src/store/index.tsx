@@ -39,8 +39,8 @@ const getInitialView = (): View => {
     if (path === '/' || path === '') return 'landing';
     if (path === '/login') return 'login';
     if (path === '/brand-book') return 'brand-book';
-    if (path === '/admin') return 'company-admin-login';
-    if (path.startsWith('/admin-portal') || path === '/admin-login') return 'company-admin';
+    if (path === '/admin' || path === '/admin-login') return 'company-admin-login';
+    if (path === '/admin-portal' || path === '/admin/dashboard') return 'company-admin';
     
     const parts = path.split('/').filter(Boolean);
     if (parts.length >= 1) {

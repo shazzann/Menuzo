@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useApp } from '@/store';
 import { RestaurantService, MenuService } from '@/services';
 import { filterExpiredSpecialDates } from '@/lib/timeUtils';
+import { supabase } from '@/lib/supabase';
 import type { Shop, FoodItem } from '@/types';
 
 export function AdminDataLoader() {
@@ -21,6 +22,27 @@ export function AdminDataLoader() {
         setLoadedUserId(user!.id);
         
         let shopData = await RestaurantService.getRestaurantByUserId(user!.id);
+        
+        // Load the actual subscription from the user's profile
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('subscription_plan, subscription_expires_at, subscription_status')
+          .eq('id', user!.id)
+          .single();
+
+        if (profile) {
+          dispatch({
+            type: 'LOGIN',
+            payload: {
+              ...user!,
+              subscription: {
+                plan: (profile.subscription_plan || 'free') as 'free' | 'pro' | 'enterprise',
+                expiresAt: new Date(profile.subscription_expires_at || new Date()),
+                status: (profile.subscription_status || 'active') as 'active' | 'expired' | 'cancelled',
+              }
+            }
+          });
+        }
 
         if (!shopData) {
           if (currentView !== 'onboarding') {
@@ -66,6 +88,7 @@ export function AdminDataLoader() {
             view_count: shopData.view_count || 0,
             qr_scan_count: shopData.qr_scan_count || 0,
             daily_stats: dailyStats || [],
+            plan: (profile?.subscription_plan as any) || 'free',
           };
           dispatch({ type: 'UPDATE_SHOP', payload: formattedShop });
 

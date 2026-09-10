@@ -19,6 +19,7 @@ import { OnboardingChecklist } from '@/components/dashboard/OnboardingChecklist'
 import { useEffect, useState, useRef, useMemo } from 'react';
 import { toast } from 'sonner';
 import { SmallQrPreview, type SmallQrPreviewRef } from '@/components/admin/SmallQrPreview';
+import { PaymentDialog } from '@/components/dashboard/PaymentDialog';
 import type { AdminTab } from '@/types';
 import {
   AlertDialog,
@@ -36,6 +37,7 @@ export function UserDashboardPage() {
   const { state, dispatch } = useApp();
   const { shop, foodItems, user } = state;
   const [isLoadingData, setIsLoadingData] = useState(true);
+  const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
   const qrRef = useRef<SmallQrPreviewRef>(null);
 
   const chartData = useMemo(() => {
@@ -162,7 +164,12 @@ export function UserDashboardPage() {
               </p>
             </div>
           </div>
-          <Button variant="outline" size="sm" className="border-primary/30 text-primary hover:bg-primary/10">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="border-primary/30 text-primary hover:bg-primary/10"
+            onClick={() => setIsPaymentDialogOpen(true)}
+          >
             Manage
           </Button>
         </div>
@@ -389,10 +396,13 @@ export function UserDashboardPage() {
         </>
         )}
       </main>
+      
+      {/* Payment Dialog */}
+      <PaymentDialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen} />
 
       {/* Bottom Navigation */}
       <BottomNav
-        activeTab="dashboard"
+        activeTab={state.currentAdminTab}
         onTabChange={handleTabChange}
         isAdmin={true}
       />

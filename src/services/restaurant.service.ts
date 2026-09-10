@@ -61,6 +61,21 @@ export const RestaurantService = {
     }
 
     if (error) throw error;
+    
+    if (data && data.user_id) {
+      // Fetch plan from profiles
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('subscription_plan')
+        .eq('id', data.user_id)
+        .maybeSingle();
+      
+      return {
+        ...data,
+        plan: profile?.subscription_plan || 'free'
+      };
+    }
+
     return data;
   },
 

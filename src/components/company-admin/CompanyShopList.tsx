@@ -33,9 +33,11 @@ export function CompanyShopList() {
   const [showFilters, setShowFilters] = useState(false);
   const [shops, setShops] = useState<ManagedShop[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchShops = async () => {
     setIsLoading(true);
+    setError(null);
     try {
       const { data, error } = await supabase
         .from('shops')
@@ -58,7 +60,9 @@ export function CompanyShopList() {
         const itemsCount = shop.food_items?.[0]?.count || 0;
         return {
           id: shop.id,
+          userId: shop.user_id,
           name: shop.name || 'Unnamed Shop',
+          username: shop.username || '',
           owner: profile?.email ? profile.email.split('@')[0] : 'Shop Owner',
           ownerEmail: profile?.email || shop.email || '',
           phone: shop.contact_number || 'No Phone',
@@ -79,8 +83,9 @@ export function CompanyShopList() {
         };
       });
       setShops(mappedShops);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to fetch shops', err);
+      setError(err.message || 'Failed to fetch shops. Please check your connection and try again.');
     } finally {
       setIsLoading(false);
     }
@@ -119,8 +124,12 @@ export function CompanyShopList() {
           <button className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-muted/30 hover:bg-muted/50 text-sm transition-colors">
             <Upload className="w-4 h-4" /> Import
           </button>
-          <button className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-muted/30 hover:bg-muted/50 text-sm transition-colors">
-            <RefreshCw className="w-4 h-4" /> Refresh
+          <button 
+            onClick={fetchShops}
+            disabled={isLoading}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-muted/30 hover:bg-muted/50 text-sm transition-colors disabled:opacity-50"
+          >
+            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} /> Refresh
           </button>
         </div>
       </div>
@@ -200,6 +209,22 @@ export function CompanyShopList() {
           </div>
         )}
       </div>
+
+      {/* Error State */}
+      {error && (
+        <div className="bg-red-500/10 border border-red-500/20 text-red-500 p-4 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 animate-in fade-in slide-in-from-top-2">
+          <div className="flex items-center gap-3">
+            <XCircle className="w-5 h-5 shrink-0" />
+            <p className="text-sm font-medium">{error}</p>
+          </div>
+          <button 
+            onClick={fetchShops}
+            className="px-4 py-1.5 bg-red-500/20 hover:bg-red-500/30 rounded-lg text-xs font-medium transition-colors"
+          >
+            Retry
+          </button>
+        </div>
+      )}
 
       {/* Grid View / Table View */}
       {isLoading ? (

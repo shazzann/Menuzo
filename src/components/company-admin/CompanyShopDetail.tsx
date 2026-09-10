@@ -4,9 +4,10 @@ import {
   ArrowLeft, CheckCircle2, MapPin, Phone, Mail, Star, Eye,
   QrCode, TrendingUp, Users, Clock, Calendar, CreditCard,
   Activity, Share2, Heart, MoreHorizontal, BarChart3, UtensilsCrossed,
-  Image as ImageIcon, Video, FileText, Monitor, Smartphone, Laptop,
+  Image as ImageIcon, Video, FileText, Monitor, Smartphone, Laptop, Link
 } from 'lucide-react';
 import { getShopThemeStyles } from '@/lib/themeUtils';
+import { supabase } from '@/lib/supabase';
 
 export function CompanyShopDetail() {
   const { state, dispatch } = useApp();
@@ -18,13 +19,31 @@ export function CompanyShopDetail() {
   const tabs = [
     { id: 'overview', label: 'Overview', icon: <Eye className="w-4 h-4" /> },
     { id: 'subscription', label: 'Subscription', icon: <CreditCard className="w-4 h-4" /> },
-    { id: 'analytics', label: 'Analytics', icon: <BarChart3 className="w-4 h-4" /> },
-    { id: 'menu', label: 'Menu Stats', icon: <UtensilsCrossed className="w-4 h-4" /> },
-    { id: 'media', label: 'Media', icon: <ImageIcon className="w-4 h-4" /> },
-    { id: 'staff', label: 'Staff', icon: <Users className="w-4 h-4" /> },
-    { id: 'devices', label: 'Devices', icon: <Monitor className="w-4 h-4" /> },
-    { id: 'activity', label: 'Activity', icon: <Activity className="w-4 h-4" /> },
+    { id: 'url', label: 'URL Assignment', icon: <Link className="w-4 h-4" /> },
+    { id: 'theme', label: 'Theme Colors', icon: <ImageIcon className="w-4 h-4" /> },
   ];
+
+  const [usernameInput, setUsernameInput] = useState(shop.username || '');
+  const [isSavingUrl, setIsSavingUrl] = useState(false);
+  const [isChangingPlan, setIsChangingPlan] = useState(false);
+
+  const handleSaveUsername = async () => {
+    if (!usernameInput.trim()) return;
+    setIsSavingUrl(true);
+    try {
+      const { error } = await supabase
+        .from('shops')
+        .update({ username: usernameInput.trim() })
+        .eq('id', shop.id);
+
+      if (error) throw error;
+      alert('Username updated successfully. Please re-fetch shops to see changes globally.');
+    } catch (err: any) {
+      alert(err.message || 'Failed to update username');
+    } finally {
+      setIsSavingUrl(false);
+    }
+  };
 
   return (
     <div className="space-y-5 animate-fade-in-up bg-background text-foreground min-h-[calc(100vh-6rem)] -m-4 lg:-m-6 p-4 lg:p-6" style={getShopThemeStyles(shop.theme)}>
@@ -78,12 +97,11 @@ export function CompanyShopDetail() {
                     <span className="text-xs font-medium">Verified</span>
                   </div>
                 )}
-                <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                  shop.status === 'active' ? 'bg-emerald-500/10 text-emerald-500' :
-                  shop.status === 'suspended' ? 'bg-red-500/10 text-red-500' :
-                  shop.status === 'trial' ? 'bg-amber-500/10 text-amber-500' :
-                  'bg-slate-500/10 text-slate-500'
-                }`}>
+                <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${shop.status === 'active' ? 'bg-emerald-500/10 text-emerald-500' :
+                    shop.status === 'suspended' ? 'bg-red-500/10 text-red-500' :
+                      shop.status === 'trial' ? 'bg-amber-500/10 text-amber-500' :
+                        'bg-slate-500/10 text-slate-500'
+                  }`}>
                   {shop.status}
                 </span>
               </div>
@@ -97,8 +115,21 @@ export function CompanyShopDetail() {
               <button className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity shadow-lg shadow-primary/25">
                 Message
               </button>
-              <button className="px-4 py-2 rounded-xl bg-muted/50 text-sm font-medium hover:bg-muted/70 transition-colors">
-                Edit
+              <button
+                onClick={async () => {
+                  if (window.confirm(`Are you sure you want to ${shop.status === 'suspended' ? 'reinstate' : 'suspend'} this shop?`)) {
+                    const newStatus = shop.status === 'suspended' ? 'active' : 'suspended';
+                    const { error } = await supabase.from('profiles').update({ subscription_status: newStatus }).eq('id', shop.userId);
+                    if (error) alert('Failed: ' + error.message);
+                    else alert(`Shop successfully ${shop.status === 'suspended' ? 'reinstated' : 'suspended'}. Please return to shop list to refresh.`);
+                  }
+                }}
+                className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${shop.status === 'suspended'
+                    ? 'bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20'
+                    : 'bg-red-500/10 text-red-500 hover:bg-red-500/20'
+                  }`}
+              >
+                {shop.status === 'suspended' ? 'Reinstate Shop' : 'Suspend Shop'}
               </button>
             </div>
           </div>
@@ -130,11 +161,10 @@ export function CompanyShopDetail() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${
-                activeTab === tab.id
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${activeTab === tab.id
                   ? 'bg-primary text-primary-foreground shadow-sm'
                   : 'text-muted-foreground hover:text-foreground hover:bg-muted/30'
-              }`}
+                }`}
             >
               {tab.icon}
               {tab.label}
@@ -194,9 +224,36 @@ export function CompanyShopDetail() {
                     <p className="text-xs text-muted-foreground">Current Plan</p>
                     <p className="text-xl font-bold capitalize">{shop.plan} Plan</p>
                   </div>
-                  <button className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-medium">
-                    Change Plan
-                  </button>
+                  <select
+                    className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-medium focus:outline-none appearance-none cursor-pointer"
+                    value={shop.plan}
+                    disabled={isChangingPlan}
+                    onChange={async (e) => {
+                      const newPlan = e.target.value;
+                      if (window.confirm(`Change plan to ${newPlan}?`)) {
+                        setIsChangingPlan(true);
+                        try {
+                          const expiresAt = new Date();
+                          expiresAt.setMonth(expiresAt.getMonth() + 1);
+                          const { error } = await supabase.from('profiles').update({
+                            subscription_plan: newPlan,
+                            subscription_expires_at: expiresAt.toISOString(),
+                          }).eq('id', shop.userId);
+                          if (error) throw error;
+                          alert('Plan changed successfully. Return to shop list to refresh.');
+                        } catch (err: any) {
+                          alert('Failed: ' + err.message);
+                        } finally {
+                          setIsChangingPlan(false);
+                        }
+                      }
+                    }}
+                  >
+                    <option value="free" className="bg-background text-foreground">Free</option>
+                    <option value="starter" className="bg-background text-foreground">Starter</option>
+                    <option value="pro" className="bg-background text-foreground">Pro</option>
+                    <option value="enterprise" className="bg-background text-foreground">Enterprise</option>
+                  </select>
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -213,175 +270,66 @@ export function CompanyShopDetail() {
                   <p className="text-sm font-semibold text-emerald-500">Enabled</p>
                 </div>
               </div>
-              <div className="space-y-2">
-                <h4 className="text-sm font-semibold">Recent Invoices</h4>
-                {[
-                  { id: 'INV-001', date: '2026-07-01', amount: '$24.99', status: 'Paid' },
-                  { id: 'INV-002', date: '2026-06-01', amount: '$24.99', status: 'Paid' },
-                  { id: 'INV-003', date: '2026-05-01', amount: '$24.99', status: 'Paid' },
-                ].map((inv) => (
-                  <div key={inv.id} className="flex items-center justify-between p-3 rounded-xl bg-muted">
-                    <div className="flex items-center gap-3">
-                      <FileText className="w-4 h-4 text-muted-foreground" />
-                      <div>
-                        <p className="text-sm font-medium">{inv.id}</p>
-                        <p className="text-xs text-muted-foreground">{inv.date}</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-semibold">{inv.amount}</p>
-                      <p className="text-xs text-emerald-500">{inv.status}</p>
-                    </div>
-                  </div>
-                ))}
+            </div>
+          )}
+
+          {activeTab === 'url' && (
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Custom URL Assignment</h3>
+              <div className="p-4 rounded-xl bg-muted border border-border/50">
+                <p className="text-sm text-muted-foreground mb-4">
+                  Set the shop's username. This updates their custom URL routing.
+                </p>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="text"
+                    value={usernameInput}
+                    onChange={(e) => setUsernameInput(e.target.value)}
+                    placeholder="Enter username"
+                    className="flex-1 bg-background border border-border/50 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  />
+                  <button
+                    onClick={handleSaveUsername}
+                    disabled={isSavingUrl}
+                    className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-medium disabled:opacity-50"
+                  >
+                    {isSavingUrl ? 'Saving...' : 'Save URL'}
+                  </button>
+                </div>
+                <div className="mt-4 p-3 bg-background/50 rounded-lg text-xs text-muted-foreground space-y-1">
+                  <p><strong>Free URL:</strong> /shop/{usernameInput || shop.username}</p>
+                  <p><strong>Pro URL:</strong> /{usernameInput || shop.username}</p>
+                </div>
               </div>
             </div>
           )}
 
-          {activeTab === 'analytics' && (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {[
-                { label: 'Daily Views', value: '1,240', change: '+12%' },
-                { label: 'QR Scans Today', value: '89', change: '+8%' },
-                { label: 'Peak Hours', value: '12-2 PM', change: '' },
-                { label: 'Bounce Rate', value: '24%', change: '-3%' },
-                { label: 'Avg Session', value: '2m 34s', change: '+15%' },
-                { label: 'Top Category', value: 'Main Course', change: '' },
-                { label: 'Popular Item', value: 'Chicken Rice', change: '' },
-                { label: 'Conversion', value: '36.4%', change: '+5%' },
-              ].map((stat) => (
-                <div key={stat.label} className="p-3 rounded-xl bg-muted text-center">
-                  <p className="text-xs text-muted-foreground">{stat.label}</p>
-                  <p className="text-lg font-bold mt-1">{stat.value}</p>
-                  {stat.change && (
-                    <p className={`text-xs mt-0.5 ${stat.change.startsWith('+') ? 'text-emerald-500' : 'text-red-500'}`}>
-                      {stat.change}
-                    </p>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-
-          {activeTab === 'menu' && (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {[
-                { label: 'Categories', value: '8', icon: <BarChart3 className="w-5 h-5 text-blue-500" /> },
-                { label: 'Total Items', value: `${shop.menuItems}`, icon: <UtensilsCrossed className="w-5 h-5 text-orange-500" /> },
-                { label: 'Active Offers', value: '5', icon: <TrendingUp className="w-5 h-5 text-emerald-500" /> },
-                { label: 'Hidden Items', value: '3', icon: <Eye className="w-5 h-5 text-slate-500" /> },
-                { label: 'Unavailable', value: '7', icon: <Clock className="w-5 h-5 text-red-500" /> },
-                { label: 'Images', value: '64', icon: <ImageIcon className="w-5 h-5 text-violet-500" /> },
-                { label: 'Videos', value: '2', icon: <Video className="w-5 h-5 text-pink-500" /> },
-                { label: 'PDF Menus', value: '1', icon: <FileText className="w-5 h-5 text-amber-500" /> },
-              ].map((stat) => (
-                <div key={stat.label} className="flex items-center gap-3 p-4 rounded-xl bg-muted">
-                  {stat.icon}
-                  <div>
-                    <p className="text-lg font-bold">{stat.value}</p>
-                    <p className="text-xs text-muted-foreground">{stat.label}</p>
+          {activeTab === 'theme' && shop.theme && (
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Shop Theme</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="p-4 rounded-xl bg-muted border border-border/50">
+                  <p className="text-xs text-muted-foreground mb-2">Primary Color</p>
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full border border-border" style={{ backgroundColor: shop.theme.primary }} />
+                    <span className="text-sm font-medium">{shop.theme.primary}</span>
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
-
-          {activeTab === 'media' && (
-            <div className="text-center py-12">
-              <ImageIcon className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
-              <h3 className="text-lg font-semibold mb-1">Media Gallery</h3>
-              <p className="text-sm text-muted-foreground">All uploaded images, videos, logos and banners for this shop</p>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-6">
-                {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-                  <div key={i} className="aspect-square rounded-xl bg-muted border border-border/50 flex items-center justify-center">
-                    <ImageIcon className="w-8 h-8 text-muted-foreground/20" />
+                <div className="p-4 rounded-xl bg-muted border border-border/50">
+                  <p className="text-xs text-muted-foreground mb-2">Secondary Color</p>
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full border border-border" style={{ backgroundColor: shop.theme.secondary }} />
+                    <span className="text-sm font-medium">{shop.theme.secondary}</span>
                   </div>
-                ))}
+                </div>
+                <div className="p-4 rounded-xl bg-muted border border-border/50">
+                  <p className="text-xs text-muted-foreground mb-2">Accent Color</p>
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full border border-border" style={{ backgroundColor: shop.theme.accent }} />
+                    <span className="text-sm font-medium">{shop.theme.accent}</span>
+                  </div>
+                </div>
               </div>
-            </div>
-          )}
-
-          {activeTab === 'staff' && (
-            <div className="space-y-3">
-              {[
-                { name: shop.owner, role: 'Owner', email: shop.ownerEmail, lastLogin: '2h ago', status: 'Online' },
-                { name: 'Ashen Kumar', role: 'Manager', email: 'ashen@example.com', lastLogin: '1d ago', status: 'Offline' },
-                { name: 'Nisala Perera', role: 'Staff', email: 'nisala@example.com', lastLogin: '5h ago', status: 'Online' },
-              ].map((member) => (
-                <div key={member.name} className="flex items-center justify-between p-4 rounded-xl bg-muted">
-                  <div className="flex items-center gap-3">
-                    <div className="relative">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white text-sm font-bold">
-                        {member.name.charAt(0)}
-                      </div>
-                      <div className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-card ${member.status === 'Online' ? 'bg-emerald-500' : 'bg-slate-500'}`} />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">{member.name}</p>
-                      <p className="text-xs text-muted-foreground">{member.role} • {member.email}</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xs text-muted-foreground">Last login</p>
-                    <p className="text-sm font-medium">{member.lastLogin}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {activeTab === 'devices' && (
-            <div className="space-y-3">
-              {[
-                { device: 'Chrome on Windows', icon: <Laptop className="w-5 h-5" />, location: 'Colombo, LK', lastActive: 'Now', current: true },
-                { device: 'Safari on iPhone', icon: <Smartphone className="w-5 h-5" />, location: 'Colombo, LK', lastActive: '2h ago', current: false },
-                { device: 'Firefox on MacOS', icon: <Monitor className="w-5 h-5" />, location: 'Kandy, LK', lastActive: '3d ago', current: false },
-              ].map((device, i) => (
-                <div key={i} className="flex items-center justify-between p-4 rounded-xl bg-muted">
-                  <div className="flex items-center gap-3">
-                    <div className="text-muted-foreground">{device.icon}</div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <p className="text-sm font-medium">{device.device}</p>
-                        {device.current && (
-                          <span className="px-1.5 py-0.5 rounded text-[10px] bg-emerald-500/10 text-emerald-500 font-medium">Current</span>
-                        )}
-                      </div>
-                      <p className="text-xs text-muted-foreground">{device.location} • {device.lastActive}</p>
-                    </div>
-                  </div>
-                  {!device.current && (
-                    <button className="px-3 py-1.5 rounded-lg text-xs text-red-500 hover:bg-red-500/10 transition-colors font-medium">
-                      Logout
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-
-          {activeTab === 'activity' && (
-            <div className="space-y-3">
-              {[
-                { action: 'Menu updated — Added 3 new items', time: '2h ago', type: 'info' },
-                { action: 'Theme changed to "Ocean Breeze"', time: '1d ago', type: 'info' },
-                { action: 'Subscription renewed — Pro Plan', time: '3d ago', type: 'success' },
-                { action: 'QR Code regenerated', time: '5d ago', type: 'info' },
-                { action: 'Payment received — $24.99', time: '1w ago', type: 'success' },
-                { action: 'Profile image updated', time: '2w ago', type: 'info' },
-                { action: 'Login from new device — iPhone', time: '2w ago', type: 'warning' },
-              ].map((log, i) => (
-                <div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-muted">
-                  <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${
-                    log.type === 'success' ? 'bg-emerald-500' :
-                    log.type === 'warning' ? 'bg-amber-500' : 'bg-blue-500'
-                  }`} />
-                  <div className="flex-1">
-                    <p className="text-sm">{log.action}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">{log.time}</p>
-                  </div>
-                </div>
-              ))}
             </div>
           )}
         </div>

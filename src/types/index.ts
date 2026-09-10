@@ -52,6 +52,7 @@ export interface Shop {
   view_count?: number;
   qr_scan_count?: number;
   daily_stats?: DailyStat[];
+  plan?: 'free' | 'pro' | 'enterprise';
 }
 
 export interface DailyStat {
@@ -147,11 +148,17 @@ export type CompanyAdminSection =
   | 'settings-notifications'
   | 'audit-logs'
   | 'system-health'
-  | 'shop-detail';
+  | 'shop-detail'
+  | 'payments-pending'
+  | 'payments-history'
+  | 'settings-admins'
+  | 'settings-platform';
 
 export interface ManagedShop {
   id: string;
+  userId: string;
   name: string;
+  username: string;
   owner: string;
   ownerEmail: string;
   phone: string;
@@ -232,4 +239,23 @@ export interface AppState {
   companyAdminSection: CompanyAdminSection;
   selectedManagedShop: ManagedShop | null;
   shopNotFound?: boolean;
+}
+
+export interface PaymentRequest {
+  id: string;
+  shop_id: string;
+  profile_id: string;
+  plan_id: 'starter' | 'pro' | 'enterprise';
+  amount: number;
+  currency: string;
+  reference: string | null;
+  proof_url: string | null;
+  status: 'pending' | 'approved' | 'rejected';
+  submitted_at: string;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  rejection_reason: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
 }

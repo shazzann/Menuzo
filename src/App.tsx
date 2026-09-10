@@ -64,7 +64,9 @@ function AppContent() {
               email: session?.user?.email || '',
               shopName: '',
               shopId: '',
-              subscription: { plan: 'pro', expiresAt: new Date('2025-12-31'), status: 'active' },
+              // Use 'free' as the safe default — real subscription data is loaded
+              // by AdminDataLoader from the profiles table after login
+              subscription: { plan: 'free', expiresAt: new Date(), status: 'active' },
             },
           });
         }
@@ -86,7 +88,8 @@ function AppContent() {
             email: session.user.email || '',
             shopName: '',
             shopId: '',
-            subscription: { plan: 'pro', expiresAt: new Date('2025-12-31'), status: 'active' },
+            // Safe default — AdminDataLoader reads real subscription from profiles
+            subscription: { plan: 'free', expiresAt: new Date(), status: 'active' },
           },
         });
       } else if (event === 'SIGNED_OUT' && mounted) {
@@ -100,7 +103,12 @@ function AppContent() {
     };
   }, [dispatch]);
 
-  const isPrivateView = currentView.startsWith('admin-') || currentView === 'user-dashboard' || currentView === 'onboarding';
+  // company-admin is also a private view — requires authentication AND admin role
+  // (the admin role check happens inside CompanyAdminPage via verifyAdmin())
+  const isPrivateView = currentView.startsWith('admin-') || 
+    currentView === 'user-dashboard' || 
+    currentView === 'onboarding' ||
+    currentView === 'company-admin';
 
   useEffect(() => {
     if (!isAuthLoading && isPrivateView && !state.user) {

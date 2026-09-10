@@ -1,37 +1,88 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useApp } from '@/store';
-import { Eye, EyeOff, ShieldCheck, ArrowRight, CheckCircle2, Lock } from 'lucide-react';
+import { Eye, EyeOff, ShieldCheck, ArrowRight, CheckCircle2, Lock, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { supabase } from '@/lib/supabase';
 
 export function CompanyAdminLoginPage() {
-  const { dispatch } = useApp();
+  const { state, dispatch } = useApp();
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    // Simulate auth
-    setTimeout(() => {
-      setIsLoading(false);
+  useEffect(() => {
+    if (state.user) {
       dispatch({ type: 'SET_VIEW', payload: 'company-admin' });
-      // Update URL without full reload
-      if (typeof window !== 'undefined') {
-        window.history.pushState({}, '', '/admin/dashboard');
+      window.history.pushState({}, '', '/admin/dashboard');
+    }
+  }, [state.user, dispatch]);
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setIsLoading(true);
+
+    try {
+      // Step 1: Authenticate with Supabase
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      });
+
+      if (authError || !authData.user) {
+        throw new Error(authError?.message || 'Invalid credentials.');
       }
-    }, 1000);
+
+      // Step 2: Verify the user exists in the admins table
+      const { data: adminRecord, error: adminError } = await supabase
+        .from('admins')
+        .select('id, role, is_active')
+        .eq('id', authData.user.id)
+        .maybeSingle();
+
+      if (adminError || !adminRecord) {
+        // User authenticated but is NOT an admin — sign them out immediately
+        await supabase.auth.signOut();
+        throw new Error('Access denied. This account does not have admin privileges.');
+      }
+
+      if (!adminRecord.is_active) {
+        await supabase.auth.signOut();
+        throw new Error('This admin account has been deactivated. Contact support.');
+      }
+
+      // Step 3: Dispatch login and navigate to admin panel
+      dispatch({
+        type: 'LOGIN',
+        payload: {
+          id: authData.user.id,
+          email: authData.user.email || '',
+          shopName: '',
+          shopId: '',
+          subscription: { plan: 'free', expiresAt: new Date(), status: 'active' },
+        },
+      });
+      dispatch({ type: 'SET_VIEW', payload: 'company-admin' });
+      window.history.pushState({}, '', '/admin/dashboard');
+
+    } catch (err: any) {
+      setError(err.message || 'Login failed. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleGoogleLogin = async () => {
+    setError(null);
     setIsLoading(true);
     try {
-      const { supabase } = await import('@/lib/supabase');
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: window.location.origin + '/admin-portal',
+          // Redirect back to /admin so the admin auth check runs properly
+          redirectTo: window.location.origin + '/admin',
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
@@ -40,9 +91,8 @@ export function CompanyAdminLoginPage() {
       });
       if (error) throw error;
     } catch (err: any) {
-      console.error(err);
+      setError(err.message || 'Google login failed.');
       setIsLoading(false);
-      // fallback or show error
     }
   };
 
@@ -119,6 +169,13 @@ export function CompanyAdminLoginPage() {
             </div>
 
             <form onSubmit={handleLogin} className="space-y-5">
+              {/* Error Message */}
+              {error && (
+                <div className="flex items-start gap-3 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500">
+                  <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                  <p className="text-sm">{error}</p>
+                </div>
+              )}
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-muted-foreground ml-1">Admin Email</label>
                 <input

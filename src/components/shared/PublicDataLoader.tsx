@@ -54,6 +54,7 @@ export function PublicDataLoader() {
             categoryOrder: shopData.category_order || undefined,
             view_count: shopData.view_count || 0,
             qr_scan_count: shopData.qr_scan_count || 0,
+            plan: (shopData as any).plan || 'free',
           };
           dispatch({ type: 'UPDATE_SHOP', payload: formattedShop });
 
