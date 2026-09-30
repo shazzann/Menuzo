@@ -41,7 +41,8 @@ export default async function handler(req, res) {
   // Define a list of reserved paths that aren't shop usernames
   const reservedPaths = [
     'login', 'signup', 'contact', 'privacy', 'terms', 'demo', 
-    'onboarding', 'dashboard', 'admin', 'company-admin', 'api'
+    'onboarding', 'dashboard', 'admin', 'company-admin', 'api', 'subscription',
+    'admin-login', 'admin-portal', 'brand-book', 'qr-menu', 'digital-menu', 'restaurant-menu'
   ];
 
   // If there's a first segment and it's not reserved, treat it as a username
@@ -61,8 +62,14 @@ export default async function handler(req, res) {
           'Content-Type': 'application/json'
         };
 
-        const shopUrl = `${supabaseUrl}/rest/v1/shops?username=eq.${possibleUsername}&select=name,description,logo,banner,tagline`;
-        const shopPromise = fetch(shopUrl, { headers });
+        const shopPromise = fetch(`${supabaseUrl}/rest/v1/rpc/resolve_menu_shop`, {
+          method: 'POST', headers, body: JSON.stringify({ p_slug: decodeURIComponent(possibleUsername) }),
+        }).then(async response => {
+          if (response.ok) return response;
+          const error = await response.clone().json().catch(() => ({}));
+          if (error.code !== 'PGRST202' && error.code !== '42883') return response;
+          return fetch(`${supabaseUrl}/rest/v1/shops?username=eq.${encodeURIComponent(possibleUsername)}&select=name,description,logo,banner,tagline`, { headers });
+        });
 
         let foodPromise = null;
         if (foodId) {

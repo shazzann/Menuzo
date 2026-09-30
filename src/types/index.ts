@@ -73,7 +73,7 @@ export interface User {
   shopId: string;
   subscription: {
     plan: 'free' | 'pro' | 'enterprise';
-    expiresAt: Date;
+    expiresAt: Date | null;
     status: 'active' | 'expired' | 'cancelled';
   };
 }
@@ -111,6 +111,7 @@ export type View =
   | 'admin-theme'
   | 'admin-qr'
   | 'admin-security'
+  | 'admin-subscription'
   | 'brand-book'
   | 'company-admin'
   | 'company-admin-login';

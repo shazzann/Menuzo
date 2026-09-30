@@ -9,6 +9,7 @@ function getUrlForView(view: View, username: string, state: any): string | null 
     case 'login': return '/login';
     case 'signup': return '/signup';
     case 'onboarding': return '/onboarding';
+    case 'admin-subscription': return '/subscription';
     case 'demo': return '/demo';
     case 'contact': return '/contact';
     case 'privacy': return '/privacy';
@@ -90,6 +91,7 @@ export function RouterSync() {
         '/login': 'login',
         '/signup': 'signup',
         '/onboarding': 'onboarding',
+        '/subscription': 'admin-subscription',
         '/demo': 'demo',
         '/contact': 'contact',
         '/privacy': 'privacy',
@@ -99,6 +101,7 @@ export function RouterSync() {
         '/restaurant-menu': 'seo-restaurant-menu',
         '/brand-book': 'brand-book',
         '/admin-portal': 'company-admin',
+        '/admin': 'company-admin-login',
         '/admin-login': 'company-admin-login',
       };
 

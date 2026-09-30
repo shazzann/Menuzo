@@ -38,9 +38,10 @@ const getInitialView = (): View => {
     const path = window.location.pathname;
     if (path === '/' || path === '') return 'landing';
     if (path === '/login') return 'login';
+    if (path === '/subscription') return 'admin-subscription';
     if (path === '/brand-book') return 'brand-book';
-    if (path === '/admin') return 'company-admin-login';
-    if (path.startsWith('/admin-portal') || path === '/admin-login') return 'company-admin';
+    if (path === '/admin' || path === '/admin-login') return 'company-admin-login';
+    if (path.startsWith('/admin-portal')) return 'company-admin';
     
     const parts = path.split('/').filter(Boolean);
     if (parts.length >= 1) {
@@ -79,6 +80,7 @@ type Action =
   | { type: 'SET_ADMIN_TAB'; payload: AdminTab }
   | { type: 'SELECT_FOOD_ITEM'; payload: FoodItem | null }
   | { type: 'SET_USER'; payload: User | null }
+  | { type: 'SET_SUBSCRIPTION'; payload: { userId: string; subscription: User['subscription'] } }
   | { type: 'UPDATE_SHOP'; payload: Partial<Shop> }
   | { type: 'ADD_FOOD_ITEM'; payload: FoodItem }
   | { type: 'UPDATE_FOOD_ITEM'; payload: FoodItem }
@@ -119,6 +121,10 @@ function extractCategories(foodItems: FoodItem[], categoryOrder?: string[]): Cat
 
 function appReducer(state: AppState, action: Action): AppState {
   switch (action.type) {
+    case 'SET_SUBSCRIPTION':
+      return state.user?.id === action.payload.userId
+        ? { ...state, user: { ...state.user, subscription: action.payload.subscription } }
+        : state;
     case 'SET_VIEW':
       return { ...state, currentView: action.payload };
     case 'SET_SHOP_NOT_FOUND':
@@ -167,13 +173,16 @@ function appReducer(state: AppState, action: Action): AppState {
       const shouldRedirect = state.currentView === 'login' || state.currentView === 'signup' || state.currentView === 'landing';
       return {
         ...state,
-        user: action.payload,
+        user: state.user?.id === action.payload.id
+          ? { ...action.payload, subscription: state.user.subscription }
+          : action.payload,
+        ...(state.user?.id !== action.payload.id ? { shop: initialShop, foodItems: [], categories: initialCategories } : {}),
         currentView: shouldRedirect ? 'user-dashboard' : state.currentView,
         currentAdminTab: shouldRedirect ? 'dashboard' : state.currentAdminTab,
       };
     }
     case 'LOGOUT':
-      return { ...state, user: null, currentView: 'login' };
+      return { ...state, user: null, shop: initialShop, foodItems: [], categories: initialCategories, currentView: 'login' };
     case 'SET_COMPANY_ADMIN_SECTION':
       return { ...state, companyAdminSection: action.payload };
     case 'SELECT_MANAGED_SHOP':

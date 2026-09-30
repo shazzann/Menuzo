@@ -33,6 +33,9 @@ import { RouterSync } from '@/components/shared/RouterSync';
 import { PublicDataLoader } from '@/components/shared/PublicDataLoader';
 import { AdminDataLoader } from '@/components/shared/AdminDataLoader';
 import { ShopThemeApplier } from '@/components/shared/ShopThemeApplier';
+import { SubscriptionDataLoader } from '@/components/shared/SubscriptionDataLoader';
+import { SubscriptionPage } from '@/pages/SubscriptionPage';
+import { freeSubscription } from '@/lib/subscription';
 
 function AppContent() {
   const { state, dispatch } = useApp();
@@ -64,7 +67,7 @@ function AppContent() {
               email: session?.user?.email || '',
               shopName: '',
               shopId: '',
-              subscription: { plan: 'pro', expiresAt: new Date('2025-12-31'), status: 'active' },
+              subscription: freeSubscription(),
             },
           });
         }
@@ -86,7 +89,7 @@ function AppContent() {
             email: session.user.email || '',
             shopName: '',
             shopId: '',
-            subscription: { plan: 'pro', expiresAt: new Date('2025-12-31'), status: 'active' },
+            subscription: freeSubscription(),
           },
         });
       } else if (event === 'SIGNED_OUT' && mounted) {
@@ -104,9 +107,18 @@ function AppContent() {
 
   useEffect(() => {
     if (!isAuthLoading && isPrivateView && !state.user) {
+      if (currentView === 'admin-subscription') sessionStorage.setItem('menuzo_upgrade_intent', 'pro');
       dispatch({ type: 'SET_VIEW', payload: 'login' });
     }
-  }, [isAuthLoading, isPrivateView, state.user, dispatch]);
+  }, [isAuthLoading, isPrivateView, currentView, state.user, dispatch]);
+
+  useEffect(() => {
+    if (state.user && state.shop.id && currentView !== 'company-admin' && currentView !== 'company-admin-login'
+      && sessionStorage.getItem('menuzo_upgrade_intent') === 'pro') {
+      sessionStorage.removeItem('menuzo_upgrade_intent');
+      dispatch({ type: 'SET_VIEW', payload: 'admin-subscription' });
+    }
+  }, [state.user?.id, state.shop.id, currentView, dispatch]);
 
   if (isAuthLoading) {
     return (
@@ -133,6 +145,8 @@ function AppContent() {
       return <SignupPage />;
     case 'onboarding':
       return <OnboardingPage />;
+    case 'admin-subscription':
+      return <SubscriptionPage key={`${state.user?.id}:${state.shop.id}`} />;
     case 'demo':
       return <DemoPage />;
     case 'contact':
@@ -190,6 +204,7 @@ function App() {
           <RouterSync />
           <PublicDataLoader />
           <AdminDataLoader />
+          <SubscriptionDataLoader />
           <ShopThemeApplier />
           <AppContent />
         </BrowserRouter>

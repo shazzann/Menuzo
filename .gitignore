@@ -1,2 +1,7 @@
 node_modules
 .env
+supabase/production/configure_billing.sql
+.release-billing/
+.tmp-production-schema.sql
+.tmp-billing-release.patch
+.tmp-release-build/

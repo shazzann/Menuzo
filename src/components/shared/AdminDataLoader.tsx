@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { useApp } from '@/store';
 import { RestaurantService, MenuService } from '@/services';
 import { filterExpiredSpecialDates } from '@/lib/timeUtils';
@@ -7,22 +7,33 @@ import type { Shop, FoodItem } from '@/types';
 export function AdminDataLoader() {
   const { state, dispatch } = useApp();
   const { user, currentView } = state;
-  const [loadedUserId, setLoadedUserId] = useState('');
+  const loadedUserId = useRef('');
 
   useEffect(() => {
+    if (!user?.id) {
+      loadedUserId.current = '';
+      return;
+    }
+
+    // Company admins do not need a restaurant to access the platform portal.
+    if (currentView === 'company-admin-login' || currentView === 'company-admin') return;
+
     // Load if user is logged in
-    if (!user?.id || user.id === 'google-auth-bypass-id' || user.id === 'user-1') return;
+    if (user.id === 'google-auth-bypass-id' || user.id === 'user-1') return;
     
     // If we already loaded data for this user, skip
-    if (loadedUserId === user.id) return;
+    if (loadedUserId.current === user.id) return;
+
+    let isCancelled = false;
 
     async function loadData() {
       try {
-        setLoadedUserId(user!.id);
-        
         let shopData = await RestaurantService.getRestaurantByUserId(user!.id);
 
+        if (isCancelled) return;
+
         if (!shopData) {
+          loadedUserId.current = user!.id;
           if (currentView !== 'onboarding') {
             dispatch({ type: 'SET_VIEW', payload: 'onboarding' });
           }
@@ -31,6 +42,8 @@ export function AdminDataLoader() {
 
         if (shopData) {
           const dailyStats = await RestaurantService.getShopDailyStats(shopData.id);
+
+          if (isCancelled) return;
 
           const rawOpeningHours = Array.isArray((shopData as any).opening_hours) ? (shopData as any).opening_hours : [];
           const activeOpeningHours = filterExpiredSpecialDates(rawOpeningHours);
@@ -71,6 +84,8 @@ export function AdminDataLoader() {
 
           const foodData = await MenuService.getMenuByShopId(shopData.id);
 
+          if (isCancelled) return;
+
           if (foodData) {
             const formattedFood: FoodItem[] = foodData.map(item => ({
               id: item.id,
@@ -87,6 +102,7 @@ export function AdminDataLoader() {
             }));
             dispatch({ type: 'SET_FOOD_ITEMS', payload: formattedFood });
           }
+          loadedUserId.current = user!.id;
         }
       } catch (err) {
         console.error("Error loading admin dashboard data:", err);
@@ -94,7 +110,12 @@ export function AdminDataLoader() {
     }
 
     loadData();
-  }, [user?.id, currentView, loadedUserId, dispatch]);
+
+    // Ignore results from an earlier page or session, including onboarding redirects.
+    return () => {
+      isCancelled = true;
+    };
+  }, [user?.id, currentView, dispatch]);
 
   return null;
 }

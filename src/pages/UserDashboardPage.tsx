@@ -20,6 +20,7 @@ import { useEffect, useState, useRef, useMemo } from 'react';
 import { toast } from 'sonner';
 import { SmallQrPreview, type SmallQrPreviewRef } from '@/components/admin/SmallQrPreview';
 import type { AdminTab } from '@/types';
+import { isProActive } from '@/lib/subscription';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -35,6 +36,7 @@ import {
 export function UserDashboardPage() {
   const { state, dispatch } = useApp();
   const { shop, foodItems, user } = state;
+  const proActive = isProActive(user?.subscription);
   const [isLoadingData, setIsLoadingData] = useState(true);
   const qrRef = useRef<SmallQrPreviewRef>(null);
 
@@ -155,15 +157,22 @@ export function UserDashboardPage() {
               <Crown className="w-5 h-5 text-primary" />
             </div>
             <div>
-              <p className="font-semibold text-sm capitalize">{user?.subscription?.plan || 'Pro'} Plan Active</p>
+              <p className="font-semibold text-sm">{proActive ? 'Pro Active' : 'Free Plan'}</p>
               <p className="text-xs text-muted-foreground flex items-center gap-1">
                 <Calendar className="w-3 h-3" />
-                Renews {user?.subscription?.expiresAt ? new Date(user.subscription.expiresAt).toLocaleDateString() : 'Dec 31, 2025'}
+                {proActive && user?.subscription.expiresAt
+                  ? `Expires ${new Date(user.subscription.expiresAt).toLocaleDateString()}`
+                  : 'Upgrade with a bank transfer'}
               </p>
             </div>
           </div>
-          <Button variant="outline" size="sm" className="border-primary/30 text-primary hover:bg-primary/10">
-            Manage
+          <Button
+            variant="outline"
+            size="sm"
+            className="border-primary/30 text-primary hover:bg-primary/10"
+            onClick={() => dispatch({ type: 'SET_VIEW', payload: 'admin-subscription' })}
+          >
+            {proActive ? 'Manage' : 'Choose Pro'}
           </Button>
         </div>
 

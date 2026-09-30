@@ -1,4 +1,4 @@
-import { ArrowLeft, ChevronRight, Store, Paintbrush, QrCode, Shield } from 'lucide-react';
+import { ArrowLeft, ChevronRight, Store, Paintbrush, QrCode, Shield, CreditCard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useApp } from '@/store';
 
@@ -23,6 +23,12 @@ export function AdminSettingsPage() {
       title: 'QR Customization',
       description: 'Style your QR code with custom colors and shapes',
       icon: QrCode,
+    },
+    {
+      id: 'admin-subscription',
+      title: 'Subscription & Payments',
+      description: 'Choose Pro, submit a bank payment, and track verification',
+      icon: CreditCard,
     },
     {
       id: 'admin-security',
