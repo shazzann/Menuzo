@@ -1,5 +1,5 @@
--- Enable RLS on storage objects if not already
-ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
+-- Supabase manages storage.objects and enables RLS itself. Application
+-- migrations define policies without altering the managed table's RLS setting.
 
 -- Public can view published images
 CREATE POLICY "Public Access"

@@ -1,3 +1,5 @@
+import type { BankTransferSettings, BillingPeriod, PaymentRequest, ShopCustomUrl } from './billing';
+
 export type Json =
   | string
   | number
@@ -9,6 +11,31 @@ export type Json =
 export interface Database {
   public: {
     Tables: {
+      billing_periods: {
+        Row: BillingPeriod
+        Insert: Omit<BillingPeriod, 'active'> & { active?: boolean }
+        Update: Partial<BillingPeriod>
+        Relationships: []
+      }
+      bank_transfer_settings: {
+        Row: BankTransferSettings
+        Insert: Partial<BankTransferSettings>
+        Update: Partial<BankTransferSettings>
+        Relationships: []
+      }
+      billing_payment_requests: {
+        Row: PaymentRequest
+        Insert: Omit<PaymentRequest, 'id' | 'created_at' | 'status' | 'requested_slug' | 'customer_note' | 'rejection_reason' | 'reviewed_at'> &
+          Partial<Pick<PaymentRequest, 'id' | 'created_at' | 'status' | 'requested_slug' | 'customer_note' | 'rejection_reason' | 'reviewed_at'>>
+        Update: Partial<PaymentRequest>
+        Relationships: []
+      }
+      shop_custom_urls: {
+        Row: ShopCustomUrl
+        Insert: Omit<ShopCustomUrl, 'created_at'> & { created_at?: string }
+        Update: Partial<ShopCustomUrl>
+        Relationships: []
+      }
       food_items: {
         Row: {
           category: string | null
@@ -194,6 +221,25 @@ export interface Database {
     }
     Views: Record<string, never>
     Functions: {
+      submit_payment_request: {
+        Args: {
+          p_shop_id: string
+          p_period_id: string
+          p_payer_name: string
+          p_transfer_reference: string
+          p_transferred_on: string
+          p_expected_amount: number
+          p_expected_currency: string
+          p_expected_months: number
+          p_requested_slug?: string | null
+          p_customer_note?: string | null
+        }
+        Returns: PaymentRequest
+      }
+      resolve_menu_shop: {
+        Args: { p_slug: string }
+        Returns: Database['public']['Tables']['shops']['Row'][]
+      }
       increment_shop_visits: {
         Args: {
           p_shop_id: string

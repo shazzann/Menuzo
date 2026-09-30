@@ -52,7 +52,7 @@ export function SignupPage() {
           email: formData.email,
           shopName: '',
           shopId: '',
-          subscription: { plan: 'free', expiresAt: new Date('2025-12-31'), status: 'active' }
+          subscription: { plan: 'free', expiresAt: null, status: 'active' }
         }
       });
 

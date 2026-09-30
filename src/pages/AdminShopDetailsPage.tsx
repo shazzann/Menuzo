@@ -356,13 +356,13 @@ export function AdminShopDetailsPage() {
                     readOnly
                     className="rounded-l-none bg-muted/50 cursor-not-allowed text-muted-foreground focus-visible:ring-0"
                     onClick={() => {
-                      if (isEditing) toast('Custom URLs are provided via Company Admin. Please contact support to upgrade.', { icon: '🔒' });
+                      if (isEditing) toast('Request a custom URL from Subscription & payments.', { icon: '🔒' });
                     }}
                   />
                 </div>
                 {isEditing && (
                   <p className="text-xs text-muted-foreground mt-1">
-                    Custom URLs are only available for Premium plans and are configured by admin.
+                    Keep this standard link. Request a custom menu URL with your Pro payment from Subscription & payments.
                   </p>
                 )}
               </div>

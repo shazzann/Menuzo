@@ -38,27 +38,18 @@ export const RestaurantService = {
   },
 
   async getRestaurantByUsername(username: string) {
-    // First try exact match on the new username column
-    let { data, error } = await supabase
+    // The resolver checks paid URL entitlement on the server for every visit.
+    const resolved = await supabase.rpc('resolve_menu_shop', { p_slug: username.toLowerCase() });
+    if (!resolved.error) return resolved.data?.[0] || null;
+    // Keep permanent links working while the new migration is being deployed.
+    // Never fall back to name matching, which could revive an expired paid URL.
+    if (resolved.error.code !== 'PGRST202' && resolved.error.code !== '42883') throw resolved.error;
+    const { data, error } = await supabase
       .from('shops')
       .select('*')
       .eq('username', username.toLowerCase())
       .limit(1)
       .maybeSingle();
-
-    // Fallback for existing shops that don't have a username set yet
-    if (!data) {
-      const slugName = username.replace(/-/g, ' ');
-      const fallback = await supabase
-        .from('shops')
-        .select('*')
-        .ilike('name', slugName)
-        .limit(1)
-        .maybeSingle();
-      
-      data = fallback.data;
-      error = fallback.error;
-    }
 
     if (error) throw error;
     return data;

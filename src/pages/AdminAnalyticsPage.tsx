@@ -5,10 +5,13 @@ import { useApp } from '@/store';
 import { BottomNav } from '@/components/shared/BottomNav';
 import type { AdminTab } from '@/types';
 import { cn } from '@/lib/utils';
+import { isProActive } from '@/lib/subscription';
 
 export function AdminAnalyticsPage() {
   const { state, dispatch } = useApp();
   const { user, foodItems, categories, shop } = state;
+  const proActive = isProActive(user?.subscription);
+  const currentPlan = proActive ? 'pro' : 'free';
   const [timeRange, setTimeRange] = useState<'today' | 'week' | 'month'>('today');
 
   const handleTabChange = (tab: AdminTab) => {
@@ -89,23 +92,31 @@ export function AdminAnalyticsPage() {
               </div>
               <div>
                 <p className="text-xs text-muted-foreground uppercase tracking-wider">Current Plan</p>
-                <p className={cn('font-bold text-lg capitalize', getPlanColor(user?.subscription?.plan || 'free'))}>
-                  {user?.subscription?.plan || 'Free'}
+                <p className={cn('font-bold text-lg capitalize', getPlanColor(currentPlan))}>
+                  {currentPlan}
                 </p>
               </div>
             </div>
-            <span className={cn('px-3 py-1 text-xs font-mono uppercase rounded-full', getPlanBadge(user?.subscription?.plan || 'free'))}>
-              {user?.subscription?.status || 'Active'}
+            <span className={cn('px-3 py-1 text-xs font-mono uppercase rounded-full', getPlanBadge(currentPlan))}>
+              {proActive ? 'Pro Active' : 'Free Plan'}
             </span>
           </div>
           
           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
             <Calendar className="w-4 h-4" />
-            <span>Expires {user?.subscription?.expiresAt ? new Date(user.subscription.expiresAt).toLocaleDateString() : 'N/A'}</span>
+            <span>
+              {proActive && user?.subscription.expiresAt
+                ? `Expires ${new Date(user.subscription.expiresAt).toLocaleDateString()}`
+                : 'Upgrade with a bank transfer'}
+            </span>
           </div>
 
-          <Button variant="outline" className="w-full border-primary/30 text-primary hover:bg-primary/10">
-            Upgrade Plan
+          <Button
+            variant="outline"
+            className="w-full border-primary/30 text-primary hover:bg-primary/10"
+            onClick={() => dispatch({ type: 'SET_VIEW', payload: 'admin-subscription' })}
+          >
+            {proActive ? 'Manage Subscription' : 'Choose Pro'}
           </Button>
         </div>
 

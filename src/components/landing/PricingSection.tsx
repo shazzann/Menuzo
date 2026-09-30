@@ -1,21 +1,42 @@
 import { CheckCircle2, XCircle, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
-
+import { useApp } from '@/store';
 import { useEffect, useState } from 'react';
-import { PricingService, type PricingPlan } from '@/services/pricing.service';
+import { BillingService } from '@/services/billing.service';
+import { formatPaymentAmount } from '@/lib/billing';
+import type { BillingPeriod } from '@/types/billing';
+import { PricingService } from '@/services/pricing.service';
 
 export function PricingSection() {
-  const [plans, setPlans] = useState<PricingPlan[]>([]);
-
+  const { state, dispatch } = useApp();
+  const [basePlans, setBasePlans] = useState(PricingService.getPlans);
   useEffect(() => {
-    const loadPlans = () => setPlans(PricingService.getPlans());
-    loadPlans();
-
-    const handleUpdate = () => loadPlans();
+    const handleUpdate = () => setBasePlans(PricingService.getPlans());
     window.addEventListener('pricing_updated', handleUpdate);
     return () => window.removeEventListener('pricing_updated', handleUpdate);
   }, []);
+  const [periods, setPeriods] = useState<BillingPeriod[]>([]);
+  useEffect(() => {
+    let cancelled = false;
+    void BillingService.getPeriods().then(data => {
+      if (!cancelled) setPeriods(data);
+    }).catch(() => {
+      // Unpublished pricing stays unavailable; checkout uses the same source.
+    });
+    return () => { cancelled = true; };
+  }, []);
+  const monthly = periods.find(period => period.id === 'monthly' && period.amount !== null && period.amount > 0);
+  const yearly = periods.find(period => period.id === 'yearly' && period.amount !== null && period.amount > 0);
+  const plans = basePlans.map(plan => ({
+    ...plan,
+    ...(plan.id === 'pro' ? {
+      price: monthly ? formatPaymentAmount(monthly.amount, monthly.currency) : 'Coming soon',
+      period: monthly ? '/month' : undefined,
+    } : {}),
+    billingNote: plan.id === 'pro' && yearly
+      ? `Or ${formatPaymentAmount(yearly.amount, yearly.currency)} / year` : undefined,
+  }));
 
   return (
     <section id="pricing" className="py-32 px-4 bg-muted/20 relative overflow-hidden border-t border-border/50">
@@ -61,10 +82,11 @@ export function PricingSection() {
                 </div>
               )}
               <h3 className="text-2xl font-bold mb-2">{plan.name}</h3>
-              <div className="mb-6 flex items-baseline gap-1">
-                <span className="text-5xl font-bold tracking-tight">{plan.price}</span>
+              <div className="mb-6 flex flex-wrap items-baseline gap-1">
+                <span className={`${plan.name === 'Pro' ? 'text-4xl' : 'text-5xl'} font-bold tracking-tight`}>{plan.price}</span>
                 {plan.period && <span className="text-muted-foreground font-medium text-lg">{plan.period}</span>}
               </div>
+              {plan.billingNote && <p className="-mt-3 mb-6 text-sm text-muted-foreground">{plan.billingNote}</p>}
               <p className="text-muted-foreground mb-8 pb-8 border-b border-border/50 text-lg">
                 {plan.description}
               </p>
@@ -85,6 +107,17 @@ export function PricingSection() {
               <Button 
                 className="w-full h-14 rounded-2xl text-lg font-semibold" 
                 variant={plan.popular ? 'default' : 'outline'}
+                onClick={() => {
+                  if (plan.name === 'Pro' && !state.user) {
+                    sessionStorage.setItem('menuzo_upgrade_intent', 'pro');
+                  }
+                  dispatch({
+                    type: 'SET_VIEW',
+                    payload: plan.name === 'Pro'
+                      ? (state.user ? 'admin-subscription' : 'login')
+                      : (state.user ? 'user-dashboard' : 'signup'),
+                  });
+                }}
               >
                 {plan.cta}
                 {plan.popular && <ArrowRight className="w-5 h-5 ml-2" />}
