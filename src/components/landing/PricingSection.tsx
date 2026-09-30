@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { BillingService } from '@/services/billing.service';
 import { formatPaymentAmount } from '@/lib/billing';
 import type { BillingPeriod } from '@/types/billing';
+<<<<<<< HEAD
 
 interface PricingPlan {
   name: string;
@@ -22,6 +23,18 @@ interface PricingPlan {
 
 export function PricingSection() {
   const { state, dispatch } = useApp();
+=======
+import { PricingService } from '@/services/pricing.service';
+
+export function PricingSection() {
+  const { state, dispatch } = useApp();
+  const [basePlans, setBasePlans] = useState(PricingService.getPlans);
+  useEffect(() => {
+    const handleUpdate = () => setBasePlans(PricingService.getPlans());
+    window.addEventListener('pricing_updated', handleUpdate);
+    return () => window.removeEventListener('pricing_updated', handleUpdate);
+  }, []);
+>>>>>>> 9a61cdd615755e8396df0dff853026d37293a272
   const [periods, setPeriods] = useState<BillingPeriod[]>([]);
   useEffect(() => {
     let cancelled = false;
@@ -34,6 +47,7 @@ export function PricingSection() {
   }, []);
   const monthly = periods.find(period => period.id === 'monthly' && period.amount !== null && period.amount > 0);
   const yearly = periods.find(period => period.id === 'yearly' && period.amount !== null && period.amount > 0);
+<<<<<<< HEAD
   const plans: PricingPlan[] = [
     {
       name: 'Free',
@@ -79,6 +93,17 @@ export function PricingSection() {
       popular: true,
     }
   ];
+=======
+  const plans = basePlans.map(plan => ({
+    ...plan,
+    ...(plan.id === 'pro' ? {
+      price: monthly ? formatPaymentAmount(monthly.amount, monthly.currency) : 'Coming soon',
+      period: monthly ? '/month' : undefined,
+    } : {}),
+    billingNote: plan.id === 'pro' && yearly
+      ? `Or ${formatPaymentAmount(yearly.amount, yearly.currency)} / year` : undefined,
+  }));
+>>>>>>> 9a61cdd615755e8396df0dff853026d37293a272
 
   return (
     <section id="pricing" className="py-32 px-4 bg-muted/20 relative overflow-hidden border-t border-border/50">

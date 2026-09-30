@@ -6,6 +6,7 @@ import {
   Activity, Share2, Heart, MoreHorizontal, BarChart3, UtensilsCrossed,
   Image as ImageIcon, Video, FileText, Monitor, Smartphone, Laptop,
 } from 'lucide-react';
+import { getShopThemeStyles } from '@/lib/themeUtils';
 
 export function CompanyShopDetail() {
   const { state, dispatch } = useApp();
@@ -26,7 +27,7 @@ export function CompanyShopDetail() {
   ];
 
   return (
-    <div className="space-y-5 animate-fade-in-up">
+    <div className="space-y-5 animate-fade-in-up bg-background text-foreground min-h-[calc(100vh-6rem)] -m-4 lg:-m-6 p-4 lg:p-6" style={getShopThemeStyles(shop.theme)}>
       {/* Back + Header */}
       <div className="flex items-center gap-3">
         <button
@@ -39,8 +40,8 @@ export function CompanyShopDetail() {
       </div>
 
       {/* Shop Hero */}
-      <div className="bg-card/80 backdrop-blur-sm border border-border/50 rounded-2xl overflow-hidden">
-        <div className="h-32 bg-gradient-to-r from-orange-500/20 via-violet-500/10 to-blue-500/20 relative">
+      <div className="bg-card backdrop-blur-sm border border-border/50 rounded-2xl overflow-hidden">
+        <div className="h-32 relative bg-primary/10">
           {shop.banner && (
             <img src={shop.banner} alt="Banner" className="absolute inset-0 w-full h-full object-cover opacity-80 mix-blend-overlay" />
           )}
@@ -64,7 +65,7 @@ export function CompanyShopDetail() {
                 <img src={shop.logo} alt="Logo" className="w-full h-full object-cover" />
               </div>
             ) : (
-              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white text-2xl font-bold shadow-xl border-4 border-card z-10 shrink-0">
+              <div className="w-20 h-20 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center text-2xl font-bold shadow-xl border-4 border-card z-10 shrink-0">
                 {shop.name.charAt(0)}
               </div>
             )}
@@ -114,7 +115,7 @@ export function CompanyShopDetail() {
           { label: 'Plan', value: shop.plan, icon: <CreditCard className="w-4 h-4" />, color: 'text-orange-500' },
           { label: 'Expires', value: shop.expiresAt, icon: <Calendar className="w-4 h-4" />, color: 'text-pink-500' },
         ].map((stat) => (
-          <div key={stat.label} className="bg-card/80 backdrop-blur-sm border border-border/50 rounded-xl p-3 text-center">
+          <div key={stat.label} className="bg-card backdrop-blur-sm border border-border/50 rounded-xl p-3 text-center">
             <div className={`flex justify-center mb-1.5 ${stat.color}`}>{stat.icon}</div>
             <p className="text-sm font-bold">{stat.value}</p>
             <p className="text-[11px] text-muted-foreground">{stat.label}</p>
@@ -123,7 +124,7 @@ export function CompanyShopDetail() {
       </div>
 
       {/* Tabs */}
-      <div className="bg-card/80 backdrop-blur-sm border border-border/50 rounded-2xl">
+      <div className="bg-card backdrop-blur-sm border border-border/50 rounded-2xl">
         <div className="flex items-center gap-1 p-2 border-b border-border/50 overflow-x-auto scrollbar-hide">
           {tabs.map((tab) => (
             <button
@@ -155,7 +156,7 @@ export function CompanyShopDetail() {
                     { label: 'Rating', value: `${shop.rating} / 5.0`, icon: <Star className="w-4 h-4" /> },
                     { label: 'Created', value: shop.createdAt, icon: <Calendar className="w-4 h-4" /> },
                   ].map((info) => (
-                    <div key={info.label} className="flex items-center gap-3 p-3 rounded-xl bg-muted/20">
+                    <div key={info.label} className="flex items-center gap-3 p-3 rounded-xl bg-muted">
                       <div className="text-muted-foreground">{info.icon}</div>
                       <div>
                         <p className="text-xs text-muted-foreground">{info.label}</p>
@@ -175,7 +176,7 @@ export function CompanyShopDetail() {
                     { label: 'Menu Items', value: `${shop.menuItems} items`, color: 'text-amber-500' },
                     { label: 'Conversion Rate', value: `${((shop.qrScans / shop.visitors) * 100).toFixed(1)}%`, color: 'text-pink-500' },
                   ].map((metric) => (
-                    <div key={metric.label} className="flex items-center justify-between p-3 rounded-xl bg-muted/20">
+                    <div key={metric.label} className="flex items-center justify-between p-3 rounded-xl bg-muted">
                       <span className="text-sm text-muted-foreground">{metric.label}</span>
                       <span className={`text-sm font-bold ${metric.color}`}>{metric.value}</span>
                     </div>
@@ -199,15 +200,15 @@ export function CompanyShopDetail() {
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <div className="p-3 rounded-xl bg-muted/20 text-center">
+                <div className="p-3 rounded-xl bg-muted text-center">
                   <p className="text-xs text-muted-foreground">Start Date</p>
                   <p className="text-sm font-semibold">{shop.createdAt}</p>
                 </div>
-                <div className="p-3 rounded-xl bg-muted/20 text-center">
+                <div className="p-3 rounded-xl bg-muted text-center">
                   <p className="text-xs text-muted-foreground">Expiry Date</p>
                   <p className="text-sm font-semibold">{shop.expiresAt}</p>
                 </div>
-                <div className="p-3 rounded-xl bg-muted/20 text-center">
+                <div className="p-3 rounded-xl bg-muted text-center">
                   <p className="text-xs text-muted-foreground">Auto Renew</p>
                   <p className="text-sm font-semibold text-emerald-500">Enabled</p>
                 </div>
@@ -219,7 +220,7 @@ export function CompanyShopDetail() {
                   { id: 'INV-002', date: '2026-06-01', amount: '$24.99', status: 'Paid' },
                   { id: 'INV-003', date: '2026-05-01', amount: '$24.99', status: 'Paid' },
                 ].map((inv) => (
-                  <div key={inv.id} className="flex items-center justify-between p-3 rounded-xl bg-muted/20">
+                  <div key={inv.id} className="flex items-center justify-between p-3 rounded-xl bg-muted">
                     <div className="flex items-center gap-3">
                       <FileText className="w-4 h-4 text-muted-foreground" />
                       <div>
@@ -249,7 +250,7 @@ export function CompanyShopDetail() {
                 { label: 'Popular Item', value: 'Chicken Rice', change: '' },
                 { label: 'Conversion', value: '36.4%', change: '+5%' },
               ].map((stat) => (
-                <div key={stat.label} className="p-3 rounded-xl bg-muted/20 text-center">
+                <div key={stat.label} className="p-3 rounded-xl bg-muted text-center">
                   <p className="text-xs text-muted-foreground">{stat.label}</p>
                   <p className="text-lg font-bold mt-1">{stat.value}</p>
                   {stat.change && (
@@ -274,7 +275,7 @@ export function CompanyShopDetail() {
                 { label: 'Videos', value: '2', icon: <Video className="w-5 h-5 text-pink-500" /> },
                 { label: 'PDF Menus', value: '1', icon: <FileText className="w-5 h-5 text-amber-500" /> },
               ].map((stat) => (
-                <div key={stat.label} className="flex items-center gap-3 p-4 rounded-xl bg-muted/20">
+                <div key={stat.label} className="flex items-center gap-3 p-4 rounded-xl bg-muted">
                   {stat.icon}
                   <div>
                     <p className="text-lg font-bold">{stat.value}</p>
@@ -292,7 +293,7 @@ export function CompanyShopDetail() {
               <p className="text-sm text-muted-foreground">All uploaded images, videos, logos and banners for this shop</p>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-6">
                 {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-                  <div key={i} className="aspect-square rounded-xl bg-muted/30 border border-border/50 flex items-center justify-center">
+                  <div key={i} className="aspect-square rounded-xl bg-muted border border-border/50 flex items-center justify-center">
                     <ImageIcon className="w-8 h-8 text-muted-foreground/20" />
                   </div>
                 ))}
@@ -307,7 +308,7 @@ export function CompanyShopDetail() {
                 { name: 'Ashen Kumar', role: 'Manager', email: 'ashen@example.com', lastLogin: '1d ago', status: 'Offline' },
                 { name: 'Nisala Perera', role: 'Staff', email: 'nisala@example.com', lastLogin: '5h ago', status: 'Online' },
               ].map((member) => (
-                <div key={member.name} className="flex items-center justify-between p-4 rounded-xl bg-muted/20">
+                <div key={member.name} className="flex items-center justify-between p-4 rounded-xl bg-muted">
                   <div className="flex items-center gap-3">
                     <div className="relative">
                       <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white text-sm font-bold">
@@ -336,7 +337,7 @@ export function CompanyShopDetail() {
                 { device: 'Safari on iPhone', icon: <Smartphone className="w-5 h-5" />, location: 'Colombo, LK', lastActive: '2h ago', current: false },
                 { device: 'Firefox on MacOS', icon: <Monitor className="w-5 h-5" />, location: 'Kandy, LK', lastActive: '3d ago', current: false },
               ].map((device, i) => (
-                <div key={i} className="flex items-center justify-between p-4 rounded-xl bg-muted/20">
+                <div key={i} className="flex items-center justify-between p-4 rounded-xl bg-muted">
                   <div className="flex items-center gap-3">
                     <div className="text-muted-foreground">{device.icon}</div>
                     <div>
@@ -370,7 +371,7 @@ export function CompanyShopDetail() {
                 { action: 'Profile image updated', time: '2w ago', type: 'info' },
                 { action: 'Login from new device — iPhone', time: '2w ago', type: 'warning' },
               ].map((log, i) => (
-                <div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-muted/20">
+                <div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-muted">
                   <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${
                     log.type === 'success' ? 'bg-emerald-500' :
                     log.type === 'warning' ? 'bg-amber-500' : 'bg-blue-500'

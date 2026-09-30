@@ -1,5 +1,8 @@
 import type { BankTransferSettings, BillingPeriod, PaymentRequest, ShopCustomUrl } from './billing';
+<<<<<<< HEAD
 import type { AdminPaymentRequest, AdminShopSubscription, BillingPage } from './company-billing';
+=======
+>>>>>>> 9a61cdd615755e8396df0dff853026d37293a272
 
 export type Json =
   | string
@@ -222,6 +225,7 @@ export interface Database {
     }
     Views: Record<string, never>
     Functions: {
+<<<<<<< HEAD
       is_company_billing_admin: { Args: Record<string, never>; Returns: boolean }
       admin_list_billing_requests: {
         Args: { p_status: string; p_query: string; p_offset: number }
@@ -243,6 +247,8 @@ export interface Database {
         Args: { p_shop_id: string; p_slug: string }
         Returns: undefined
       }
+=======
+>>>>>>> 9a61cdd615755e8396df0dff853026d37293a272
       submit_payment_request: {
         Args: {
           p_shop_id: string

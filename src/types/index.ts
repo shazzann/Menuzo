@@ -171,6 +171,7 @@ export interface ManagedShop {
   expiresAt: string;
   logo?: string;
   banner?: string;
+  theme?: ThemeConfig;
   qrScans: number;
   visitors: number;
 }

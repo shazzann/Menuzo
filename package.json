@@ -8,7 +8,10 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "test:billing": "node --test tests/customer-billing.test.mjs",
+<<<<<<< HEAD
     "test:company-billing": "node --test tests/company-billing.test.mjs",
+=======
+>>>>>>> 9a61cdd615755e8396df0dff853026d37293a272
     "preview": "vite preview"
   },
   "dependencies": {
