@@ -1,5 +1,5 @@
 import type { BankTransferSettings, BillingPeriod, PaymentRequest, ShopCustomUrl } from './billing';
-import type { AdminPaymentRequest, AdminShopSubscription, BillingPage } from './company-billing';
+import type { AdminPaymentRequest, AdminShopSubscription, BillingPage, ShopBillingDetails } from './company-billing';
 
 export type Json =
   | string
@@ -222,6 +222,10 @@ export interface Database {
     }
     Views: Record<string, never>
     Functions: {
+      admin_get_shop_billing: {
+        Args: { p_shop_id: string; p_status: string; p_offset: number }
+        Returns: ShopBillingDetails
+      }
       is_company_billing_admin: { Args: Record<string, never>; Returns: boolean }
       admin_list_billing_requests: {
         Args: { p_status: string; p_query: string; p_offset: number }

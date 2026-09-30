@@ -83,4 +83,34 @@ UPDATE public.profiles SET subscription_expires_at=now()-interval '1 day',subscr
 SET ROLE authenticated;
 SELECT pg_temp.expect_error($q$SELECT public.admin_change_subscription_status('10000000-0000-0000-0000-000000000001','active','Restore expired')$q$,'This subscription has expired%');
 RESET ROLE;
+-- Owners can immediately purchase another period while already subscribed.
+-- Exercise same-period and mixed-period renewals through both customer and admin RPCs.
+UPDATE public.billing_periods SET amount=15000,currency='LKR' WHERE id='yearly';
+DO $$
+DECLARE
+  v_case record;
+  v_expiry timestamptz;
+  v_request public.billing_payment_requests%ROWTYPE;
+BEGIN
+  FOR v_case IN SELECT * FROM (VALUES (1,1),(12,12),(1,12),(12,1)) AS cases(current_months,purchased_months) LOOP
+    v_expiry := now() + make_interval(months => v_case.current_months);
+    UPDATE public.profiles SET subscription_plan='pro',subscription_status='active',subscription_expires_at=v_expiry
+      WHERE id='00000000-0000-0000-0000-000000000001';
+    PERFORM set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000001',true);
+    v_request := public.submit_payment_request(
+      '10000000-0000-0000-0000-000000000001',
+      CASE WHEN v_case.purchased_months=1 THEN 'monthly' ELSE 'yearly' END,
+      'Renewal Payer',format('STACK-%s-%s',v_case.current_months,v_case.purchased_months),
+      (now() AT TIME ZONE 'Asia/Colombo')::date,
+      CASE WHEN v_case.purchased_months=1 THEN 100 ELSE 15000 END,'LKR',v_case.purchased_months);
+    PERFORM pg_temp.assert_true((SELECT subscription_expires_at=v_expiry FROM public.profiles
+      WHERE id='00000000-0000-0000-0000-000000000001'),'pending renewal does not change expiry');
+    PERFORM set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000003',true);
+    PERFORM public.admin_review_billing_payment(v_request.id,'approved',NULL,NULL,true);
+    PERFORM pg_temp.assert_true((SELECT subscription_expires_at=v_expiry+make_interval(months => v_case.purchased_months)
+      FROM public.profiles WHERE id='00000000-0000-0000-0000-000000000001'),
+      format('%s-month subscription plus %s-month purchase preserves all remaining time',v_case.current_months,v_case.purchased_months));
+  END LOOP;
+END;
+$$;
 \echo 'Company billing authorization, review, renewal, URL, and audit checks passed.'

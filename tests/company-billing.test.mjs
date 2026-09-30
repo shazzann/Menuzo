@@ -56,7 +56,7 @@ function harness(options = {}) {
   const Button = ({ children, variant: _variant, size: _size, ...props }) => React.createElement('button',props,children);
   const service = {
     requests: async () => { if (options.loadError) throw options.loadError; return { rows: options.rows || [request], total: (options.rows || [request]).length }; },
-    subscriptions: async () => ({ rows: [], total: 0 }),
+    subscriptions: async () => ({ rows: options.shops || [], total: (options.shops || []).length }),
     review: async (...args) => { calls.push(args); if (options.reviewError) throw options.reviewError; },
   };
   const { CompanyBilling } = load('src/components/company-admin/CompanyBilling.tsx', {
@@ -66,11 +66,12 @@ function harness(options = {}) {
     },
     'react/jsx-runtime': jsx, 'lucide-react': icons, sonner: { toast: { success() {} } },
     '@/components/ui/button': { Button },
+    './CompanyShopBillingDetail': { CompanyShopBillingDetail: ({ shopId }) => React.createElement('p',null,`History for ${shopId}`) },
     '@/components/ui/dialog': { Dialog: ({ open, children }) => open ? React.createElement('div',null,children) : null, DialogContent: Wrapper, DialogDescription: Wrapper, DialogHeader: Wrapper, DialogTitle: Wrapper },
     '@/services/company-billing.service': { CompanyBillingService: service, companyBillingError: e => e.message },
     '@/lib/billing': { formatPaymentAmount: (amount, currency) => `${currency} ${amount}` },
   }, { window: { setTimeout(fn) { timers.push(fn); return timers.length; }, clearTimeout() {} } });
-  const render = () => { index = 0; const tree = CompanyBilling({ section: 'payment-requests' }); mounted = true; return tree; };
+  const render = () => { index = 0; const tree = CompanyBilling({ section: options.section || 'payment-requests' }); mounted = true; return tree; };
   return { render, html: () => renderToStaticMarkup(render()), calls, async ready() { render(); effects.forEach(fn => fn()); for (const fn of timers) await fn(); } };
 }
 test('review UI requires receipt confirmation and sends the chosen request decision', async () => {
@@ -103,4 +104,56 @@ test('failed list request renders an error instead of an empty payment queue', a
   const page = harness({ loadError: { message: 'Admin access denied' } }); await page.ready();
   assert.match(page.html(), /Admin access denied/);
   assert.doesNotMatch(page.html(), /No matching records/);
+});
+
+test('subscription list can open history for a Free shop', async () => {
+  const page = harness({ section: 'subscriptions', shops: [{ shop_id: 'free-shop-id', shop_name: 'Free Shop', owner_email: 'owner@example.test', subscription_plan: 'free', pro_active: false }] });
+  await page.ready();
+  const button = find(page.render(), n => textOf(n) === 'View shop' && n.props.onClick);
+  assert.ok(button); assert.ok(!button.props.disabled);
+  button.props.onClick();
+  assert.match(page.html(), /History for free-shop-id/);
+});
+
+test('shop history service sends an exact shop ID, status, and page offset', async () => {
+  const calls = [];
+  const { CompanyBillingService } = load('src/services/company-billing.service.ts', { '@/lib/supabase': { supabase: { rpc: async (...args) => { calls.push(plain(args)); return { data: { payments: { rows: [], total: 0 } } }; } } } });
+  await CompanyBillingService.shopBilling('shop-id','approved',50);
+  assert.deepEqual(calls,[['admin_get_shop_billing',{ p_shop_id: 'shop-id',p_status: 'approved',p_offset: 50 }]]);
+});
+
+function historyHarness(fetch) {
+  const states = [], effects = [], calls = [];
+  let stateIndex = 0, effectIndex = 0;
+  const Button = ({ children, variant: _variant, size: _size, ...props }) => React.createElement('button',props,children);
+  const { CompanyShopBillingDetail } = load('src/components/company-admin/CompanyShopBillingDetail.tsx', {
+    react: {
+      useState(initial) { const i = stateIndex++; if (!(i in states)) states[i]=initial; return [states[i],value => { states[i]=typeof value==='function' ? value(states[i]) : value; }]; },
+      useEffect(fn,deps) { const i=effectIndex++; const previous=effects[i]; if (!previous || deps.some((value,n) => !Object.is(value,previous.deps[n]))) { previous?.cleanup?.(); effects[i]={ fn,deps,pending:true }; } },
+    },
+    'react/jsx-runtime': jsx, 'lucide-react': icons, '@/components/ui/button': { Button },
+    '@/lib/billing': { formatPaymentAmount: (amount,currency) => `${currency} ${amount}` },
+    '@/services/company-billing.service': { CompanyBillingService: { shopBilling: async (...args) => { calls.push(args); return fetch(...args); } }, companyBillingError: error => error.message },
+  });
+  function render() { stateIndex=0; effectIndex=0; return CompanyShopBillingDetail({shopId:'shop-id'}); }
+  return {
+    render, calls, html: () => renderToStaticMarkup(render()),
+    async settle() { render(); for (const effect of effects) if (effect.pending) { effect.pending=false; effect.cleanup=effect.fn(); } await new Promise(resolve => setImmediate(resolve)); },
+    cleanup() { for (const effect of effects) effect.cleanup?.(); },
+  };
+}
+const historyData = { shop: { shop_name:'History Cafe',owner_email:'owner@example.test',username:'history-cafe',subscription_plan:'pro',pro_active:true,subscription_expires_at:'2027-01-01T00:00:00Z' }, payments:{ rows:[{...request,status:'approved',activated_until:'2027-01-01T00:00:00Z'}],total:51 } };
+test('shop history displays payment details and paginates before resetting filters', async () => {
+  const page=historyHarness(async () => historyData); await page.settle();
+  assert.match(page.html(),/History Cafe/); assert.match(page.html(),/BANK-111/); assert.match(page.html(),/Expiry granted by this payment/);
+  find(page.render(),n => textOf(n)==='Next payments' && n.props.onClick).props.onClick(); await page.settle();
+  assert.deepEqual(page.calls.at(-1),['shop-id','all',50]);
+  find(page.render(),n => n.type==='select').props.onChange({target:{value:'rejected'}}); await page.settle();
+  assert.deepEqual(page.calls.at(-1),['shop-id','rejected',0]); page.cleanup();
+});
+test('shop history distinguishes no payments from loading failure', async () => {
+  const empty=historyHarness(async () => ({...historyData,payments:{rows:[],total:0}})); await empty.settle();
+  assert.match(empty.html(),/No payment requests have been submitted/); empty.cleanup();
+  const failure=historyHarness(async () => { throw {message:'History unavailable'}; }); await failure.settle();
+  assert.match(failure.html(),/History unavailable/); assert.doesNotMatch(failure.html(),/No payment requests/); failure.cleanup();
 });

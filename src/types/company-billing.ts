@@ -21,3 +21,4 @@ export type AdminShopSubscription = {
   pro_active: boolean;
 };
 export type BillingPage<T> = { rows: T[]; total: number };
+export type ShopBillingDetails = { shop: AdminShopSubscription; payments: BillingPage<AdminPaymentRequest> };

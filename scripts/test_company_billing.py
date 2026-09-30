@@ -26,7 +26,7 @@ if __name__ == '__main__':
         raise SystemExit('Could not create disposable test database: ' + created.stderr)
     try:
         result = run(['psql', '-X', '-U', 'postgres', '-d', DATABASE, '-v', 'ON_ERROR_STOP=1'],
-                     input=expand(ROOT / 'tests/company-billing-db.sql'))
+                     input=expand(ROOT / 'tests/company-shop-history-db.sql'))
         print(result.stdout[-2200:])
         if result.returncode:
             print(result.stderr)

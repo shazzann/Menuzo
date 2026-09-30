@@ -15,12 +15,23 @@ SELECT version FROM supabase_migrations.schema_migrations WHERE version = '20260
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('action', choices=['check', 'apply', 'verify'])
-    action = parser.parse_args().action
+    parser.add_argument('--migration', choices=['company-billing', 'shop-history'], default='company-billing')
+    args = parser.parse_args()
+    action = args.action
+    filename = f'{VERSION}_company_billing.sql'
+    if args.migration == 'shop-history':
+        VERSION = '20260930000002'
+        filename = f'{VERSION}_shop_billing_history.sql'
+        VERIFY = """
+SELECT to_regprocedure('public.admin_get_shop_billing(uuid,text,integer)') AS shop_history_api;
+SELECT has_function_privilege('anon','public.admin_get_shop_billing(uuid,text,integer)','EXECUTE') AS anonymous_can_read_history;
+SELECT version FROM supabase_migrations.schema_migrations WHERE version='20260930000002';
+"""
     env = connection()
     if action == 'verify':
         sql(VERIFY, env)
     else:
-        source = (ROOT / f'supabase/migrations/{VERSION}_company_billing.sql').read_text(encoding='utf-8')
+        source = (ROOT / 'supabase/migrations' / filename).read_text(encoding='utf-8')
         statements = '\n'.join(line for line in source.splitlines() if line.strip() not in {'BEGIN;', 'COMMIT;'})
         # Keep locks bounded so deployment cannot hold up customer traffic indefinitely.
         sql("BEGIN; SET LOCAL lock_timeout = '5s'; SET LOCAL statement_timeout = '60s';\n" + statements

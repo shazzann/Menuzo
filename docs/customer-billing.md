@@ -84,6 +84,11 @@ inactive registry entries cannot obtain billing access.
 - **Subscriptions**: view current paid access and expiry. Suspend or restore
   access with a recorded reason. Restoration never adds time and is blocked
   after expiry; renewal requires another approved payment.
+  Use **View shop** on any row, including Free shops, to view the shop's current
+  subscription, menu link, and payment history. Filter by payment status and
+  expand a payment for transfer details, review time, rejection reason, and the
+  expiry granted by approval. History is scoped to that exact shop, even when
+  its owner has other shops, and is paginated in groups of 50.
 - **Shop URLs**: assign/change/remove a custom URL. Assignment requires active
   paid access. Existing permanent menu links remain available.
 
@@ -110,6 +115,12 @@ transaction; `apply` publishes it and records migration history; `verify` checks
 installed APIs and grants. These commands require the production owner's CLI
 login and the existing linked production project. Frontend changes are kept in
 the workspace until published separately; no Git push is part of this update.
+
+Shop history uses the additional migration
+`20260930000002_shop_billing_history.sql`. Use
+`python -B scripts/production_company_billing.py check --migration shop-history`
+to validate it, then `apply --migration shop-history` to publish only this
+migration. The history API is read-only and requires active company admin access.
 
 ## Custom URLs
 

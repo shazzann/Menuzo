@@ -28,6 +28,13 @@ export const CompanyBillingService = {
     if (error) throw error;
     return data;
   },
+  async shopBilling(shopId: string, status: string, offset: number) {
+    const { data, error } = await supabase.rpc('admin_get_shop_billing', {
+      p_shop_id: shopId, p_status: status, p_offset: offset,
+    });
+    if (error) throw error;
+    return data;
+  },
   async changeStatus(shopId: string, status: 'active' | 'cancelled', reason: string) {
     const { error } = await supabase.rpc('admin_change_subscription_status', {
       p_shop_id: shopId, p_status: status, p_reason: reason.trim(),

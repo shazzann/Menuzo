@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { CompanyBillingService, companyBillingError } from '@/services/company-billing.service';
 import { formatPaymentAmount } from '@/lib/billing';
+import { CompanyShopBillingDetail } from './CompanyShopBillingDetail';
 import type { AdminPaymentRequest, AdminShopSubscription, CompanyBillingSection } from '@/types/company-billing';
 
 const titles = { 'payment-requests': 'Payment Requests', payments: 'Payments', subscriptions: 'Subscriptions', 'shop-urls': 'Shop URLs' };
@@ -27,6 +28,7 @@ export function CompanyBilling({ section }: { section: CompanyBillingSection }) 
   const [error, setError] = useState('');
   const [selected, setSelected] = useState<AdminPaymentRequest | null>(null);
   const [editing, setEditing] = useState<AdminShopSubscription | null>(null);
+  const [viewingShop, setViewingShop] = useState<AdminShopSubscription | null>(null);
   const [decision, setDecision] = useState<'approved' | 'rejected'>('approved');
   const [reason, setReason] = useState('');
   const [slug, setSlug] = useState('');
@@ -114,8 +116,8 @@ export function CompanyBilling({ section }: { section: CompanyBillingSection }) 
           <td className="p-4"><p className="mb-1 capitalize">{shop.subscription_plan || 'free'}</p><Status value={shop.pro_active ? 'active' : shop.subscription_status === 'cancelled' ? 'suspended' : shop.subscription_plan === 'free' || !shop.subscription_plan ? 'free' : 'expired'} /></td>
           <td className="p-4 whitespace-nowrap">{date(shop.subscription_expires_at)}</td>
           <td className="p-4">{shop.slug ? <><p className="break-all">/{shop.slug}</p>{shop.pro_active ? <a className="inline-flex items-center gap-1 text-primary" href={`/${shop.slug}`} target="_blank" rel="noreferrer">Open menu <ExternalLink className="h-3 w-3" /></a> : <p className="text-xs text-muted-foreground">Inactive until paid access is restored</p>}</> : 'Not assigned'}</td>
-          <td className="p-4">{section === 'shop-urls' ? <Button size="sm" variant="outline" disabled={!shop.pro_active && !shop.slug} onClick={() => openShop(shop)}>Manage URL</Button>
-            : <Button size="sm" variant="outline" disabled={!['pro','enterprise'].includes(shop.subscription_plan || '') || (!shop.pro_active && shop.subscription_status !== 'cancelled')} onClick={() => openShop(shop)}>{shop.subscription_status === 'cancelled' ? 'Restore access' : 'Suspend access'}</Button>}</td>
+          <td className="p-4"><div className="flex flex-wrap gap-2"><Button size="sm" variant="outline" onClick={() => setViewingShop(shop)}>View shop</Button>{section === 'shop-urls' ? <Button size="sm" variant="outline" disabled={!shop.pro_active && !shop.slug} onClick={() => openShop(shop)}>Manage URL</Button>
+            : <Button size="sm" variant="outline" disabled={!['pro','enterprise'].includes(shop.subscription_plan || '') || (!shop.pro_active && shop.subscription_status !== 'cancelled')} onClick={() => openShop(shop)}>{shop.subscription_status === 'cancelled' ? 'Restore access' : 'Suspend access'}</Button>}</div></td>
         </tr>)}</tbody>
       </table></div>}
     {!error && !loading && total > 0 && <div className="flex items-center justify-between text-sm"><span>{offset + 1}–{Math.min(offset + 50, total)} of {total}</span><div className="flex gap-2"><Button variant="outline" disabled={offset === 0} onClick={() => { setLoading(true); setOffset(v => Math.max(0,v - 50)); }}>Previous</Button><Button variant="outline" disabled={offset + 50 >= total} onClick={() => { setLoading(true); setOffset(v => v + 50); }}>Next</Button></div></div>}
@@ -147,6 +149,11 @@ export function CompanyBilling({ section }: { section: CompanyBillingSection }) 
           <Button className="w-full" variant={decision === 'rejected' ? 'destructive' : 'default'} disabled={busy || (decision === 'approved' && !verified)} type="submit">{busy ? 'Saving…' : decision === 'approved' ? 'Confirm approval & activate subscription' : 'Confirm rejection'}</Button>
         </> : <div className="space-y-2 text-sm"><p>Reviewed: {date(selected.reviewed_at)}</p>{selected.reviewed_by && <p className="break-all">Reviewer: {selected.reviewed_by}</p>}{selected.activated_until && <p>Activated until: {date(selected.activated_until)}</p>}{selected.rejection_reason && <p className="whitespace-pre-wrap">Rejection reason: {selected.rejection_reason}</p>}</div>}
       </form>}
+    </DialogContent></Dialog>
+
+    <Dialog open={!!viewingShop} onOpenChange={open => { if (!open) setViewingShop(null); }}><DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl">
+      <DialogHeader><DialogTitle>Shop subscription & payments</DialogTitle><DialogDescription>{viewingShop?.shop_name} · Subscription details and past payments</DialogDescription></DialogHeader>
+      {viewingShop && <CompanyShopBillingDetail key={viewingShop.shop_id} shopId={viewingShop.shop_id} />}
     </DialogContent></Dialog>
 
     <Dialog open={!!editing} onOpenChange={open => { if (!open && !busy) setEditing(null); }}><DialogContent>
