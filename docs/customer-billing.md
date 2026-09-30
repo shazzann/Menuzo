@@ -66,7 +66,6 @@ be set alongside the actual prices. No real account number or price is invented.
   grants a hardcoded Pro plan. Status refreshes on window focus and every
   30 seconds while visible.
 
-<<<<<<< HEAD
 ## Company admin review
 
 Sign in at `/admin-login`, then open **Billing → Payment Requests** in the
@@ -111,28 +110,6 @@ transaction; `apply` publishes it and records migration history; `verify` checks
 installed APIs and grants. These commands require the production owner's CLI
 login and the existing linked production project. Frontend changes are kept in
 the workspace until published separately; no Git push is part of this update.
-=======
-## Future review integration (not implemented)
-
-Company admin screens, payment review controls, approval/rejection endpoints,
-and subscription activation are outside this change. A future trusted server
-workflow must review the receipt before changing any entitlement.
-
-That workflow should perform the following in a transaction:
-
-1. Mark the chosen request approved or rejected and set `reviewed_at` (and a
-   customer-readable `rejection_reason` on rejection).
-2. For approval, activate/extend the owner's `profiles.subscription_plan`,
-   `subscription_status`, and `subscription_expires_at` using the purchased
-   duration. An approved request by itself never activates a subscription.
-3. If a preferred URL was requested and is available, assign it in
-   `shop_custom_urls`. A requested slug is a preference, not a reservation.
-
-The new request table uses trusted service operations for review/assignment. Existing production administrator permissions and legacy review functions remain intact.
-Never expose its key in the browser. Rejection of a renewal must not revoke a
-previously paid, still-active subscription. No existing account is upgraded or
-charged by this customer implementation.
->>>>>>> 9a61cdd615755e8396df0dff853026d37293a272
 
 ## Custom URLs
 
@@ -151,15 +128,12 @@ expired subscription leaves the standard menu URL available.
 - `npm run test:billing`: subscription eligibility, checkout validation,
   WhatsApp encoding, service request integrity, stale-session handling, and
   customer page smoke tests.
-<<<<<<< HEAD
 - `npm run test:company-billing`: guarded admin RPC calls, receipt confirmation,
   review history, and failure states in the admin screen.
 - `python scripts/test_company_billing.py`: creates an isolated database in the
   local Supabase Docker container, runs customer and admin security/approval/
   renewal/URL/audit checks, and removes only the database it created. It refuses
   to overwrite an existing test database and never uses production credentials.
-=======
->>>>>>> 9a61cdd615755e8396df0dff853026d37293a272
 - `npm run build`: TypeScript and Vite production compilation.
 - `tests/customer-billing-db.sql`: isolated PostgreSQL/Supabase-role fixture
   exercises the migration and database permissions. Use an empty disposable

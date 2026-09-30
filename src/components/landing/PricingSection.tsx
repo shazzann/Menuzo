@@ -6,24 +6,6 @@ import { useEffect, useState } from 'react';
 import { BillingService } from '@/services/billing.service';
 import { formatPaymentAmount } from '@/lib/billing';
 import type { BillingPeriod } from '@/types/billing';
-<<<<<<< HEAD
-
-interface PricingPlan {
-  name: string;
-  price: string;
-  period?: string;
-  billingNote?: string;
-  description: string;
-  features: string[];
-  notIncluded?: string[];
-  cta: string;
-  popular: boolean;
-  badge?: string;
-}
-
-export function PricingSection() {
-  const { state, dispatch } = useApp();
-=======
 import { PricingService } from '@/services/pricing.service';
 
 export function PricingSection() {
@@ -34,7 +16,6 @@ export function PricingSection() {
     window.addEventListener('pricing_updated', handleUpdate);
     return () => window.removeEventListener('pricing_updated', handleUpdate);
   }, []);
->>>>>>> 9a61cdd615755e8396df0dff853026d37293a272
   const [periods, setPeriods] = useState<BillingPeriod[]>([]);
   useEffect(() => {
     let cancelled = false;
@@ -47,53 +28,6 @@ export function PricingSection() {
   }, []);
   const monthly = periods.find(period => period.id === 'monthly' && period.amount !== null && period.amount > 0);
   const yearly = periods.find(period => period.id === 'yearly' && period.amount !== null && period.amount > 0);
-<<<<<<< HEAD
-  const plans: PricingPlan[] = [
-    {
-      name: 'Free',
-      price: 'Free',
-      period: 'Forever',
-      description: 'Perfect for cafés and small restaurants getting started with digital menus.',
-      features: [
-        'Up to 10 Menu Items',
-        'Up to 2 Categories',
-        'QR Code Menu',
-        'Custom Theme Designer',
-        'Custom QR Code Branding',
-        'Analytics Dashboard',
-        'Restaurant Profile',
-        'Shareable Menu Link'
-      ],
-      notIncluded: [
-        'Custom Menu URL',
-        'Priority Support'
-      ],
-      cta: 'Get Started Free',
-      popular: false,
-    },
-    {
-      name: 'Pro',
-      price: monthly ? formatPaymentAmount(monthly.amount, monthly.currency) : 'Coming soon',
-      period: monthly ? '/month' : undefined,
-      billingNote: yearly ? `Or ${formatPaymentAmount(yearly.amount, yearly.currency)} / year` : undefined,
-      description: 'Everything you need to run a professional digital menu with your own branding, advanced analytics, and higher limits.',
-      features: [
-        'Up to 100 Menu Items',
-        'Up to 20 Categories',
-        'QR Code Menu',
-        'Custom Theme Designer',
-        'Custom QR Code Branding',
-        'Custom Menu URL',
-        'Advanced Analytics Dashboard',
-        'Priority Support',
-        'Restaurant Profile',
-        'Shareable Menu Link'
-      ],
-      cta: 'Upgrade to Pro',
-      popular: true,
-    }
-  ];
-=======
   const plans = basePlans.map(plan => ({
     ...plan,
     ...(plan.id === 'pro' ? {
@@ -103,7 +37,6 @@ export function PricingSection() {
     billingNote: plan.id === 'pro' && yearly
       ? `Or ${formatPaymentAmount(yearly.amount, yearly.currency)} / year` : undefined,
   }));
->>>>>>> 9a61cdd615755e8396df0dff853026d37293a272
 
   return (
     <section id="pricing" className="py-32 px-4 bg-muted/20 relative overflow-hidden border-t border-border/50">

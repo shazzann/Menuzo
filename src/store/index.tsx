@@ -182,12 +182,8 @@ function appReducer(state: AppState, action: Action): AppState {
       };
     }
     case 'LOGOUT':
-<<<<<<< HEAD
       return { ...state, user: null, shop: initialShop, foodItems: [], categories: initialCategories,
         currentView: state.currentView.startsWith('company-admin') ? 'company-admin-login' : 'login' };
-=======
-      return { ...state, user: null, shop: initialShop, foodItems: [], categories: initialCategories, currentView: 'login' };
->>>>>>> 9a61cdd615755e8396df0dff853026d37293a272
     case 'SET_COMPANY_ADMIN_SECTION':
       return { ...state, companyAdminSection: action.payload };
     case 'SELECT_MANAGED_SHOP':
