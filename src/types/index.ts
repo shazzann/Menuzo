@@ -119,6 +119,10 @@ export type View =
 export type AdminTab = 'dashboard' | 'menu-preview' | 'settings' | 'add-food' | 'analytics' | 'shop-details';
 
 export type CompanyAdminSection =
+  | 'payment-requests'
+  | 'payments'
+  | 'subscriptions'
+  | 'shop-urls'
   | 'dashboard'
   | 'shops'
   | 'shop-verification'

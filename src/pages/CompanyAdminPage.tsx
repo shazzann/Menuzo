@@ -9,6 +9,9 @@ import {
   PieChart, Users, Clock,
 } from 'lucide-react';
 import { useTheme } from '@/components/shared/ThemeProvider';
+import { CompanyBilling } from '@/components/company-admin/CompanyBilling';
+import { CompanyBillingService, companyBillingError } from '@/services/company-billing.service';
+import { supabase } from '@/lib/supabase';
 import { CompanyDashboard } from '@/components/company-admin/CompanyDashboard';
 import { CompanyShopList } from '@/components/company-admin/CompanyShopList';
 import { CompanyShopDetail } from '@/components/company-admin/CompanyShopDetail';
@@ -26,6 +29,15 @@ interface NavGroup {
 }
 
 const navGroups: NavGroup[] = [
+  {
+    label: 'Billing', icon: <CreditCard className="w-4 h-4" />,
+    items: [
+      { label: 'Payment Requests', section: 'payment-requests', icon: <FileText className="w-4 h-4" /> },
+      { label: 'Payments', section: 'payments', icon: <CreditCard className="w-4 h-4" /> },
+      { label: 'Subscriptions', section: 'subscriptions', icon: <ShieldCheck className="w-4 h-4" /> },
+      { label: 'Shop URLs', section: 'shop-urls', icon: <Globe className="w-4 h-4" /> },
+    ],
+  },
   {
     label: 'Business',
     icon: <Store className="w-4 h-4" />,
@@ -114,42 +126,38 @@ export function CompanyAdminPage() {
   const { state, dispatch } = useApp();
   const { theme, setTheme } = useTheme();
   
+  const [access, setAccess] = useState<'checking' | 'allowed' | 'denied'>('checking');
+  const [accessError, setAccessError] = useState('');
+  const [accessVersion, setAccessVersion] = useState(0);
   useEffect(() => {
+    let cancelled = false;
     const verifyAdmin = async () => {
       try {
-        const { supabase } = await import('@/lib/supabase');
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (!session?.user?.email) {
-          throw new Error('Not authenticated');
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) throw error;
+        if (!session) {
+          if (!cancelled) dispatch({ type: 'SET_VIEW', payload: 'company-admin-login' });
+          return;
         }
-
-        const { data, error } = await supabase
-          .from('admins')
-          .select('role')
-          .eq('email', session.user.email)
-          .maybeSingle();
-
-        if (error || !data) {
-          throw new Error('Unauthorized');
-        }
-      } catch (err: any) {
-        console.error('Admin access denied:', err);
-        const { toast } = await import('sonner');
-        toast.error('Unauthorized. Super admin access required.');
-        
-        const { supabase } = await import('@/lib/supabase');
-        await supabase.auth.signOut();
-        
-        dispatch({ type: 'SET_VIEW', payload: 'company-admin-login' });
+        if (!await CompanyBillingService.isAdmin()) throw { code: '42501' };
+        if (!cancelled) setAccess('allowed');
+      } catch (err) {
+        if (!cancelled) { setAccessError(companyBillingError(err)); setAccess('denied'); }
       }
     };
-    verifyAdmin();
-  }, [dispatch]);
+    void verifyAdmin();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_OUT' && !cancelled) {
+        setAccess('denied');
+        dispatch({ type: 'SET_VIEW', payload: 'company-admin-login' });
+      }
+    });
+    return () => { cancelled = true; subscription.unsubscribe(); };
+  }, [dispatch, accessVersion]);
 
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  const [expandedGroups, setExpandedGroups] = useState<string[]>(['Business']);
+  const [expandedGroups, setExpandedGroups] = useState<string[]>(['Billing', 'Business']);
   const [searchOpen, setSearchOpen] = useState(false);
 
   const currentSection = state.companyAdminSection;
@@ -171,6 +179,11 @@ export function CompanyAdminPage() {
     dispatch({ type: 'LOGOUT' });
   };
 
+  if (access !== 'allowed') return <div className="min-h-screen flex flex-col items-center justify-center gap-4 p-6">
+    <p role={access === 'denied' ? 'alert' : 'status'}>{access === 'checking' ? 'Checking company admin access…' : accessError}</p>
+    {access === 'denied' && <><button className="text-primary underline" onClick={() => { setAccess('checking'); setAccessVersion(v => v + 1); }}>Retry</button><button onClick={() => dispatch({ type: 'SET_VIEW', payload: 'company-admin-login' })}>Back to admin login</button></>}
+  </div>;
+
   const now = new Date();
   const greeting = now.getHours() < 12 ? 'Good Morning' : now.getHours() < 18 ? 'Good Afternoon' : 'Good Evening';
   const dateStr = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
@@ -182,6 +195,11 @@ export function CompanyAdminPage() {
     }
 
     switch (currentSection) {
+      case 'payment-requests':
+      case 'payments':
+      case 'subscriptions':
+      case 'shop-urls':
+        return <CompanyBilling key={currentSection} section={currentSection} />;
       case 'dashboard':
         return <CompanyDashboard />;
       case 'shops':

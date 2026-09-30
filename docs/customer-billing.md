@@ -66,26 +66,50 @@ be set alongside the actual prices. No real account number or price is invented.
   grants a hardcoded Pro plan. Status refreshes on window focus and every
   30 seconds while visible.
 
-## Future review integration (not implemented)
+## Company admin review
 
-Company admin screens, payment review controls, approval/rejection endpoints,
-and subscription activation are outside this change. A future trusted server
-workflow must review the receipt before changing any entitlement.
+Sign in at `/admin-login`, then open **Billing → Payment Requests** in the
+company portal. Email/password sign-in uses Supabase authentication; Google
+sign-in remains available. Portal access and each billing RPC require an active
+entry in the existing `admins` registry. A legacy registry entry with a different
+ID can match the authenticated user's confirmed email. Unconfirmed email and
+inactive registry entries cannot obtain billing access.
 
-That workflow should perform the following in a transaction:
+- **Payment Requests**: search by shop, owner, transfer reference, or request ID;
+  filter pending, approved, or rejected requests; review payer, amount, date,
+  purchased period, and customer note. Check the WhatsApp receipt against the
+  actual bank credit and explicitly confirm verification before approving.
+- **Payments**: opens approved payment history, with reviewer, review time, and
+  the expiry granted at approval. The status filter also shows rejected requests.
+- **Subscriptions**: view current paid access and expiry. Suspend or restore
+  access with a recorded reason. Restoration never adds time and is blocked
+  after expiry; renewal requires another approved payment.
+- **Shop URLs**: assign/change/remove a custom URL. Assignment requires active
+  paid access. Existing permanent menu links remain available.
 
-1. Mark the chosen request approved or rejected and set `reviewed_at` (and a
-   customer-readable `rejection_reason` on rejection).
-2. For approval, activate/extend the owner's `profiles.subscription_plan`,
-   `subscription_status`, and `subscription_expires_at` using the purchased
-   duration. An approved request by itself never activates a subscription.
-3. If a preferred URL was requested and is available, assign it in
-   `shop_custom_urls`. A requested slug is a preference, not a reservation.
+Approval locks the request and owner profile, uses the request's stored months,
+and activates/extends the paid subscription atomically with optional URL
+assignment and an audit event. Active renewals extend from the existing expiry;
+otherwise they start at approval. An existing Enterprise plan is preserved.
+Repeat reviews are rejected, and an already-approved transfer reference cannot
+be reused for the same owner. A URL collision rolls back the entire approval;
+choose another URL or leave it blank to retain the current URL and assign later.
+Rejection requires a customer-visible reason and does not alter paid access.
 
-The new request table uses trusted service operations for review/assignment. Existing production administrator permissions and legacy review functions remain intact.
-Never expose its key in the browser. Rejection of a renewal must not revoke a
-previously paid, still-active subscription. No existing account is upgraded or
-charged by this customer implementation.
+Entitlements currently live on `profiles`, so subscription changes affect all
+shops belonging to that owner. Custom URLs are assigned separately to each shop.
+Customer status refreshes on focus and while visible. All successful admin
+mutations write to `billing_admin_events`, which customers cannot read or modify.
+The legacy `payment_requests` table and its review functions remain separate.
+
+The migration `20260930000001_company_billing.sql` has been applied and verified
+in production project `jzlfjrwhfcjcqeyculbd`. Existing production
+installations must apply only this migration, not replay the base migrations.
+`scripts/production_company_billing.py check` validates it with a rolled-back
+transaction; `apply` publishes it and records migration history; `verify` checks
+installed APIs and grants. These commands require the production owner's CLI
+login and the existing linked production project. Frontend changes are kept in
+the workspace until published separately; no Git push is part of this update.
 
 ## Custom URLs
 
@@ -104,6 +128,12 @@ expired subscription leaves the standard menu URL available.
 - `npm run test:billing`: subscription eligibility, checkout validation,
   WhatsApp encoding, service request integrity, stale-session handling, and
   customer page smoke tests.
+- `npm run test:company-billing`: guarded admin RPC calls, receipt confirmation,
+  review history, and failure states in the admin screen.
+- `python scripts/test_company_billing.py`: creates an isolated database in the
+  local Supabase Docker container, runs customer and admin security/approval/
+  renewal/URL/audit checks, and removes only the database it created. It refuses
+  to overwrite an existing test database and never uses production credentials.
 - `npm run build`: TypeScript and Vite production compilation.
 - `tests/customer-billing-db.sql`: isolated PostgreSQL/Supabase-role fixture
   exercises the migration and database permissions. Use an empty disposable

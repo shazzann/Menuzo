@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useApp } from '@/store';
 import { Eye, EyeOff, ShieldCheck, ArrowRight, CheckCircle2, Lock } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
+import { CompanyBillingService, companyBillingError } from '@/services/company-billing.service';
 import { Button } from '@/components/ui/button';
 
 export function CompanyAdminLoginPage() {
@@ -10,18 +12,22 @@ export function CompanyAdminLoginPage() {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const [loginError, setLoginError] = useState('');
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    // Simulate auth
-    setTimeout(() => {
-      setIsLoading(false);
-      dispatch({ type: 'SET_VIEW', payload: 'company-admin' });
-      // Update URL without full reload
-      if (typeof window !== 'undefined') {
-        window.history.pushState({}, '', '/admin/dashboard');
+    if (isLoading) return;
+    setIsLoading(true); setLoginError('');
+    try {
+      const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+      if (error) { setLoginError('Unable to sign in. Check your email and password.'); return; }
+      if (!await CompanyBillingService.isAdmin()) {
+        await supabase.auth.signOut();
+        setLoginError('Your account does not have active company admin access.');
+        return;
       }
-    }, 1000);
+      dispatch({ type: 'SET_VIEW', payload: 'company-admin' });
+    } catch (err) { setLoginError(companyBillingError(err)); }
+    finally { setIsLoading(false); }
   };
 
   const handleGoogleLogin = async () => {
@@ -39,10 +45,10 @@ export function CompanyAdminLoginPage() {
         },
       });
       if (error) throw error;
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
       setIsLoading(false);
-      // fallback or show error
+      setLoginError(companyBillingError(err));
     }
   };
 
@@ -119,6 +125,7 @@ export function CompanyAdminLoginPage() {
             </div>
 
             <form onSubmit={handleLogin} className="space-y-5">
+              {loginError && <p role="alert" className="text-sm text-destructive">{loginError}</p>}
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-muted-foreground ml-1">Admin Email</label>
                 <input
