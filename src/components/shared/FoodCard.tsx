@@ -39,7 +39,7 @@ export function FoodCard({ item, onClick, variant = 'grid' }: FoodCardProps) {
           <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">
             {item.description}
           </p>
-          <div className="flex items-center gap-2 mt-1.5">
+          <div className="shop-price-row flex items-center gap-2 mt-1.5">
             {item.discount ? (
               <>
                 <span className="text-xs text-muted-foreground line-through">
@@ -101,7 +101,7 @@ export function FoodCard({ item, onClick, variant = 'grid' }: FoodCardProps) {
         <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">
           {item.tagline}
         </p>
-        <div className="flex items-center gap-2 mt-2">
+        <div className="shop-price-row flex items-center gap-2 mt-2">
           {item.discount ? (
             <>
               <span className="text-xs text-muted-foreground line-through">

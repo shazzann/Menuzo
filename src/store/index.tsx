@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useReducer, type ReactNode } from 'react';
 import type { AppState, View, AdminTab, FoodItem, Shop, User, Category, CompanyAdminSection, ManagedShop } from '@/types';
 
+import { isPublicShopView, parseShopRoute } from '@/lib/shopRoutes';
+
 const initialShop: Shop = {
   id: '',
   username: 'menuzo',
@@ -33,34 +35,10 @@ const initialCategories: Category[] = [
   { id: 'all', name: 'All' },
 ];
 
-const getInitialView = (): View => {
-  if (typeof window !== 'undefined') {
-    const path = window.location.pathname;
-    if (path === '/' || path === '') return 'landing';
-    if (path === '/login') return 'login';
-    if (path === '/subscription') return 'admin-subscription';
-    if (path === '/brand-book') return 'brand-book';
-    if (path === '/admin' || path === '/admin-login') return 'company-admin-login';
-    if (path.startsWith('/admin-portal')) return 'company-admin';
-    
-    const parts = path.split('/').filter(Boolean);
-    if (parts.length >= 1) {
-      const page = parts[1] || 'menu';
-      switch (page) {
-        case 'menu': return 'customer-menu';
-        case 'shop': return 'customer-shop-detail';
-        case 'dashboard': return 'user-dashboard';
-        case 'menupreview': return 'admin-preview';
-        case 'settings': return 'admin-settings';
-        case 'add-food': return 'admin-add-food';
-        case 'analytics': return 'admin-analytics';
-      }
-    }
-  }
-  return 'landing';
-};
+const getInitialView = (): View => parseShopRoute(typeof window === 'undefined' ? '/' : window.location.pathname).view;
 
 const initialState: AppState = {
+  shopDataContext: '', shopDataStatus: 'idle', shopLoadError: '', shopLoadVersion: 0,
   currentView: getInitialView(),
   currentAdminTab: 'menu-preview',
   selectedFoodItem: null,
@@ -76,6 +54,10 @@ const initialState: AppState = {
 };
 
 type Action =
+  | { type: 'SHOP_LOAD_START'; payload: string }
+  | { type: 'SHOP_LOAD_SUCCESS'; payload: { context: string; shop: Shop; food: FoodItem[]; selectedFoodId?: string } }
+  | { type: 'SHOP_LOAD_ERROR'; payload: { context: string; message: string; notFound?: boolean } }
+  | { type: 'RETRY_SHOP_LOAD' }
   | { type: 'SET_VIEW'; payload: View }
   | { type: 'SET_ADMIN_TAB'; payload: AdminTab }
   | { type: 'SELECT_FOOD_ITEM'; payload: FoodItem | null }
@@ -121,6 +103,18 @@ function extractCategories(foodItems: FoodItem[], categoryOrder?: string[]): Cat
 
 function appReducer(state: AppState, action: Action): AppState {
   switch (action.type) {
+    case 'SHOP_LOAD_START':
+      return { ...state,shopDataContext:action.payload,shopDataStatus:'loading',shopLoadError:'',shopNotFound:false,
+        shop:initialShop,foodItems:[],categories:initialCategories,selectedFoodItem:null,searchQuery:'',selectedCategory:'all' };
+    case 'SHOP_LOAD_SUCCESS':
+      return state.shopDataContext !== action.payload.context ? state : { ...state,shopDataStatus:'ready',shopLoadError:'',shopNotFound:false,
+        shop:action.payload.shop,foodItems:action.payload.food,selectedFoodItem:action.payload.food.find(item => item.id === action.payload.selectedFoodId) || null,categories:extractCategories(action.payload.food,action.payload.shop.categoryOrder) };
+    case 'SHOP_LOAD_ERROR':
+      return state.shopDataContext !== action.payload.context ? state : { ...state,shopDataStatus:action.payload.notFound ? 'not-found' : 'error',
+        shopLoadError:action.payload.message,shopNotFound:!!action.payload.notFound };
+    case 'RETRY_SHOP_LOAD':
+      return { ...state,shopLoadVersion:state.shopLoadVersion+1,shopDataStatus:'idle',shopLoadError:'',shopNotFound:false };
+
     case 'SET_SUBSCRIPTION':
       return state.user?.id === action.payload.userId
         ? { ...state, user: { ...state.user, subscription: action.payload.subscription } }
@@ -176,13 +170,14 @@ function appReducer(state: AppState, action: Action): AppState {
         user: state.user?.id === action.payload.id
           ? { ...action.payload, subscription: state.user.subscription }
           : action.payload,
-        ...(state.user?.id !== action.payload.id ? { shop: initialShop, foodItems: [], categories: initialCategories } : {}),
+        ...(state.user?.id !== action.payload.id && !isPublicShopView(state.currentView)
+          ? { shop: initialShop, foodItems: [], categories: initialCategories, shopDataContext: '', shopDataStatus: 'idle' as const, shopNotFound: false } : {}),
         currentView: shouldRedirect ? 'user-dashboard' : state.currentView,
         currentAdminTab: shouldRedirect ? 'dashboard' : state.currentAdminTab,
       };
     }
     case 'LOGOUT':
-      return { ...state, user: null, shop: initialShop, foodItems: [], categories: initialCategories,
+      return { ...state, user: null, shop: initialShop, foodItems: [], categories: initialCategories, shopDataContext: '', shopDataStatus: 'idle', shopNotFound: false,
         currentView: state.currentView.startsWith('company-admin') ? 'company-admin-login' : 'login' };
     case 'SET_COMPANY_ADMIN_SECTION':
       return { ...state, companyAdminSection: action.payload };

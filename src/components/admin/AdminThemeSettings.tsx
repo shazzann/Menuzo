@@ -4,6 +4,7 @@ import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import type { ThemeConfig } from '@/types';
 import { toast } from 'sonner';
+import { SHOP_THEME_PRESETS as PRESETS, contrastRatio as getContrastRatio, getShopThemeStyles, isBrandTheme, readableForeground, readableColor, normalizeShopTheme } from '@/lib/themeUtils';
 
 interface AdminThemeSettingsProps {
   theme: ThemeConfig;
@@ -11,14 +12,6 @@ interface AdminThemeSettingsProps {
   isEditing: boolean;
   shopName: string;
 }
-
-const PRESETS = [
-  { name: 'Menuzo Brand', description: 'Warm and energetic', colors: { primary: '#090A0C', secondary: '#1C1E22', accent: '#FB8500' } },
-  { name: 'Ocean Blue', description: 'Calm and professional', colors: { primary: '#F0F9FF', secondary: '#E0F2FE', accent: '#0EA5E9' } },
-  { name: 'Forest Green', description: 'Fresh and natural', colors: { primary: '#16A34A', secondary: '#F0FDF4', accent: '#4ADE80' } },
-  { name: 'Luxury Gold', description: 'Premium and exclusive', colors: { primary: '#CA8A04', secondary: '#FEFCE8', accent: '#FACC15' } },
-  { name: 'Cherry Red', description: 'Bold and appetizing', colors: { primary: '#E11D48', secondary: '#FFF1F2', accent: '#FB7185' } },
-];
 
 export function AdminThemeSettings({ theme, onChange, isEditing, shopName }: AdminThemeSettingsProps) {
   const [copiedHex, setCopiedHex] = useState<string | null>(null);
@@ -51,47 +44,15 @@ export function AdminThemeSettings({ theme, onChange, isEditing, shopName }: Adm
     }
   };
 
-  const getContrastColor = (hexcolor: string) => {
-    // If a short hex is provided, expand it
-    let hex = hexcolor.replace('#', '');
-    if (hex.length === 3) {
-      hex = hex.split('').map(c => c + c).join('');
-    }
-    if (hex.length !== 6) return '#ffffff';
-    
-    const r = parseInt(hex.substring(0, 2), 16);
-    const g = parseInt(hex.substring(2, 4), 16);
-    const b = parseInt(hex.substring(4, 6), 16);
-    const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
-    return (yiq >= 128) ? '#000000' : '#ffffff';
-  };
-
-  const getLuminance = (hex: string) => {
-    let hexClean = hex.replace('#', '');
-    if (hexClean.length === 3) hexClean = hexClean.split('').map(c => c + c).join('');
-    if (hexClean.length !== 6) return 0;
-    
-    const r = parseInt(hexClean.substring(0, 2), 16) / 255;
-    const g = parseInt(hexClean.substring(2, 4), 16) / 255;
-    const b = parseInt(hexClean.substring(4, 6), 16) / 255;
-    
-    const a = [r, g, b].map(v => v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4));
-    return a[0] * 0.2126 + a[1] * 0.7152 + a[2] * 0.0722;
-  };
-
-  const getContrastRatio = (hex1: string, hex2: string) => {
-    const lum1 = getLuminance(hex1);
-    const lum2 = getLuminance(hex2);
-    const brightest = Math.max(lum1, lum2);
-    const darkest = Math.min(lum1, lum2);
-    return (brightest + 0.05) / (darkest + 0.05);
-  };
+  const getContrastColor = readableForeground;
+  const previewTheme = normalizeShopTheme(theme);
+  const brand = isBrandTheme(theme);
 
   const calculateOverallContrast = () => {
     // We check contrast between background (primary) and text/highlights (accent)
-    const ratioBgToText = getContrastRatio(theme.primary, theme.accent);
+    const ratioBgToText = getContrastRatio(previewTheme.primary, brand ? previewTheme.accent : readableColor(previewTheme.accent, previewTheme.primary));
     // And contrast between surfaces (secondary) and text/highlights (accent)
-    const ratioSurfaceToText = getContrastRatio(theme.secondary, theme.accent);
+    const ratioSurfaceToText = getContrastRatio(previewTheme.secondary, brand ? previewTheme.accent : readableColor(previewTheme.accent, previewTheme.secondary));
     
     return {
       ratioBgToText,
@@ -106,11 +67,11 @@ export function AdminThemeSettings({ theme, onChange, isEditing, shopName }: Adm
   let contrastColor = 'text-red-500';
 
   if (contrastResult.minRatio >= 7) {
-    contrastScore = 'Excellent WCAG AAA';
+    contrastScore = 'Excellent highlight contrast';
     contrastStars = 5;
     contrastColor = 'text-green-500';
   } else if (contrastResult.minRatio >= 4.5) {
-    contrastScore = 'Good WCAG AA readability';
+    contrastScore = 'Readable highlights';
     contrastStars = 4;
     contrastColor = 'text-green-500';
   } else if (contrastResult.minRatio >= 3) {
@@ -129,7 +90,7 @@ export function AdminThemeSettings({ theme, onChange, isEditing, shopName }: Adm
       <div>
         <div className="bg-card rounded-2xl border shadow-sm overflow-hidden p-4">
           <p className="text-xs font-medium text-muted-foreground mb-3 uppercase tracking-wider">Live Preview</p>
-          <div className="rounded-xl border bg-background overflow-hidden relative" style={{ height: '180px' }}>
+          <div className="rounded-xl border bg-background overflow-hidden relative" data-shop-theme={brand ? 'brand' : 'custom'} style={{ ...getShopThemeStyles(theme), height: brand ? '180px' : '260px' }}>
             <div className="absolute inset-0 bg-gradient-to-b from-black/60 to-transparent z-10" />
             <div 
               className="absolute inset-0 bg-cover bg-center" 
@@ -146,24 +107,24 @@ export function AdminThemeSettings({ theme, onChange, isEditing, shopName }: Adm
               </div>
             </div>
             
-            <div className="absolute bottom-0 left-0 right-0 rounded-t-2xl z-20 p-4" style={{ backgroundColor: theme.primary }}>
+            <div className="absolute bottom-0 left-0 right-0 rounded-t-2xl z-20 p-4 bg-background">
               <div className="flex gap-2 mb-3 overflow-hidden">
-                <div className="px-3 py-1 rounded-full text-[10px] font-medium" style={{ backgroundColor: theme.accent, color: getContrastColor(theme.accent) }}>All</div>
-                <div className="px-3 py-1 rounded-full text-[10px] font-medium border" style={{ backgroundColor: theme.secondary, color: getContrastColor(theme.secondary) }}>Burgers</div>
-                <div className="px-3 py-1 rounded-full text-[10px] font-medium border" style={{ backgroundColor: theme.secondary, color: getContrastColor(theme.secondary) }}>Drinks</div>
+                <div className="px-3 py-1 rounded-full text-[10px] font-medium bg-primary text-primary-foreground">All</div>
+                <div className="px-3 py-1 rounded-full text-[10px] font-medium border bg-card text-card-foreground">Burgers</div>
+                <div className="px-3 py-1 rounded-full text-[10px] font-medium border bg-card text-card-foreground">Drinks</div>
               </div>
               
-              <div className="rounded-xl p-3 flex gap-3 shadow-sm border border-border/50" style={{ backgroundColor: theme.secondary, color: getContrastColor(theme.secondary) }}>
+              <div className="rounded-xl p-3 flex gap-3 shadow-sm border border-border/50 bg-card text-card-foreground">
                 <div className="w-16 h-16 rounded-lg bg-muted flex-shrink-0 relative overflow-hidden">
                   <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400&q=80)' }} />
                 </div>
-                <div className="flex-1 flex flex-col justify-center">
+                <div className="flex-1 min-w-0 flex flex-col justify-center">
                   <div className="flex items-start justify-between">
                     <h4 className="font-semibold text-sm">Classic Burger</h4>
                   </div>
                   <p className="text-[10px] text-muted-foreground mt-0.5 line-clamp-1">Juicy beef patty with fresh lettuce</p>
                   <div className="mt-1.5 flex items-center justify-between">
-                    <span className="font-bold text-sm" style={{ color: theme.accent }}>Rs. 1200</span>
+                    <span className="font-bold text-sm text-primary">Rs. 1200</span>
                   </div>
                 </div>
               </div>
@@ -182,7 +143,7 @@ export function AdminThemeSettings({ theme, onChange, isEditing, shopName }: Adm
             )}
           </h3>
           <p className="text-sm text-muted-foreground mt-1">
-            Choose the three colors that represent your brand. Menuzo automatically applies the colors using the 60-30-10 design rule.
+            Choose the three colors that represent your brand. Menuzo uses these for backgrounds, surfaces and accents, adjusting text shades for readability.
           </p>
         </div>
 
@@ -193,7 +154,7 @@ export function AdminThemeSettings({ theme, onChange, isEditing, shopName }: Adm
             { id: 'accent', label: 'Accent Color', desc: 'Buttons, Highlights, Prices (10%)', value: theme.accent },
           ].map((colorType) => (
             <div key={colorType.id} className="flex items-center gap-4 p-3 rounded-xl border bg-muted/30">
-              <div className="relative">
+              <div className="relative flex-shrink-0">
                 <input
                   type="color"
                   value={colorType.value}
@@ -207,9 +168,9 @@ export function AdminThemeSettings({ theme, onChange, isEditing, shopName }: Adm
                 />
               </div>
               
-              <div className="flex-1">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1 pr-2">
+              <div className="flex-1 min-w-0">
+                <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex-1 min-w-0 max-w-full pr-2">
                     <Label className="font-medium text-sm">{colorType.label}</Label>
                     <p className="text-xs text-muted-foreground mt-0.5 truncate">{colorType.desc}</p>
                   </div>
@@ -296,7 +257,7 @@ export function AdminThemeSettings({ theme, onChange, isEditing, shopName }: Adm
         <div className="bg-card rounded-2xl border p-4 flex flex-col justify-center">
           <div className="flex items-center justify-between mb-1">
             <h4 className="text-sm font-semibold">Contrast Checker</h4>
-            <span className="text-xs font-mono bg-muted px-2 py-0.5 rounded-md" title="WCAG Contrast Ratio">{contrastResult.minRatio.toFixed(1)}:1</span>
+            <span className="text-xs font-mono bg-muted px-2 py-0.5 rounded-md" title="Minimum contrast of rendered highlight text on the page and cards">{contrastResult.minRatio.toFixed(1)}:1</span>
           </div>
           <div className={`flex items-center gap-1 mb-1 ${contrastColor}`}>
             {[1, 2, 3, 4, 5].map(star => (
@@ -326,7 +287,7 @@ export function AdminThemeSettings({ theme, onChange, isEditing, shopName }: Adm
               onClick={() => onChange(preset.colors)}
               className={cn(
                 "flex items-center justify-between p-4 rounded-xl border transition-all",
-                theme.primary === preset.colors.primary && theme.secondary === preset.colors.secondary
+                theme.primary === preset.colors.primary && theme.secondary === preset.colors.secondary && theme.accent === preset.colors.accent
                   ? "border-primary bg-primary/5 ring-1 ring-primary"
                   : "bg-card hover:bg-muted/50",
                 !isEditing && "opacity-80 cursor-default"
@@ -335,7 +296,7 @@ export function AdminThemeSettings({ theme, onChange, isEditing, shopName }: Adm
               <div className="flex flex-col items-start overflow-hidden flex-1 pr-4">
                 <h4 className="font-medium text-sm flex items-center gap-2">
                   {preset.name}
-                  {theme.primary === preset.colors.primary && theme.secondary === preset.colors.secondary && (
+                  {theme.primary === preset.colors.primary && theme.secondary === preset.colors.secondary && theme.accent === preset.colors.accent && (
                     <Check className="w-4 h-4 text-primary" />
                   )}
                 </h4>

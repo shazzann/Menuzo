@@ -28,7 +28,7 @@ import { Toaster } from '@/components/ui/sonner';
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { BrowserRouter } from 'react-router-dom';
+import { BrowserRouter, useLocation } from 'react-router-dom';
 import { RouterSync } from '@/components/shared/RouterSync';
 import { PublicDataLoader } from '@/components/shared/PublicDataLoader';
 import { AdminDataLoader } from '@/components/shared/AdminDataLoader';
@@ -36,10 +36,12 @@ import { ShopThemeApplier } from '@/components/shared/ShopThemeApplier';
 import { SubscriptionDataLoader } from '@/components/shared/SubscriptionDataLoader';
 import { SubscriptionPage } from '@/pages/SubscriptionPage';
 import { freeSubscription } from '@/lib/subscription';
+import { isOwnerShopView, isPublicShopView, parseShopRoute } from '@/lib/shopRoutes';
 
 function AppContent() {
   const { state, dispatch } = useApp();
   const { currentView } = state;
+  const location = useLocation();
   const [isAuthLoading, setIsAuthLoading] = useState(true);
 
   useEffect(() => {
@@ -113,12 +115,13 @@ function AppContent() {
   }, [isAuthLoading, isPrivateView, currentView, state.user, dispatch]);
 
   useEffect(() => {
-    if (state.user && state.shop.id && currentView !== 'company-admin' && currentView !== 'company-admin-login'
+    if (state.user && state.shop.id && isOwnerShopView(currentView)
+      && state.shopDataContext === `owner:${state.user.id}` && state.shopDataStatus === 'ready'
       && sessionStorage.getItem('menuzo_upgrade_intent') === 'pro') {
       sessionStorage.removeItem('menuzo_upgrade_intent');
       dispatch({ type: 'SET_VIEW', payload: 'admin-subscription' });
     }
-  }, [state.user?.id, state.shop.id, currentView, dispatch]);
+  }, [state.user?.id, state.shop.id, state.shopDataContext, state.shopDataStatus, currentView, dispatch]);
 
   if (isAuthLoading) {
     return (
@@ -132,8 +135,19 @@ function AppContent() {
     return null; // Prevents flash before redirect happens
   }
 
-  if (state.shopNotFound && ['customer-menu', 'customer-food-detail', 'customer-shop-detail'].includes(currentView)) {
-    return <ShopNotFoundPage />;
+  const shopContext = isPublicShopView(currentView)
+    ? `public:${parseShopRoute(location.pathname).slug || ''}`
+    : isOwnerShopView(currentView) && state.user ? `owner:${state.user.id}` : null;
+  if (shopContext) {
+    const matchingContext = state.shopDataContext === shopContext;
+    if (matchingContext && state.shopDataStatus === 'not-found' && isPublicShopView(currentView)) return <ShopNotFoundPage />;
+    if (!matchingContext || state.shopDataStatus !== 'ready') {
+      const failed = matchingContext && state.shopDataStatus === 'error';
+      return <div className="min-h-screen flex flex-col items-center justify-center gap-4 p-6">
+        <p role={failed ? 'alert' : 'status'}>{failed ? state.shopLoadError : 'Loading shop details…'}</p>
+        {failed && <button className="rounded-xl bg-primary px-5 py-2 text-primary-foreground" onClick={() => dispatch({ type: 'RETRY_SHOP_LOAD' })}>Try again</button>}
+      </div>;
+    }
   }
 
   switch (currentView) {
@@ -178,7 +192,7 @@ function AppContent() {
     case 'admin-settings':
       return <AdminSettingsPage />;
     case 'admin-shop-details':
-      return <AdminShopDetailsPage />;
+      return <AdminShopDetailsPage key={state.shop.id} />;
     case 'admin-theme':
       return <AdminThemePage />;
     case 'admin-qr':

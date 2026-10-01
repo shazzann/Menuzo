@@ -12,6 +12,7 @@ import { billingErrorMessage, formatPaymentAmount, isCheckoutReady, paymentWhats
 import { getTodayDateString } from '@/lib/timeUtils';
 import type { BankTransferSettings, BillingPeriod, PaymentRequest, ShopCustomUrl } from '@/types/billing';
 import { toast } from 'sonner';
+import { SubscriptionPlanComparison } from '@/components/subscription/SubscriptionPlanComparison';
 
 const steps = ['Select period', 'Bank transfer', 'Verify payment'];
 const panel = 'rounded-2xl border border-border bg-card p-5 sm:p-7';
@@ -42,6 +43,7 @@ export function SubscriptionPage() {
   const selected = step === 0 ? currentPeriod : checkoutPeriod || undefined;
   const pending = requests.find(request => request.status === 'pending');
   const latest = requests[0];
+  const showComparison = !proActive && !pending && step === 0;
   const priceUnchanged = step === 0 || (currentPeriod?.id === checkoutPeriod?.id && currentPeriod?.amount === checkoutPeriod?.amount
     && currentPeriod?.currency === checkoutPeriod?.currency && currentPeriod?.months === checkoutPeriod?.months);
   const ready = !loading && !loadError && priceUnchanged && !!currentPeriod?.active && isCheckoutReady(selected, bank);
@@ -132,10 +134,19 @@ export function SubscriptionPage() {
         </div>
       </header>
       <main className="max-w-6xl mx-auto px-4 py-8 space-y-6">
-        <div className="space-y-2"><span className="inline-flex items-center gap-2 text-primary text-sm font-semibold"><Crown className="w-4 h-4" /> MENUZO PRO</span><h2 className="text-3xl sm:text-4xl font-bold tracking-tight">A little more room to grow.</h2><p className="text-muted-foreground max-w-2xl">Choose your period, pay by bank transfer, and send your receipt for verification. Pro starts after your payment is approved.</p></div>
+        <div className="space-y-2"><span className="inline-flex items-center gap-2 text-primary text-sm font-semibold"><Crown className="w-4 h-4" /> MENUZO PRO</span><h2 className="text-3xl sm:text-4xl font-bold tracking-tight">{showComparison ? 'Your next chapter starts with Pro.' : 'A little more room to grow.'}</h2><p className="text-muted-foreground max-w-2xl">{showComparison ? 'Your Free plan gets you started. Compare what you have with the extra space and benefits of Pro.' : 'Choose your period, pay by bank transfer, and send your receipt for verification. Pro starts after your payment is approved.'}</p></div>
         {loadError && <div role="alert" className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm">{loadError}</div>}
         {!shop.id && <p role="status" className="text-sm text-muted-foreground">Loading your shop details…</p>}
-        <div className="grid lg:grid-cols-[minmax(0,1fr)_320px] gap-6 items-start">
+        {showComparison && <SubscriptionPlanComparison
+          periods={periods} selectedId={selectedId} loading={loading} ready={ready && !!shop.id}
+          onSelect={id => { setSelectedId(id); setTransferMade(false); setReceiptSent(false); }}
+          onKeepFree={() => dispatch({ type: 'SET_VIEW', payload: 'user-dashboard' })}
+          onUpgrade={() => {
+            if (!ready || !selected || !shop.id) return;
+            setCheckoutPeriod(selected); setTransferMade(false); setReceiptSent(false); setStep(1);
+          }}
+        />}
+        <div className={showComparison ? 'space-y-6' : 'grid lg:grid-cols-[minmax(0,1fr)_320px] gap-6 items-start'}>
           <div className="space-y-6 min-w-0">
             {pending ? (
               <section className={`${panel} border-amber-500/30`} aria-live="polite">
@@ -148,7 +159,7 @@ export function SubscriptionPage() {
               <>
                 {latest?.status === 'rejected' && <section role="status" className={`${panel} border-destructive/30`}><div className="flex items-center gap-2 font-semibold text-destructive"><XCircle className="w-5 h-5" />Payment request rejected</div><p className="text-sm mt-2">{latest.rejection_reason || 'We could not verify this transfer. Please check your details and send a new request.'}</p><p className="text-sm text-muted-foreground mt-2">{proActive ? 'Your existing subscription is unchanged.' : 'Your plan remains Free.'} You can correct your payment details below.</p></section>}
                 {latest?.status === 'approved' && <section role="status" className={`${panel} border-emerald-500/30`}><div className="flex items-center gap-2 font-semibold text-emerald-600"><CheckCircle2 className="w-5 h-5" />Payment verified</div><p className="text-sm mt-2 text-muted-foreground">{proActive ? 'Your Pro subscription is active.' : user?.subscription.status === 'expired' ? 'Your subscription has expired. Choose a period below to renew.' : user?.subscription.status === 'cancelled' ? 'Your previous payment was verified, but your subscription has been cancelled. Your account is on Free.' : 'Your payment has been verified. We are waiting for your subscription to be activated.'}</p></section>}
-                <section className={panel}>
+                {!showComparison && <section className={panel}>
                   <ol className="grid grid-cols-3 gap-2 mb-8" aria-label="Upgrade progress">{steps.map((label, index) => <li key={label} aria-current={step === index ? 'step' : undefined} className={`text-xs sm:text-sm ${step >= index ? 'text-foreground' : 'text-muted-foreground'}`}><span className={`flex h-8 w-8 items-center justify-center rounded-full mb-2 ${step >= index ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>{step > index ? <Check className="w-4 h-4" /> : index + 1}</span>{label}</li>)}</ol>
                   {step === 0 && <div className="space-y-6">
                     <div><h3 className="text-xl font-bold">{proActive ? 'Renew Pro' : 'Choose Pro'}</h3><p className="text-sm text-muted-foreground mt-1">Pay once for the selected period. No automatic renewals.</p>{proActive && <p className="text-sm text-primary mt-2">Renew anytime. Once your payment is approved, a monthly purchase adds 1 month and a yearly purchase adds 12 months to your current expiry. Your remaining paid time is kept, even when switching periods.</p>}</div>
@@ -182,16 +193,16 @@ export function SubscriptionPage() {
                     <div className="flex flex-wrap gap-3"><Button type="button" variant="outline" disabled={submitting} onClick={() => setStep(1)}>Back</Button><Button type="submit" disabled={!ready || !receiptSent || submitting} className="gap-2">{submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}Submit verification request</Button></div>
                     <p className="text-xs text-muted-foreground">Submitting a request does not activate Pro. Your payment must be reviewed first.</p>
                   </form>}
-                </section>
+                </section>}
               </>
             )}
-            <section className={panel}><h3 className="font-semibold mb-4">Payment requests</h3>{!requests.length ? <p className="text-sm text-muted-foreground">{loading ? 'Loading payment requests…' : loadError ? 'Payment history could not be loaded.' : 'No payment requests yet. Your submitted requests will appear here.'}</p> : <ul className="divide-y divide-border">{requests.map(request => <li key={request.id} className="py-4 first:pt-0 last:pb-0"><div className="flex flex-wrap justify-between gap-2"><div><p className="font-medium text-sm">{request.period_label} Pro · {formatPaymentAmount(request.amount, request.currency)}</p><p className="text-xs text-muted-foreground mt-1">{new Date(request.created_at).toLocaleDateString()} · {request.transfer_reference}</p></div><span className={`self-start rounded-full px-3 py-1 text-xs font-medium ${request.status === 'approved' ? 'bg-emerald-500/10 text-emerald-600' : request.status === 'rejected' ? 'bg-destructive/10 text-destructive' : 'bg-amber-500/10 text-amber-600'}`}>{request.status === 'approved' ? 'Payment verified' : request.status === 'pending' ? 'Pending review' : 'Rejected'}</span></div>{request.rejection_reason && <p className="text-xs text-muted-foreground mt-2">{request.rejection_reason}</p>}</li>)}</ul>}</section>
+            {(!showComparison || requests.length > 0) && <section className={panel}><h3 className="font-semibold mb-4">Payment requests</h3>{!requests.length ? <p className="text-sm text-muted-foreground">{loading ? 'Loading payment requests…' : loadError ? 'Payment history could not be loaded.' : 'No payment requests yet. Your submitted requests will appear here.'}</p> : <ul className="divide-y divide-border">{requests.map(request => <li key={request.id} className="py-4 first:pt-0 last:pb-0"><div className="flex flex-wrap justify-between gap-2"><div><p className="font-medium text-sm">{request.period_label} Pro · {formatPaymentAmount(request.amount, request.currency)}</p><p className="text-xs text-muted-foreground mt-1">{new Date(request.created_at).toLocaleDateString()} · {request.transfer_reference}</p></div><span className={`self-start rounded-full px-3 py-1 text-xs font-medium ${request.status === 'approved' ? 'bg-emerald-500/10 text-emerald-600' : request.status === 'rejected' ? 'bg-destructive/10 text-destructive' : 'bg-amber-500/10 text-amber-600'}`}>{request.status === 'approved' ? 'Payment verified' : request.status === 'pending' ? 'Pending review' : 'Rejected'}</span></div>{request.rejection_reason && <p className="text-xs text-muted-foreground mt-2">{request.rejection_reason}</p>}</li>)}</ul>}</section>}
           </div>
-          <aside className="space-y-5">
+          {!showComparison && <aside className="space-y-5">
             <section className={`${panel} bg-primary/5 border-primary/20`}><Crown className="w-7 h-7 text-primary mb-4" /><p className="text-xs text-muted-foreground uppercase tracking-wide">Current plan</p><h3 className="text-2xl font-bold mt-1">{proActive ? 'Pro active' : 'Free'}</h3><p className="text-sm text-muted-foreground mt-2">{proActive && user?.subscription.expiresAt ? `Active until ${new Date(user.subscription.expiresAt).toLocaleDateString()}` : user?.subscription.status === 'expired' ? 'Your paid subscription has expired. Your standard menu link is still available.' : 'Keep sharing your menu. Upgrade when you are ready.'}</p></section>
             <section className={panel}><Link2 className="w-6 h-6 text-primary mb-3" /><h3 className="font-semibold">Your custom URL</h3>{proActive && customUrl ? <><p className="text-xs text-emerald-600 mt-2 mb-3">Active with your Pro subscription</p><a className="text-sm text-primary break-all hover:underline" href={`/${customUrl.slug}`} target="_blank" rel="noopener noreferrer">{window.location.host}/{customUrl.slug}</a><Button className="w-full mt-4 gap-2" variant="outline" size="sm" onClick={() => void copy(`${window.location.origin}/${customUrl.slug}`)}><Copy className="w-4 h-4" />Copy custom URL</Button></> : <p className="text-sm text-muted-foreground mt-2">{proActive ? 'Your custom URL will appear here once assigned.' : 'Available after your Pro subscription is activated and your requested URL is assigned.'}</p>}<div className="mt-5 pt-4 border-t border-border"><p className="text-xs text-muted-foreground mb-1">Standard menu link</p><a href={`/${shop.username}`} className="text-xs break-all hover:underline" target="_blank" rel="noopener noreferrer">{window.location.host}/{shop.username}</a></div></section>
             <p className="text-xs text-muted-foreground px-2 flex items-start gap-2"><ShieldCheck className="w-4 h-4 shrink-0" />Only a verified, active subscription unlocks Pro and your custom URL.</p>
-          </aside>
+          </aside>}
         </div>
       </main>
     </div>

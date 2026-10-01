@@ -4,6 +4,14 @@ Open `/subscription`, or use **Choose Pro / Manage** on the shop dashboard,
 **Choose Pro / Manage Subscription** in analytics, or **Subscription & Payments** in settings.
 The landing page Pro button preserves the upgrade choice through login and shop onboarding.
 
+Customers without active paid access first see Free and Pro benefit cards in
+Menuzo's theme. The monthly/yearly toggle reads published billing prices and
+calculates any annual savings from matching currencies and durations. Choosing
+Pro carries the selected period and quoted price into bank payment instructions;
+unavailable checkout cannot be started. Continuing with Free returns to the
+dashboard. Active subscriptions keep the renewal screen, and pending requests
+keep their verification status screen.
+
 The customer flow supports monthly/yearly selection, bank instructions, transfer
 details, a WhatsApp receipt draft, and a persisted verification request. Requests
 remain pending until a trusted review process updates them. Customers can view

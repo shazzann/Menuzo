@@ -6,7 +6,7 @@ import {
   Activity, Share2, Heart, MoreHorizontal, BarChart3, UtensilsCrossed,
   Image as ImageIcon, Video, FileText, Monitor, Smartphone, Laptop,
 } from 'lucide-react';
-import { getShopThemeStyles } from '@/lib/themeUtils';
+import { getShopThemeStyles, isBrandTheme } from '@/lib/themeUtils';
 
 export function CompanyShopDetail() {
   const { state, dispatch } = useApp();
@@ -27,7 +27,7 @@ export function CompanyShopDetail() {
   ];
 
   return (
-    <div className="space-y-5 animate-fade-in-up bg-background text-foreground min-h-[calc(100vh-6rem)] -m-4 lg:-m-6 p-4 lg:p-6" style={getShopThemeStyles(shop.theme)}>
+    <div className="space-y-5 animate-fade-in-up bg-background text-foreground min-h-[calc(100vh-6rem)] -m-4 lg:-m-6 p-4 lg:p-6" data-shop-theme={isBrandTheme(shop.theme) ? 'brand' : 'custom'} style={getShopThemeStyles(shop.theme)}>
       {/* Back + Header */}
       <div className="flex items-center gap-3">
         <button

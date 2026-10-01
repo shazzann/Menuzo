@@ -4,6 +4,12 @@ module.exports = {
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   theme: {
     extend: {
+      textColor: {
+        primary: {
+          DEFAULT: 'hsl(var(--shop-primary-text, var(--primary)))',
+          foreground: 'hsl(var(--primary-foreground))',
+        },
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",

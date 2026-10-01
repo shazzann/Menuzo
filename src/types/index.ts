@@ -225,6 +225,10 @@ export interface SubscriptionPlan {
 }
 
 export interface AppState {
+  shopDataContext: string;
+  shopDataStatus: 'idle' | 'loading' | 'ready' | 'error' | 'not-found';
+  shopLoadError: string;
+  shopLoadVersion: number;
   currentView: View;
   currentAdminTab: AdminTab;
   selectedFoodItem: FoodItem | null;

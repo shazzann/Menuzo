@@ -58,7 +58,7 @@ export function ThemedMap({ location, className = '', children }: ThemedMapProps
       >
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 520" width="28" height="38">
           <ellipse cx="192" cy="480" rx="96" ry="32" fill="#00000002" opacity="0.15" />
-          <path fill="#F97316" d="M192 0C86 0 0 86 0 192c0 142 161 306 179 323 3 3 8 5 13 5s10-2 13-5c18-17 179-181 179-323C384 86 298 0 192 0zm0 270c-43 0-78-35-78-78s35-78 78-78 78 35 78 78-35 78-78 78z" />
+          <path fill="var(--shop-map-pin, #F97316)" d="M192 0C86 0 0 86 0 192c0 142 161 306 179 323 3 3 8 5 13 5s10-2 13-5c18-17 179-181 179-323C384 86 298 0 192 0zm0 270c-43 0-78-35-78-78s35-78 78-78 78 35 78 78-35 78-78 78z" />
         </svg>
       </div>
     </div>

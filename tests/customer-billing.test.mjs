@@ -36,6 +36,12 @@ function loadSource(path, dependencies = {}, globals = {}) {
 const plain = (value) => JSON.parse(JSON.stringify(value));
 const subscription = loadSource('src/lib/subscription.ts');
 const billing = loadSource('src/lib/billing.ts');
+const comparison = loadSource('src/components/subscription/SubscriptionPlanComparison.tsx', {
+  'react/jsx-runtime': jsxRuntime,
+  'lucide-react': icons,
+  '@/lib/billing': billing,
+  '@/components/ui/button': { Button: ({children, variant: _variant, ...props}) => React.createElement('button',props,children) },
+});
 const now = Date.parse('2026-09-29T12:00:00Z');
 const future = new Date(now + 60_000);
 const past = new Date(now - 60_000);
@@ -367,6 +373,7 @@ function findElement(node, predicate) {
     }
   } else if (React.isValidElement(node)) {
     if (predicate(node)) return node;
+    if (node.type === comparison.SubscriptionPlanComparison) return findElement(node.type(node.props), predicate);
     return findElement(node.props.children, predicate);
   }
   return undefined;
@@ -430,6 +437,7 @@ function subscriptionPageHarness(options = {}) {
     '@/services/subscription.service': { SubscriptionService: { getSubscription: async () => options.subscription || subscription.freeSubscription() } },
     '@/lib/subscription': subscription,
     '@/lib/billing': billing,
+    '@/components/subscription/SubscriptionPlanComparison': comparison,
     '@/lib/timeUtils': { getTodayDateString: () => '2026-09-29' },
     sonner: { toast: { success(message) { messages.push(message); }, error(message) { messages.push(message); } } },
   }, {
@@ -453,31 +461,23 @@ function subscriptionPageHarness(options = {}) {
   };
 }
 
-test('subscription page renders Monthly and Yearly placeholders and prevents an unconfigured transfer', async () => {
+test('Free plan comparison shows benefits and blocks checkout when pricing is unavailable', async () => {
   const page = subscriptionPageHarness();
   page.render();
   const cleanup = page.runEffects();
   await flush();
-  let rendered = page.render();
+  const rendered = page.render();
+  assert.match(rendered.html, /Compare Free and Pro plans/);
   assert.match(rendered.html, /Monthly/);
   assert.match(rendered.html, /Yearly/);
-  assert.match(rendered.html, /Price coming soon/);
-  assert.match(rendered.html, /No automatic renewals/);
-  const bankButton = findElement(rendered.tree, (element) => typeof element.props.onClick === 'function' && textOf(element) === 'View bank payment details');
-  assert.ok(bankButton, 'Customer can inspect bank detail placeholders');
-  bankButton.props.onClick();
-  rendered = page.render();
-  assert.match(rendered.html, /Details coming soon/);
-  assert.match(rendered.html, /Bank payments are not available yet/);
-  const transferFields = findElement(rendered.tree, (element) => element.type === 'fieldset');
-  assert.equal(transferFields.props.disabled, true);
-  const continueButton = findElement(rendered.tree, (element) => textOf(element) === 'Continue to WhatsApp');
-  assert.equal(continueButton.props.disabled, true);
-  const transferForm = findElement(rendered.tree, (element) => element.type === 'form');
-  transferForm.props.onSubmit({ preventDefault() {} });
-  rendered = page.render();
-  assert.doesNotMatch(rendered.html, /Submit verification request/);
-  assert.equal(page.submitCount(), 0);
+  assert.match(rendered.html, /Coming soon/);
+  assert.match(rendered.html, /Menu items: Up to 10/);
+  assert.match(rendered.html, /Menu items: Up to 100/);
+  const upgrade = findElement(rendered.tree, element => typeof element.props.onClick === 'function' && textOf(element) === 'Upgrade to Pro');
+  assert.equal(upgrade.props.disabled,true);
+  upgrade.props.onClick();
+  assert.doesNotMatch(page.render().html, /Make a bank transfer/);
+  assert.equal(page.submitCount(),0);
   for (const dispose of cleanup) dispose?.();
 });
 
@@ -518,7 +518,7 @@ function goToVerification(page) {
   const yearly = findElement(page.render().tree, (node) => node.type === 'input' && node.props.value === 'yearly');
   assert.ok(yearly, 'Yearly option is available');
   yearly.props.onChange();
-  buttonByText(page, 'View bank payment details').props.onClick();
+  buttonByText(page, 'Upgrade to Pro').props.onClick();
   for (const [id, value] of [
     ['payer-name', 'Jane Smith'], ['transfer-reference', 'BANK-123'], ['transfer-date', '2026-09-28'],
     ['preferred-url', 'my-cafe'], ['payment-note', 'Receipt sent.'],
@@ -607,4 +607,40 @@ test('changed pricing during checkout preserves the quoted amount and blocks sub
   buttonByText(page, 'Back').props.onClick();
   assert.match(page.render().html, /Pricing has changed/);
   cleanup();
+});
+
+test('Free comparison uses live LKR prices and preserves the yearly choice into checkout', async () => {
+  const page = subscriptionPageHarness({ periods: [
+    { ...configuredPeriod, amount: 1500, currency: 'LKR' },
+    { ...yearlyPeriod, amount: 15000, currency: 'LKR' },
+  ], bank: configuredBank });
+  const cleanup = await mountPage(page);
+  assert.match(page.render().html, /LKR.*1,500/);
+  assert.match(page.render().html, /Save LKR.*3,000/);
+  findElement(page.render().tree, node => node.type === 'input' && node.props.value === 'yearly').props.onChange();
+  assert.match(page.render().html, /LKR.*15,000/);
+  assert.match(page.render().html, /One payment for 12 months/);
+  buttonByText(page,'Upgrade to Pro').props.onClick();
+  assert.match(page.render().html, /Yearly Pro/);
+  assert.match(page.render().html, /LKR.*15,000/);
+  buttonByText(page,'Back').props.onClick();
+  assert.match(page.render().html, /Compare Free and Pro plans/);
+  assert.equal(findElement(page.render().tree,node => node.type === 'input' && node.props.value === 'yearly').props.checked,true);
+  buttonByText(page,'Continue with Free').props.onClick();
+  assert.deepEqual(page.actions.at(-1),{type:'SET_VIEW',payload:'user-dashboard'});
+  cleanup();
+});
+
+test('active Pro and pending payments retain their existing management screens', async () => {
+  const pro = subscriptionPageHarness({ periods: [configuredPeriod,yearlyPeriod],bank:configuredBank,
+    subscription: {plan:'pro',status:'active',expiresAt:new Date(Date.now()+86400000)} });
+  const disposePro = await mountPage(pro);
+  assert.match(pro.render().html,/Renew Pro/);
+  assert.doesNotMatch(pro.render().html,/Compare Free and Pro plans/);
+  disposePro();
+  const pending = subscriptionPageHarness({ requests:[savedPayment] });
+  const disposePending = await mountPage(pending);
+  assert.match(pending.render().html,/Payment verification pending/);
+  assert.doesNotMatch(pending.render().html,/Compare Free and Pro plans/);
+  disposePending();
 });

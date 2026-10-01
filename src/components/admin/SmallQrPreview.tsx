@@ -1,3 +1,4 @@
+import { getShopQrColors } from '@/lib/themeUtils';
 import { useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
 import QRCodeStyling from 'qr-code-styling';
 import type { DotType, CornerSquareType, CornerDotType } from 'qr-code-styling';
@@ -47,10 +48,7 @@ export const SmallQrPreview = forwardRef<SmallQrPreviewRef, SmallQrPreviewProps>
 
   const getColors = () => {
     if (qrStyle === 'brand') {
-      return {
-        fgColor: themeAccent,
-        bgColor: themePrimary
-      };
+      return getShopQrColors(themePrimary, themeAccent);
     }
     return {
       fgColor: '#000000',

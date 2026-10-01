@@ -1,9 +1,10 @@
 import { useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useApp } from '@/store';
-import type { View } from '@/types';
+import type { AppState, View } from '@/types';
+import { isOwnerShopView, isPublicShopView, parseShopRoute } from '@/lib/shopRoutes';
 
-function getUrlForView(view: View, username: string, state: any): string | null {
+function getUrlForView(view: View, username: string, state: AppState, foodId?: string): string | null {
   switch (view) {
     case 'landing': return '/';
     case 'login': return '/login';
@@ -23,7 +24,7 @@ function getUrlForView(view: View, username: string, state: any): string | null 
     case 'customer-menu': return `/${username}`;
     case 'customer-shop-detail': return `/${username}/shop`;
     case 'customer-food-detail': 
-       return `/${username}/food${state.selectedFoodItem ? `/${state.selectedFoodItem.id}` : ''}`;
+       return `/${username}/food${state.selectedFoodItem || foodId ? `/${state.selectedFoodItem?.id || foodId}` : ''}`;
     case 'user-dashboard': return `/${username}/dashboard`;
     case 'admin-preview': return `/${username}/menupreview`;
     case 'admin-settings': return `/${username}/settings`;
@@ -41,115 +42,32 @@ export function RouterSync() {
   const { state, dispatch } = useApp();
   const navigate = useNavigate();
   const location = useLocation();
-  const { shop, currentView } = state;
-  const username = shop.username;
-  const lastPathname = useRef('');
-  const lastView = useRef(currentView);
-  const isNavigating = useRef(false);
+  const lastPath = useRef(location.pathname);
+  const pendingPath = useRef<string | null>(null);
 
-  // Sync State -> URL
   useEffect(() => {
-    const isPrivateAdminView = currentView.startsWith('admin-') || currentView === 'user-dashboard';
-    if (state.user && isPrivateAdminView && !shop.id) {
-      // Wait for AdminDataLoader to fetch the shop and its username before syncing URL
-      lastView.current = currentView;
-      lastPathname.current = location.pathname;
+    if (pendingPath.current) {
+      if (location.pathname !== pendingPath.current) return;
+      pendingPath.current = null;
+    }
+    // Browser navigation owns the view. Never derive a public slug from owner data.
+    if (location.pathname !== lastPath.current) {
+      lastPath.current = location.pathname;
+      const route = parseShopRoute(location.pathname);
+      if (state.currentView !== route.view) dispatch({ type: 'SET_VIEW', payload: route.view });
       return;
     }
-
-    const expectedUrl = getUrlForView(currentView, username, state);
-    if (expectedUrl && expectedUrl !== location.pathname) {
-      if (currentView === lastView.current && lastPathname.current !== location.pathname) {
-        // Browser back/forward navigation occurred. Let URL->State handle it.
-        return;
-      }
-      lastView.current = currentView;
-      lastPathname.current = expectedUrl;
-      isNavigating.current = true;
-      navigate(expectedUrl, { replace: true });
-    } else {
-      lastView.current = currentView;
+    const route = parseShopRoute(location.pathname);
+    const ownerReady = state.user && state.shopDataContext === `owner:${state.user.id}` && state.shopDataStatus === 'ready';
+    if (isOwnerShopView(state.currentView) && !ownerReady) return;
+    const slug = isPublicShopView(state.currentView) && isPublicShopView(route.view)
+      ? route.slug || state.shop.username : state.shop.username;
+    const expected = getUrlForView(state.currentView, slug, state, route.foodId);
+    if (expected && expected !== location.pathname) {
+      pendingPath.current = expected;
+      lastPath.current = expected;
+      navigate(expected, { replace: true });
     }
-  }, [currentView, username, navigate, location.pathname, state.user, shop.id]);
-
-  // Sync URL -> State
-  useEffect(() => {
-    if (isNavigating.current) {
-      if (location.pathname === lastPathname.current) {
-        isNavigating.current = false; // Navigation completed
-      } else {
-        return; // Navigation is still pending, skip URL->State sync
-      }
-    }
-
-    if (location.pathname !== lastPathname.current) {
-      lastPathname.current = location.pathname;
-      const path = location.pathname;
-      
-      const exactRoutes: Record<string, View> = {
-        '/': 'landing',
-        '/login': 'login',
-        '/signup': 'signup',
-        '/onboarding': 'onboarding',
-        '/subscription': 'admin-subscription',
-        '/demo': 'demo',
-        '/contact': 'contact',
-        '/privacy': 'privacy',
-        '/terms': 'terms',
-        '/qr-menu': 'seo-qr-menu',
-        '/digital-menu': 'seo-digital-menu',
-        '/restaurant-menu': 'seo-restaurant-menu',
-        '/brand-book': 'brand-book',
-        '/admin-portal': 'company-admin',
-        '/admin': 'company-admin-login',
-        '/admin-login': 'company-admin-login',
-      };
-
-      if (exactRoutes[path]) {
-        dispatch({ type: 'SET_VIEW', payload: exactRoutes[path] });
-        lastView.current = exactRoutes[path];
-      } else {
-        const parts = path.split('/').filter(Boolean);
-        if (parts.length >= 1) {
-          const urlUsername = parts[0];
-          const page = parts[1] || 'menu';
-          
-          if (shop.username !== urlUsername) {
-             dispatch({ type: 'UPDATE_SHOP', payload: { username: urlUsername } });
-          }
-          
-          let nextView: View | null = null;
-          switch (page) {
-            case 'menu': nextView = 'customer-menu'; break;
-            case 'shop': nextView = 'customer-shop-detail'; break;
-            case 'food': nextView = 'customer-food-detail'; break;
-            case 'dashboard': nextView = 'user-dashboard'; break;
-            case 'menupreview': nextView = 'admin-preview'; break;
-            case 'settings':
-              if (parts.length >= 3) {
-                switch (parts[2]) {
-                  case 'shop': nextView = 'admin-shop-details'; break;
-                  case 'theme': nextView = 'admin-theme'; break;
-                  case 'qr': nextView = 'admin-qr'; break;
-                  case 'security': nextView = 'admin-security'; break;
-                  default: nextView = 'admin-settings'; break;
-                }
-              } else {
-                nextView = 'admin-settings';
-              }
-              break;
-            case 'add-food': nextView = 'admin-add-food'; break;
-            case 'analytics': nextView = 'admin-analytics'; break;
-          }
-          
-          if (nextView) {
-            dispatch({ type: 'SET_VIEW', payload: nextView });
-            lastView.current = nextView;
-          }
-        }
-      }
-    }
-  }, [location.pathname, dispatch, shop.username]);
-
+  }, [state, location.pathname, navigate, dispatch]);
   return null;
 }

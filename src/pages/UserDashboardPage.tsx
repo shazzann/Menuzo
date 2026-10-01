@@ -20,6 +20,7 @@ import { useEffect, useState, useRef, useMemo } from 'react';
 import { toast } from 'sonner';
 import { SmallQrPreview, type SmallQrPreviewRef } from '@/components/admin/SmallQrPreview';
 import type { AdminTab } from '@/types';
+import { isBrandTheme } from '@/lib/themeUtils';
 import { isProActive } from '@/lib/subscription';
 import {
   AlertDialog,
@@ -305,7 +306,7 @@ export function UserDashboardPage() {
                     <Button 
                       size="icon"
                       variant="default" 
-                      className="h-8 w-8 rounded-lg flex-shrink-0 bg-[#FB8500] hover:bg-[#FB8500]/90 text-black shadow-sm"
+                      className={`h-8 w-8 rounded-lg flex-shrink-0 shadow-sm ${isBrandTheme(shop.theme) ? 'bg-[#FB8500] hover:bg-[#FB8500]/90 text-black' : 'bg-primary hover:bg-primary/90 text-primary-foreground'}`}
                       onClick={() => window.open(`/${shop.username || 'menuzo'}/menu`, '_blank')}
                     >
                       <ExternalLink className="w-4 h-4" />

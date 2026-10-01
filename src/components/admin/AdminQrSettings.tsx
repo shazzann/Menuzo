@@ -1,3 +1,4 @@
+import { getShopQrColors } from '@/lib/themeUtils';
 import { useRef, useEffect } from 'react';
 import { Check, CircleDot, Grid3x3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -46,10 +47,7 @@ export function AdminQrSettings({
 
   const getColors = () => {
     if (qrStyle === 'brand') {
-      return {
-        fgColor: themeAccent || '#FB8500',
-        bgColor: themePrimary || '#090A0C'
-      };
+      return getShopQrColors(themePrimary, themeAccent);
     }
     return {
       fgColor: '#000000',
@@ -203,11 +201,11 @@ export function AdminQrSettings({
             )}
             <div 
               className="w-12 h-12 rounded-lg border flex items-center justify-center shadow-sm transition-colors duration-300"
-              style={{ backgroundColor: themePrimary || '#090A0C' }}
+              style={{ backgroundColor: getShopQrColors(themePrimary, themeAccent).bgColor }}
             >
               <div 
                 className="w-6 h-6 rounded-sm transition-colors duration-300" 
-                style={{ backgroundColor: themeAccent || '#FB8500' }}
+                style={{ backgroundColor: getShopQrColors(themePrimary, themeAccent).fgColor }}
               />
             </div>
             <span className="font-medium text-sm mt-2">Brand Theme</span>

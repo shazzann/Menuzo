@@ -3,6 +3,7 @@ import { ArrowLeft, Save, Edit3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { useApp } from '@/store';
+import { isValidThemeColor } from '@/lib/themeUtils';
 import { AdminThemeSettings } from '@/components/admin/AdminThemeSettings';
 
 export function AdminThemePage() {
@@ -21,6 +22,10 @@ export function AdminThemePage() {
   }, [shop.theme]);
 
   const handleSave = async () => {
+    if (![theme.primary, theme.secondary, theme.accent].every(isValidThemeColor)) {
+      toast.error('Enter a valid hex colour for all three colours before saving.');
+      return;
+    }
     setIsSaving(true);
     try {
       if (shop.id && shop.id !== 'shop-1') {

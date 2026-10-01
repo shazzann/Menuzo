@@ -78,6 +78,43 @@
   .font-mono {
     font-family: 'IBM Plex Mono', monospace;
   }
+
+  :where([data-shop-theme="custom"]) .shop-price-row {
+    flex-wrap: wrap;
+    row-gap: 0.25rem;
+  }
+
+  :where([data-shop-theme="custom"]) .shop-price-row > span {
+    white-space: nowrap;
+  }
+
+  /* A shop can have a dark page and pale cards (or the reverse). Surface
+     containers establish their own inherited text, price and border tokens.
+     Utilities such as text-primary-foreground still override these defaults. */
+  :where([data-shop-theme="custom"]) :is(
+    .bg-card, .bg-card\/95, .bg-card\/90, .bg-card\/80, .shop-search,
+    .bg-secondary, .bg-secondary\/90, .bg-secondary\/80,
+    .bg-muted, .bg-muted\/80
+  ) {
+    --foreground: var(--shop-surface-foreground);
+    --muted-foreground: var(--shop-surface-muted);
+    --shop-primary-text: var(--shop-surface-primary-text);
+    --border: var(--shop-surface-border);
+    --input: var(--shop-surface-border);
+    color: hsl(var(--foreground));
+  }
+
+  :where([data-shop-theme="custom"]) :is(
+    .bg-background, .bg-background\/95, .bg-background\/90, .bg-background\/80, .bg-background\/70,
+    .bg-popover
+  ) {
+    --foreground: var(--shop-page-foreground);
+    --muted-foreground: var(--shop-page-muted);
+    --shop-primary-text: var(--shop-page-primary-text);
+    --border: var(--shop-page-border);
+    --input: var(--shop-page-border);
+    color: hsl(var(--foreground));
+  }
 }
 
 @layer utilities {
@@ -101,11 +138,11 @@
   }
 
   .card-shadow {
-    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
+    box-shadow: var(--shop-card-shadow, 0 18px 50px rgba(0, 0, 0, 0.45));
   }
 
   .card-border {
-    border: 1px solid rgba(245, 247, 250, 0.08);
+    border: 1px solid var(--shop-card-border, rgba(245, 247, 250, 0.08));
   }
 
   .neon-glow {
