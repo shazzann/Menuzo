@@ -644,3 +644,74 @@ test('active Pro and pending payments retain their existing management screens',
   assert.doesNotMatch(pending.render().html,/Compare Free and Pro plans/);
   disposePending();
 });
+
+function enterRenewalTransfer(page, periodId = 'monthly') {
+  const period = findElement(page.render().tree, node => node.type === 'input' && node.props.value === periodId);
+  assert.ok(period);
+  period.props.onChange();
+  const start = findElement(page.render().tree, node => typeof node.props.onClick === 'function'
+    && ['Upgrade to Pro', 'View bank payment details'].includes(textOf(node)));
+  assert.ok(start); start.props.onClick();
+  assert.equal(findElement(page.render().tree, node => node.props.id === 'preferred-url'), undefined);
+  for (const [id, value] of [['payer-name','Jane Smith'],['transfer-reference','RENEWAL-123'],['transfer-date','2026-09-28']]) {
+    findElement(page.render().tree, node => node.props.id === id).props.onChange({target:{value}});
+  }
+  checkboxOnPage(page).props.onChange({target:{checked:true}});
+  formOnPage(page).props.onSubmit({preventDefault(){}});
+}
+
+for (const periodId of ['monthly','yearly']) for (const status of ['active','expired']) {
+  test(`${status} ${periodId} renewal keeps the assigned URL without asking again`, async () => {
+    const page = subscriptionPageHarness({
+      periods:[configuredPeriod,yearlyPeriod], bank:configuredBank,
+      customUrl:{shop_id:'owned-shop',slug:'existing-cafe',created_at:'2026-08-01T00:00:00Z'},
+      requests:[{...savedPayment,id:'first-payment',status:'approved',requested_slug:'old-requested-name'}],
+      subscription:{plan:'pro',status,expiresAt:new Date(Date.now()+(status==='active'?1:-1)*86400000)},
+      submit:async()=>({...savedPayment,id:'renewal'}),
+    });
+    const cleanup=await mountPage(page);
+    enterRenewalTransfer(page,periodId);
+    const whatsapp=findElement(page.render().tree,node=>node.type==='a'&&textOf(node)==='Open WhatsApp');
+    const message=new URL(whatsapp.props.href).searchParams.get('text');
+    assert.match(message,/Existing custom URL: menuzo.test\/existing-cafe \(keep unchanged\)/);
+    assert.doesNotMatch(message,/Requested URL:|old-requested-name/);
+    checkboxOnPage(page).props.onChange({target:{checked:true}});
+    await formOnPage(page).props.onSubmit({preventDefault(){}});
+    assert.equal(page.submittedInputs.length,1);
+    assert.equal(page.submittedInputs[0].periodId,periodId);
+    assert.equal(page.submittedInputs[0].requestedSlug,null);
+    cleanup();
+  });
+}
+
+test('a previous approved payment does not ask for another URL while assignment is outstanding',async()=>{
+  const page=subscriptionPageHarness({periods:[configuredPeriod,yearlyPeriod],bank:configuredBank,
+    requests:[{...savedPayment,status:'approved'}],submit:async()=>({...savedPayment,id:'renewal'})});
+  const cleanup=await mountPage(page);enterRenewalTransfer(page);
+  checkboxOnPage(page).props.onChange({target:{checked:true}});
+  await formOnPage(page).props.onSubmit({preventDefault(){}});
+  assert.equal(page.submittedInputs[0].requestedSlug,null);cleanup();
+});
+
+test('a rejected first payment can still correct its requested URL',async()=>{
+  const page=subscriptionPageHarness({periods:[configuredPeriod,yearlyPeriod],bank:configuredBank,
+    requests:[{...savedPayment,status:'rejected',rejection_reason:'Check transfer details.'}]});
+  const cleanup=await mountPage(page);
+  goToVerification(page);
+  const whatsapp=findElement(page.render().tree,node=>node.type==='a'&&textOf(node)==='Open WhatsApp');
+  assert.match(new URL(whatsapp.props.href).searchParams.get('text'),/Requested URL: my-cafe/);
+  cleanup();
+});
+
+test('a newly assigned URL takes precedence over a stale URL typed earlier in checkout',async()=>{
+  const options={periods:[configuredPeriod,yearlyPeriod],bank:configuredBank,submit:async()=>savedPayment};
+  const page=subscriptionPageHarness(options);const cleanup=await mountPage(page);goToVerification(page);
+  options.customUrl={shop_id:'owned-shop',slug:'assigned-by-admin',created_at:'2026-09-29T00:00:00Z'};
+  buttonByText(page,'Refresh').props.onClick();await flush();
+  const whatsapp=findElement(page.render().tree,node=>node.type==='a'&&textOf(node)==='Open WhatsApp');
+  const message=new URL(whatsapp.props.href).searchParams.get('text');
+  assert.match(message,/assigned-by-admin/);assert.doesNotMatch(message,/Requested URL: my-cafe/);
+  checkboxOnPage(page).props.onChange({target:{checked:true}});
+  await formOnPage(page).props.onSubmit({preventDefault(){}});
+  assert.equal(page.submittedInputs[0].requestedSlug,null);cleanup();
+});

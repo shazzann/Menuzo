@@ -1,9 +1,26 @@
-import { ArrowLeft, ChevronRight, Store, Paintbrush, QrCode, Shield, CreditCard } from 'lucide-react';
+import { useState } from 'react';
+import { ArrowLeft, ChevronRight, Store, Paintbrush, QrCode, Shield, CreditCard, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useApp } from '@/store';
+import { supabase } from '@/lib/supabase';
+import { toast } from 'sonner';
 
 export function AdminSettingsPage() {
   const { dispatch } = useApp();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      dispatch({ type: 'LOGOUT' });
+    } catch {
+      toast.error('Could not log out. Please try again.');
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
 
   const settingsCards = [
     {
@@ -88,6 +105,21 @@ export function AdminSettingsPage() {
             </div>
           );
         })}
+        <div className="pt-4">
+          <Button
+            variant="outline"
+            onClick={handleLogout}
+            disabled={isLoggingOut}
+            className="w-full border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
+          >
+            <LogOut className="w-4 h-4 mr-2" />
+            {isLoggingOut ? 'Logging out…' : 'Log Out'}
+          </Button>
+        </div>
+        <div className="flex justify-center pt-6 pb-2">
+          <img src="/logo/Logo main4tight.png" alt="Menuzo" className="h-12 w-auto max-w-full object-contain dark:hidden" />
+          <img src="/logo/Logo main4dark.png" alt="Menuzo" className="hidden h-12 w-auto max-w-full object-contain dark:block" />
+        </div>
       </div>
     </div>
   );

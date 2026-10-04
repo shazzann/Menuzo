@@ -42,6 +42,8 @@ export function SubscriptionPage() {
   const currentPeriod = periods.find(period => period.id === selectedId);
   const selected = step === 0 ? currentPeriod : checkoutPeriod || undefined;
   const pending = requests.find(request => request.status === 'pending');
+  const needsCustomUrl = !customUrl && !requests.some(request => request.status === 'approved');
+  const requestedSlug = needsCustomUrl ? form.slug : null;
   const latest = requests[0];
   const showComparison = !proActive && !pending && step === 0;
   const priceUnchanged = step === 0 || (currentPeriod?.id === checkoutPeriod?.id && currentPeriod?.amount === checkoutPeriod?.amount
@@ -97,7 +99,8 @@ export function SubscriptionPage() {
     `Shop: ${shop.name} (${shop.username})`, `Account: ${user?.email || ''}`,
     `Period: ${selected.label}`, `Amount: ${formatPaymentAmount(selected.amount, selected.currency)}`,
     `Payer: ${form.payerName.trim()}`, `Reference: ${form.reference.trim()}`, `Transfer date: ${form.date}`,
-    form.slug ? `Requested URL: ${form.slug}` : '', 'I will attach my transfer receipt here.',
+    customUrl ? `Existing custom URL: ${window.location.host}/${customUrl.slug} (keep unchanged)`
+      : requestedSlug ? `Requested URL: ${requestedSlug}` : '', 'I will attach my transfer receipt here.',
   ].filter(Boolean).join('\n')) : null;
 
   const submit = async (event: React.FormEvent) => {
@@ -110,7 +113,7 @@ export function SubscriptionPage() {
       const request = await BillingService.submitRequest({ shopId: shop.id, periodId: selected.id,
         expectedAmount: selected.amount!, expectedCurrency: selected.currency, expectedMonths: selected.months,
         payerName: form.payerName, transferReference: form.reference, transferredOn: form.date,
-        requestedSlug: form.slug, customerNote: form.note });
+        requestedSlug, customerNote: form.note });
       if (!pageActive.current) return;
       // Persisted pending requests never grant paid access.
       setRequests(current => [request, ...current.filter(item => item.id !== request.id)]);
@@ -176,7 +179,8 @@ export function SubscriptionPage() {
                     <fieldset disabled={!ready} className="space-y-4 disabled:opacity-60"><legend className="font-semibold mb-3">Your transfer details</legend>
                       <div className="space-y-2"><Label htmlFor="payer-name">Account holder / payer name</Label><Input id="payer-name" required minLength={2} maxLength={120} value={form.payerName} onChange={event => setForm({ ...form, payerName: event.target.value })} autoComplete="name" /></div>
                       <div className="grid sm:grid-cols-2 gap-4"><div className="space-y-2"><Label htmlFor="transfer-reference">Transfer reference</Label><Input id="transfer-reference" required minLength={3} maxLength={120} value={form.reference} onChange={event => setForm({ ...form, reference: event.target.value })} /></div><div className="space-y-2"><Label htmlFor="transfer-date">Transfer date</Label><Input id="transfer-date" type="date" required max={getTodayDateString()} value={form.date} onChange={event => setForm({ ...form, date: event.target.value })} /></div></div>
-                      <div className="space-y-2"><Label htmlFor="preferred-url">Preferred custom menu URL (optional)</Label><div className="flex items-center gap-2"><span className="text-sm text-muted-foreground">{window.location.host}/</span><Input id="preferred-url" placeholder="your-restaurant" maxLength={50} minLength={3} pattern="[a-z0-9]+(-[a-z0-9]+)*" title="Use 3–50 lowercase letters or numbers, separated by single hyphens." value={form.slug} onChange={event => setForm({ ...form, slug: event.target.value.toLowerCase() })} /></div><p className="text-xs text-muted-foreground">Subject to availability. Your custom URL activates after approval and assignment. Your existing menu link keeps working.</p></div>
+                      {needsCustomUrl ? <div className="space-y-2"><Label htmlFor="preferred-url">Preferred custom menu URL (optional)</Label><div className="flex items-center gap-2"><span className="text-sm text-muted-foreground">{window.location.host}/</span><Input id="preferred-url" placeholder="your-restaurant" maxLength={50} minLength={3} pattern="[a-z0-9]+(-[a-z0-9]+)*" title="Use 3–50 lowercase letters or numbers, separated by single hyphens." value={form.slug} onChange={event => setForm({ ...form, slug: event.target.value.toLowerCase() })} /></div><p className="text-xs text-muted-foreground">Subject to availability. Your custom URL activates after approval and assignment. Your existing menu link keeps working.</p></div>
+                        : <div className="rounded-xl bg-muted/50 p-4 space-y-2"><p className="text-sm font-medium">{customUrl ? 'Keeping your custom URL' : 'Custom URL setup'}</p>{customUrl && <p className="text-sm break-all">{window.location.host}/{customUrl.slug}</p>}<p className="text-xs text-muted-foreground">{customUrl ? 'Renewing keeps this URL. You do not need to choose it again.' : 'You do not need to request a custom URL again when renewing. Contact support if your URL has not been assigned yet.'}</p></div>}
                       <div className="space-y-2"><Label htmlFor="payment-note">Note (optional)</Label><Textarea id="payment-note" maxLength={1000} value={form.note} onChange={event => setForm({ ...form, note: event.target.value })} /></div>
                       <label className="flex items-start gap-3 text-sm"><input type="checkbox" required checked={transferMade} onChange={event => setTransferMade(event.target.checked)} className="mt-1 accent-primary" />I have completed this bank transfer and kept the receipt.</label>
                     </fieldset>

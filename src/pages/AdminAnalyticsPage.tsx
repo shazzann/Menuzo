@@ -1,18 +1,20 @@
 import { useState } from 'react';
-import { Settings, CreditCard, Calendar, TrendingUp, Users, Eye, Utensils, LayoutGrid } from 'lucide-react';
+import { Settings, CreditCard, Calendar, QrCode, Eye, Utensils, LayoutGrid } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useApp } from '@/store';
 import { BottomNav } from '@/components/shared/BottomNav';
 import type { AdminTab } from '@/types';
 import { cn } from '@/lib/utils';
 import { isProActive } from '@/lib/subscription';
+import { ANALYTICS_RANGE_LABELS, summarizeShopViews, type AnalyticsRange } from '@/lib/shopAnalytics';
+import { MenuViewsChart } from '@/components/admin/MenuViewsChart';
 
 export function AdminAnalyticsPage() {
   const { state, dispatch } = useApp();
   const { user, foodItems, categories, shop } = state;
   const proActive = isProActive(user?.subscription);
   const currentPlan = proActive ? 'pro' : 'free';
-  const [timeRange, setTimeRange] = useState<'today' | 'week' | 'month'>('today');
+  const [timeRange, setTimeRange] = useState<AnalyticsRange>('today');
 
   const handleTabChange = (tab: AdminTab) => {
     dispatch({ type: 'SET_ADMIN_TAB', payload: tab });
@@ -51,11 +53,8 @@ export function AdminAnalyticsPage() {
     }
   };
 
-  // Real data for analytics
-  const viewStats = {
-    views: shop?.view_count || 0,
-    qrScans: shop?.qr_scan_count || 0,
-  };
+  const viewStats = summarizeShopViews(shop?.daily_stats, timeRange);
+  const statsAvailable = shop?.daily_stats !== undefined;
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -147,24 +146,32 @@ export function AdminAnalyticsPage() {
 
         {/* Views & Performance */}
         <div>
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
             <h3 className="font-semibold text-sm">Shop Performance</h3>
             <div className="flex bg-muted rounded-lg p-1">
               {(['today', 'week', 'month'] as const).map(range => (
                 <button
                   key={range}
                   onClick={() => setTimeRange(range)}
+                  aria-pressed={timeRange === range}
                   className={cn(
                     "px-3 py-1 text-xs font-medium rounded-md capitalize transition-colors",
                     timeRange === range ? "bg-background shadow-sm" : "text-muted-foreground"
                   )}
                 >
-                  {range}
+                  {ANALYTICS_RANGE_LABELS[range]}
                 </button>
               ))}
             </div>
           </div>
           
+          <p className="text-xs text-muted-foreground mb-3">{ANALYTICS_RANGE_LABELS[timeRange]} · Sri Lanka time · Includes today</p>
+          {!statsAvailable && (
+            <div role="alert" className="mb-3 p-4 rounded-xl bg-muted text-sm">
+              Daily statistics could not be loaded.
+              <Button variant="link" onClick={() => dispatch({ type: 'RETRY_SHOP_LOAD' })}>Retry</Button>
+            </div>
+          )}
           <div className="space-y-3">
             <div className="p-5 rounded-xl bg-card border border-border flex items-center justify-between">
               <div className="flex items-center gap-4">
@@ -173,29 +180,34 @@ export function AdminAnalyticsPage() {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Menu Views</p>
-                  <p className="text-2xl font-bold">{viewStats.views.toLocaleString()}</p>
+                  <p className="text-2xl font-bold">{statsAvailable ? viewStats.views.toLocaleString() : '—'}</p>
                 </div>
               </div>
-              <div className="text-right">
-                <span className="inline-flex items-center gap-1 text-emerald-500 bg-emerald-500/10 px-2 py-1 rounded-full text-xs font-medium">
-                  <TrendingUp className="w-3 h-3" />
-                  +12%
-                </span>
-              </div>
+
             </div>
 
             <div className="p-5 rounded-xl bg-card border border-border flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div className="p-3 bg-blue-500/10 rounded-xl">
-                  <Users className="w-6 h-6 text-blue-500" />
+                  <QrCode className="w-6 h-6 text-blue-500" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">QR Scan Counts</p>
-                  <p className="text-2xl font-bold">{viewStats.qrScans.toLocaleString()}</p>
+                  <p className="text-sm text-muted-foreground">QR Visits</p>
+                  <p className="text-2xl font-bold">{statsAvailable ? viewStats.qrScans.toLocaleString() : '—'}</p>
                 </div>
               </div>
             </div>
           </div>
+          {statsAvailable && (
+            <div className="mt-4 p-4 rounded-xl bg-card border border-border min-w-0">
+              <h3 className="font-semibold text-sm mb-1">Daily visits</h3>
+              <p className="text-xs text-muted-foreground mb-4">{ANALYTICS_RANGE_LABELS[timeRange]} · {viewStats.data[0].label}{viewStats.data.length > 1 ? ` – ${viewStats.data[viewStats.data.length - 1].label}` : ''}</p>
+              <MenuViewsChart data={viewStats.data} />
+            </div>
+          )}
+          <p className="text-xs text-muted-foreground mt-3 leading-relaxed">
+            Menu views include QR visits. Repeat opens in the same browser tab session are counted once per entry method (link or QR), not on every refresh. These are visits, not unique people.
+          </p>
         </div>
       </div>
 

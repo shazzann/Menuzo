@@ -27,11 +27,11 @@ export function AdminDataLoader() {
         }
         const [food, stats] = await Promise.all([
           MenuService.getMenuByShopId(row.id),
-          RestaurantService.getShopDailyStats(row.id).catch(() => []),
+          RestaurantService.getShopDailyStats(row.id).catch(() => undefined),
         ]);
         if (cancelled) return;
         dispatch({ type: 'SHOP_LOAD_SUCCESS', payload: { context,
-          shop: { ...formatShop(row), daily_stats: stats || [] }, food: formatFood(food || []) } });
+          shop: { ...formatShop(row), daily_stats: stats ?? undefined }, food: formatFood(food || []) } });
       } catch {
         if (!cancelled) dispatch({ type: 'SHOP_LOAD_ERROR', payload: { context, message: 'Your shop details could not be loaded. Please try again.' } });
       }

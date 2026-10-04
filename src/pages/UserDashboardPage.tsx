@@ -1,6 +1,5 @@
 import { 
   Utensils, 
-  TrendingUp, 
   Settings, 
   QrCode,
   Crown,
@@ -11,12 +10,13 @@ import {
   ChevronRight,
   Download
 } from 'lucide-react';
-import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis } from 'recharts';
+import { MenuViewsChart } from '@/components/admin/MenuViewsChart';
+import { summarizeShopViews } from '@/lib/shopAnalytics';
 import { Button } from '@/components/ui/button';
 import { useApp } from '@/store';
 import { BottomNav } from '@/components/shared/BottomNav';
 import { OnboardingChecklist } from '@/components/dashboard/OnboardingChecklist';
-import { useEffect, useState, useRef, useMemo } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { toast } from 'sonner';
 import { SmallQrPreview, type SmallQrPreviewRef } from '@/components/admin/SmallQrPreview';
 import type { AdminTab } from '@/types';
@@ -40,29 +40,9 @@ export function UserDashboardPage() {
   const proActive = isProActive(user?.subscription);
   const [isLoadingData, setIsLoadingData] = useState(true);
   const qrRef = useRef<SmallQrPreviewRef>(null);
+  const [isDownloadingQr, setIsDownloadingQr] = useState(false);
 
-  const chartData = useMemo(() => {
-    const data = [];
-    const today = new Date();
-    
-    // Create an array of the last 7 days
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date(today);
-      d.setDate(d.getDate() - i);
-      const dateString = d.toISOString().split('T')[0];
-      const dayName = d.toLocaleDateString('en-US', { weekday: 'short' });
-      
-      const statForDay = shop?.daily_stats?.find(s => s.date === dateString);
-      
-      data.push({
-        name: dayName,
-        views: statForDay ? statForDay.views : 0,
-        qrScans: statForDay ? statForDay.qr_scans : 0,
-      });
-    }
-    
-    return data;
-  }, [shop?.daily_stats]);
+  const chartData = summarizeShopViews(shop?.daily_stats, 'week').data;
 
   useEffect(() => {
     // Data is now loaded globally by AdminDataLoader
@@ -201,41 +181,21 @@ export function UserDashboardPage() {
           <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="font-semibold">Menu Views</h3>
-              <p className="text-sm text-muted-foreground">Last 7 days</p>
+              <p className="text-sm text-muted-foreground">All-time total</p>
             </div>
             <div className="text-right">
               <p className="text-2xl font-bold">{(shop.view_count || 0).toLocaleString()}</p>
-              <span className="inline-flex items-center gap-1 text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-full text-[10px] font-medium mt-1">
-                <TrendingUp className="w-3 h-3" />
-                +24%
-              </span>
+
             </div>
           </div>
-          <div className="h-40 w-full mt-2 -ml-2">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={chartData} margin={{ top: 5, right: 0, left: 0, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <XAxis dataKey="name" hide />
-                <Tooltip 
-                  contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', borderRadius: '8px' }}
-                  itemStyle={{ color: 'hsl(var(--foreground))' }}
-                />
-                <Area 
-                  type="monotone" 
-                  dataKey="views" 
-                  stroke="hsl(var(--primary))" 
-                  strokeWidth={3}
-                  fillOpacity={1} 
-                  fill="url(#colorViews)" 
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
+          <p className="text-sm font-medium mb-2">Daily visits · Last 7 days</p>
+          <p className="text-xs text-muted-foreground mb-3">Sri Lanka time</p>
+          {shop.daily_stats !== undefined ? <MenuViewsChart data={chartData} /> : (
+            <div className="text-sm text-muted-foreground">
+              Daily statistics could not be loaded.
+              <Button variant="link" onClick={() => dispatch({ type: 'RETRY_SHOP_LOAD' })}>Retry</Button>
+            </div>
+          )}
         </div>
 
         {/* Quick Stats Grid */}
@@ -283,15 +243,22 @@ export function UserDashboardPage() {
                     {typeof window !== 'undefined' ? `${window.location.host}/${shop.username || 'menuzo'}` : `menuzo.com/${shop.username || 'menuzo'}`}
                   </span>
                   <div className="flex items-center gap-1">
-                    <Button size="icon" variant="ghost" className="h-8 w-8 hover:bg-background rounded-lg flex-shrink-0 text-muted-foreground hover:text-foreground shadow-sm" onClick={() => {
+                    <Button size="icon" variant="ghost" disabled={isDownloadingQr} aria-label="Download high-resolution QR code" className="h-8 w-8 hover:bg-background rounded-lg flex-shrink-0 text-muted-foreground hover:text-foreground shadow-sm" onClick={async () => {
                       if (qrRef.current) {
-                        qrRef.current.download(`${shop.name.toLowerCase().replace(/\s+/g, '-')}-qr`);
-                        if (typeof window !== 'undefined') {
-                          localStorage.setItem(`qr_generated_${shop.id}`, 'true');
-                          // Force a tiny re-render for the checklist if it's visible by dispatching a dummy action
-                          dispatch({ type: 'UPDATE_SHOP', payload: { ...shop } });
+                        setIsDownloadingQr(true);
+                        try {
+                          await qrRef.current.download(`${shop.name.toLowerCase().replace(/\s+/g, '-')}-qr`);
+                          if (typeof window !== 'undefined') {
+                            localStorage.setItem(`qr_generated_${shop.id}`, 'true');
+                            // Refresh the checklist only after the export succeeds.
+                            dispatch({ type: 'UPDATE_SHOP', payload: { ...shop } });
+                          }
+                          toast.success('High-resolution QR code downloaded!');
+                        } catch {
+                          toast.error('Could not download the QR code. Please try again.');
+                        } finally {
+                          setIsDownloadingQr(false);
                         }
-                        toast.success('QR Code downloaded!');
                       }
                     }}>
                       <Download className="w-4 h-4" />

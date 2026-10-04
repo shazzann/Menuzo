@@ -1,9 +1,10 @@
 import { getShopQrColors } from '@/lib/themeUtils';
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useMemo, useState } from 'react';
 import { Check, CircleDot, Grid3x3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import QRCodeStyling from 'qr-code-styling';
-import type { DotType, CornerSquareType, CornerDotType } from 'qr-code-styling';
+import { createStyledQr, downloadQrPng, getQrOptions, QR_PATTERNS as PATTERNS } from '@/lib/qrCode';
+import { toast } from 'sonner';
+import type { DotType } from 'qr-code-styling';
 import { cn } from '@/lib/utils';
 
 interface AdminQrSettingsProps {
@@ -20,15 +21,6 @@ interface AdminQrSettingsProps {
   onDownload?: () => void;
 }
 
-const PATTERNS: { label: string, value: DotType, eyeFrame: CornerSquareType, eyeBall: CornerDotType }[] = [
-  { label: 'Classic', value: 'square', eyeFrame: 'square', eyeBall: 'square' },
-  { label: 'Rounded', value: 'rounded', eyeFrame: 'extra-rounded', eyeBall: 'rounded' },
-  { label: 'Dots', value: 'dots', eyeFrame: 'dot', eyeBall: 'dot' },
-  { label: 'Smooth', value: 'extra-rounded', eyeFrame: 'extra-rounded', eyeBall: 'dot' },
-  { label: 'Pixel', value: 'classy', eyeFrame: 'square', eyeBall: 'square' },
-  { label: 'Diamond', value: 'classy-rounded', eyeFrame: 'extra-rounded', eyeBall: 'rounded' },
-];
-
 export function AdminQrSettings({ 
   shopUrl, 
   themePrimary, 
@@ -43,81 +35,18 @@ export function AdminQrSettings({
   onDownload
 }: AdminQrSettingsProps) {
   const qrRef = useRef<HTMLDivElement>(null);
-  const qrCode = useRef<QRCodeStyling | null>(null);
-
-  const getColors = () => {
-    if (qrStyle === 'brand') {
-      return getShopQrColors(themePrimary, themeAccent);
-    }
-    return {
-      fgColor: '#000000',
-      bgColor: '#ffffff'
-    };
-  };
-
-  const getPatternConfig = (pattern: DotType) => {
-    return PATTERNS.find(p => p.value === pattern) || PATTERNS[0];
-  };
+  const [downloading, setDownloading] = useState(false);
+  const options = useMemo(() => getQrOptions({ shopUrl, shopLogo, size: 180, imageSize: 0.25,
+    qrStyle, qrPattern, primary: themePrimary, accent: themeAccent }),
+    [shopUrl, shopLogo, qrStyle, qrPattern, themePrimary, themeAccent]);
 
   useEffect(() => {
-    const { fgColor, bgColor } = getColors();
-    const config = getPatternConfig(qrPattern);
-    
-    // Fix for Vite production build CJS interop
-    const QRCodeConstructor = typeof QRCodeStyling === 'function' ? QRCodeStyling : (QRCodeStyling as any).default;
-    
-    qrCode.current = new QRCodeConstructor({
-      width: 180,
-      height: 180,
-      type: 'svg',
-      data: shopUrl.includes('?') ? `${shopUrl}&source=qr` : `${shopUrl}?source=qr`,
-      image: shopLogo ? `${shopLogo.replace('http://', 'https://')}?qr=1` : undefined,
-      dotsOptions: {
-        color: fgColor,
-        type: config.value
-      },
-      cornersSquareOptions: {
-        color: fgColor,
-        type: config.eyeFrame
-      },
-      cornersDotOptions: {
-        color: fgColor,
-        type: config.eyeBall
-      },
-      backgroundOptions: {
-        color: bgColor,
-      },
-      imageOptions: {
-        crossOrigin: 'anonymous',
-        margin: 5,
-        imageSize: 0.25
-      },
-      qrOptions: {
-        errorCorrectionLevel: 'H'
-      }
-    });
-
-    if (qrRef.current) {
-      qrRef.current.innerHTML = '';
-      qrCode.current?.append(qrRef.current);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!qrCode.current) return;
-    const { fgColor, bgColor } = getColors();
-    const config = getPatternConfig(qrPattern);
-
-    qrCode.current.update({
-      image: shopLogo ? `${shopLogo.replace('http://', 'https://')}?qr=1` : undefined,
-      dotsOptions: { color: fgColor, type: config.value },
-      cornersSquareOptions: { color: fgColor, type: config.eyeFrame },
-      cornersDotOptions: { color: fgColor, type: config.eyeBall },
-      backgroundOptions: { color: bgColor },
-      imageOptions: { crossOrigin: 'anonymous', margin: 5, imageSize: 0.25 },
-      qrOptions: { errorCorrectionLevel: 'H' }
-    });
-  }, [qrStyle, qrPattern, themePrimary, themeAccent, shopLogo]);
+    if (!qrRef.current) return;
+    const host = document.createElement('div');
+    qrRef.current.replaceChildren(host);
+    createStyledQr(options).append(host);
+    return () => host.remove();
+  }, [options]);
 
   return (
     <div className="space-y-8 pb-24 animate-in fade-in duration-300">
@@ -130,7 +59,7 @@ export function AdminQrSettings({
       <div className="bg-card rounded-2xl border p-6 flex flex-col items-center justify-center gap-4 card-shadow mx-4 mt-4">
         <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground font-semibold mb-2">Live Preview</span>
         
-        <div className="p-4 rounded-xl shadow-sm border transition-colors duration-300" style={{ backgroundColor: getColors().bgColor }}>
+        <div className="p-4 rounded-xl shadow-sm border transition-colors duration-300" style={{ backgroundColor: options.backgroundOptions?.color }}>
           <div ref={qrRef} />
         </div>
         
@@ -142,20 +71,22 @@ export function AdminQrSettings({
         <Button 
           variant="outline" 
           className="w-full max-w-[200px]"
-          onClick={() => {
-            if (qrCode.current) {
-              qrCode.current.download({
-                name: `${shopName.replace(/\s+/g, '-').toLowerCase()}-qr-code`,
-                extension: 'png'
-              });
-              if (onDownload) {
-                onDownload();
-              }
+          disabled={downloading}
+          onClick={async () => {
+            setDownloading(true);
+            try {
+              await downloadQrPng(options, `${shopName.replace(/\s+/g, '-').toLowerCase()}-qr-code`);
+              onDownload?.();
+            } catch {
+              toast.error('Could not download the QR code. Please try again.');
+            } finally {
+              setDownloading(false);
             }
           }}
         >
-          Download QR Code
+          {downloading ? 'Preparing download…' : 'Download QR Code'}
         </Button>
+        <p className="text-xs text-muted-foreground">High-resolution PNG · 2048 × 2048 pixels</p>
       </div>
 
       {/* QR Color Theme */}

@@ -10,6 +10,8 @@
     "test:billing": "node --test tests/customer-billing.test.mjs",
     "test:company-billing": "node --test tests/company-billing.test.mjs",
     "test:themes": "node --test tests/shop-themes.test.mjs",
+    "test:qr": "node --test tests/qr-export.test.mjs",
+    "test:analytics": "node --test tests/shop-analytics.test.mjs",
     "test:shop-loading": "node --test tests/shop-loading.test.mjs",
     "preview": "vite preview"
   },

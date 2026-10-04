@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import type { Database } from '@/types/supabase';
+import { analyticsDates } from '@/lib/shopAnalytics';
 
 type ShopInsert = Database['public']['Tables']['shops']['Insert'];
 type ShopUpdate = Database['public']['Tables']['shops']['Update'];
@@ -68,15 +69,14 @@ export const RestaurantService = {
   },
 
   async getShopDailyStats(shopId: string) {
-    const today = new Date();
-    const sevenDaysAgo = new Date(today);
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const dates = analyticsDates('month');
 
     const { data, error } = await supabase
       .from('shop_daily_stats')
       .select('*')
       .eq('shop_id', shopId)
-      .gte('date', sevenDaysAgo.toISOString().split('T')[0])
+      .gte('date', dates[0])
+      .lte('date', dates[dates.length - 1])
       .order('date', { ascending: true });
 
     if (error) throw error;

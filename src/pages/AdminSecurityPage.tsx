@@ -1,11 +1,10 @@
 import { useState } from 'react';
-import { ArrowLeft, Lock, LogOut } from 'lucide-react';
+import { ArrowLeft, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { useApp } from '@/store';
-import { supabase } from '@/lib/supabase';
 
 export function AdminSecurityPage() {
   const { state, dispatch } = useApp();
@@ -16,15 +15,6 @@ export function AdminSecurityPage() {
     new: '',
     confirm: '',
   });
-
-  const handleLogout = async () => {
-    try {
-      await supabase.auth.signOut();
-      dispatch({ type: 'LOGOUT' });
-    } catch (err) {
-      console.error('Error logging out:', err);
-    }
-  };
 
   const handlePasswordChange = (e: React.FormEvent) => {
     e.preventDefault();
@@ -126,11 +116,6 @@ export function AdminSecurityPage() {
             </form>
           )}
 
-          <div className="pt-8">
-            <Button variant="outline" onClick={handleLogout} className="w-full border-destructive/30 text-destructive hover:bg-destructive/10">
-              <LogOut className="w-4 h-4 mr-2" /> Log Out
-            </Button>
-          </div>
         </div>
       </div>
     </div>
