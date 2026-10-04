@@ -72,12 +72,12 @@ export function FoodCard({ item, onClick, variant = 'grid' }: FoodCardProps) {
     <div
       onClick={onClick}
       className={cn(
-        'group relative rounded-2xl bg-card card-border card-shadow overflow-hidden',
+        'food-card group relative flex h-full w-full flex-col rounded-2xl bg-card card-border card-shadow overflow-hidden',
         onClick && 'cursor-pointer transition-all duration-200 hover:scale-[1.03] hover:border-primary/30',
         !item.isAvailable && 'opacity-60'
       )}
     >
-      <div className="relative aspect-square">
+      <div className="relative aspect-square flex-shrink-0">
         <img
           src={item.image}
           alt={item.name}
@@ -96,23 +96,23 @@ export function FoodCard({ item, onClick, variant = 'grid' }: FoodCardProps) {
           </div>
         )}
       </div>
-      <div className="p-3">
+      <div className="flex flex-1 flex-col p-3">
         <h4 className="font-semibold text-sm line-clamp-1">{item.name}</h4>
-        <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">
+        <p className="min-h-4 text-xs text-muted-foreground line-clamp-1 mt-0.5">
           {item.tagline}
         </p>
-        <div className="shop-price-row flex items-center gap-2 mt-2">
+        <div className="food-card-prices flex flex-wrap items-baseline gap-x-2 gap-y-1 mt-auto pt-2">
           {item.discount ? (
             <>
-              <span className="text-xs text-muted-foreground line-through">
+              <span className="food-card-original-price whitespace-nowrap text-xs text-muted-foreground line-through">
                 Rs. {item.originalPrice.toFixed(2)}
               </span>
-              <span className="text-sm font-bold text-primary">
+              <span className="food-card-current-price whitespace-nowrap text-sm font-bold text-primary">
                 Rs. {item.finalPrice.toFixed(2)}
               </span>
             </>
           ) : (
-            <span className="text-sm font-bold">
+            <span className="food-card-current-price whitespace-nowrap text-sm font-bold">
               Rs. {item.finalPrice.toFixed(2)}
             </span>
           )}

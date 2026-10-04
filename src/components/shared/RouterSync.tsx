@@ -66,7 +66,11 @@ export function RouterSync() {
     if (expected && expected !== location.pathname) {
       pendingPath.current = expected;
       lastPath.current = expected;
-      navigate(expected, { replace: true });
+      const openingFood = route.view === 'customer-menu' && state.currentView === 'customer-food-detail';
+      navigate(expected, {
+        replace: !openingFood,
+        state: openingFood ? { menuReturnPath: location.pathname } : null,
+      });
     }
   }, [state, location.pathname, navigate, dispatch]);
   return null;

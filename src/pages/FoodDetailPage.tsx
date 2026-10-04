@@ -1,4 +1,5 @@
-import { useEffect } from 'react';
+import { useEffect, useLayoutEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft, ChefHat, Sparkles, Share2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useSEO } from '@/hooks/useSEO';
@@ -7,6 +8,13 @@ import { useApp } from '@/store';
 export function FoodDetailPage() {
   const { state, dispatch } = useApp();
   const { selectedFoodItem, shop } = state;
+  const location = useLocation();
+  const navigate = useNavigate();
+  const selectedFoodId = selectedFoodItem?.id;
+
+  useLayoutEffect(() => {
+    if (selectedFoodId) window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  }, [selectedFoodId]);
 
   let backView: 'customer-menu' | 'admin-preview' | 'admin-add-food' = 'customer-menu';
   if (state.currentView === 'admin-food-detail') backView = 'admin-preview';
@@ -80,7 +88,10 @@ export function FoodDetailPage() {
         
         {/* Back Button */}
         <button
-          onClick={() => dispatch({ type: 'SET_VIEW', payload: backView })}
+          onClick={() => {
+            if (backView === 'customer-menu' && location.state?.menuReturnPath) navigate(-1);
+            else dispatch({ type: 'SET_VIEW', payload: backView });
+          }}
           className="absolute top-4 left-4 p-2.5 rounded-full bg-background/50 backdrop-blur-sm hover:bg-background/70 transition-colors"
         >
           <ArrowLeft className="w-5 h-5" />

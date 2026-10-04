@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { ArrowLeft, Clock, MapPin, Phone, Store, Image as ImageIcon, Share2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useApp } from '@/store';
@@ -11,12 +11,19 @@ import { useSEO } from '@/hooks/useSEO';
 import { checkShopStatus } from '@/lib/timeUtils';
 import { supabase } from '@/lib/supabase';
 import type { FoodItem } from '@/types';
+import { captureMenuPosition, restoreMenuPosition } from '@/lib/menuPosition';
 
 export function CustomerMenuPage() {
   const { state, dispatch } = useApp();
   const { shop, foodItems, categories, searchQuery, selectedCategory } = state;
-  const [viewMode, setViewMode] = useState<'rows' | 'list'>('rows');
-  const [activeTabId, setActiveTabId] = useState('all');
+  const menuRef = useRef<HTMLDivElement>(null);
+  const [returnPosition] = useState(() => state.menuPosition?.shopId === shop.id ? state.menuPosition : null);
+  const [viewMode, setViewMode] = useState<'rows' | 'list'>(returnPosition?.viewMode ?? 'rows');
+  const [activeTabId, setActiveTabId] = useState(returnPosition?.activeTabId ?? 'all');
+
+  useLayoutEffect(() => {
+    if (returnPosition && menuRef.current) restoreMenuPosition(menuRef.current, returnPosition);
+  }, [returnPosition]);
 
   const specialOffers = useMemo(
     () => foodItems.filter((item) => item.isSpecialOffer && item.isAvailable),
@@ -111,7 +118,7 @@ export function CustomerMenuPage() {
 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [foodItems, activeTabId]);
+  }, [categoriesWithItems, viewMode, activeTabId]);
 
   const timeStatus = checkShopStatus(shop.openingHours);
   const isCurrentlyOpen = shop.isOpen && timeStatus.isOpen;
@@ -123,6 +130,9 @@ export function CustomerMenuPage() {
   });
 
   const handleFoodClick = (food: FoodItem) => {
+    if (menuRef.current) {
+      dispatch({ type: 'SAVE_MENU_POSITION', payload: captureMenuPosition(menuRef.current, { shopId: shop.id, viewMode, activeTabId }) });
+    }
     dispatch({ type: 'SELECT_FOOD_ITEM', payload: food });
     dispatch({ type: 'SET_VIEW', payload: 'customer-food-detail' });
   };
@@ -151,7 +161,7 @@ export function CustomerMenuPage() {
   };
 
   return (
-    <div className="min-h-screen bg-muted/30 pb-20">
+    <div ref={menuRef} className="min-h-screen bg-muted/30 pb-20">
       {/* Banner */}
       <div className="h-40 sm:h-48 md:h-64 bg-muted relative">
         {shop.banner ? (
@@ -310,9 +320,9 @@ export function CustomerMenuPage() {
                       More
                     </button>
                   </div>
-                  <div className="flex overflow-x-auto gap-4 px-4 pb-4 snap-x hide-scrollbar">
+                  <div data-menu-scroll={`category:${category.id}`} className="mx-4 flex overflow-x-auto gap-4 pb-4 snap-x scrollbar-hide">
                     {categoryItems.map((item) => (
-                      <div key={item.id} className="w-[200px] flex-shrink-0 snap-start first:ml-2">
+                      <div key={item.id} className="w-[176px] flex-shrink-0 snap-start">
                         <FoodCard
                           item={item}
                           onClick={() => handleFoodClick(item)}

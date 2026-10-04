@@ -14,7 +14,7 @@ interface CategoryTabsProps {
 export function CategoryTabs({ categories, selectedCategory, onSelectCategory, onAddCategory, onReorder, className }: CategoryTabsProps) {
   return (
     <div className={cn("sticky top-0 z-30 bg-background/95 backdrop-blur-sm py-3 px-4 border-b border-border flex items-center justify-between gap-2", className)}>
-      <div className="flex gap-2 overflow-x-auto scrollbar-hide flex-1">
+      <div data-menu-scroll="category-tabs" className="flex gap-2 overflow-x-auto scrollbar-hide flex-1">
         {categories.map((category) => (
           <button
             key={category.id}

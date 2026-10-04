@@ -246,9 +246,9 @@ export function AdminPreviewPage() {
                       More
                     </button>
                   </div>
-                  <div className="flex overflow-x-auto gap-4 px-4 pb-4 snap-x hide-scrollbar">
+                  <div className="mx-4 flex overflow-x-auto gap-4 pb-4 snap-x scrollbar-hide">
                     {categoryItems.map((item) => (
-                      <div key={item.id} className="w-[200px] flex-shrink-0 snap-start first:ml-2">
+                      <div key={item.id} className="w-[176px] flex-shrink-0 snap-start">
                         <FoodCard
                           item={item}
                           onClick={() => handleFoodClick(item)}

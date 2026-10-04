@@ -224,7 +224,16 @@ export interface SubscriptionPlan {
   color: string;
 }
 
+export interface MenuPosition {
+  shopId: string;
+  viewMode: 'rows' | 'list';
+  activeTabId: string;
+  scrollY: number;
+  horizontal: Record<string, number>;
+}
+
 export interface AppState {
+  menuPosition: MenuPosition | null;
   shopDataContext: string;
   shopDataStatus: 'idle' | 'loading' | 'ready' | 'error' | 'not-found';
   shopLoadError: string;

@@ -29,7 +29,7 @@ function hooks() {
   };
 }
 function app(path,options={}) {
-  let state,reducer;const actions=[],publicQueries=[],ownerQueries=[],navigations=[];
+  let state,reducer;const actions=[],publicQueries=[],ownerQueries=[],navigations=[],navigationOptions=[];
   const store=load('src/store/index.tsx',{
     react:{...React,useReducer(fn,initial){reducer=fn;state=initial;return[state,()=>{}];}},
     'react/jsx-runtime':jsx,'@/lib/shopRoutes':routes,
@@ -37,7 +37,7 @@ function app(path,options={}) {
   store.AppProvider({children:null});
   const dispatch=action=>{actions.push(action);state=reducer(state,action);};
   const router={useLocation:()=>({pathname:path}),useNavigate:()=>navigate};
-  const navigate=next=>{navigations.push(next);path=next;};
+  const navigate=(next,options)=>{navigations.push(next);navigationOptions.push(options);path=next;};
   const deps={
     '@/store':{useApp:()=>({state,dispatch})},'react-router-dom':router,'@/lib/shopRoutes':routes,'@/lib/shopData':formatting,
     '@/services':{
@@ -51,12 +51,41 @@ function app(path,options={}) {
   };
   const mounted=['RouterSync','PublicDataLoader','AdminDataLoader'].map(name=>{const h=hooks();const module=load(`src/components/shared/${name}.tsx`,{...deps,react:h.api});return{h,fn:module[name]};});
   return {
-    get state(){return state;},get path(){return path;},dispatch,actions,publicQueries,ownerQueries,navigations,
+    get state(){return state;},get path(){return path;},dispatch,actions,publicQueries,ownerQueries,navigations,navigationOptions,
     go(next){path=next;},
     async pump(times=5){for(let n=0;n<times;n++){for(const m of mounted)m.h.render(m.fn);for(const m of mounted)m.h.effects();await new Promise(resolve=>setImmediate(resolve));}},
     dispose(){mounted.forEach(m=>m.h.dispose());},
   };
 }
+
+test('opening home stays on home with no session, an owner session, or an account without a shop',async()=>{
+  for(const hasShop of [true,false]) {
+    const page=app('/',{ownerShop:()=>hasShop?row('owned-shop','my-cafe'):null});
+    await page.pump();assert.equal(page.state.currentView,'landing');assert.equal(page.path,'/');
+    page.dispatch({type:'LOGIN',payload:user});await page.pump();
+    // Supabase can emit SIGNED_IN again when an existing session is restored.
+    page.dispatch({type:'LOGIN',payload:user});await page.pump();
+    assert.equal(page.state.currentView,'landing');assert.equal(page.path,'/');
+    assert.equal(page.ownerQueries.length,0);assert.equal(page.navigations.length,0);
+    page.dispatch({type:'LOGOUT'});await page.pump();
+    assert.equal(page.state.currentView,'landing');assert.equal(page.path,'/');page.dispose();
+  }
+});
+
+test('login and signup still open the dashboard or onboarding after authentication',async()=>{
+  for(const path of ['/login','/signup']) for(const hasShop of [true,false]) {
+    const page=app(path,{ownerShop:()=>hasShop?row('owned-shop','my-cafe'):null});
+    page.dispatch({type:'LOGIN',payload:user});await page.pump();
+    assert.equal(page.state.currentView,hasShop?'user-dashboard':'onboarding');
+    assert.equal(page.path,hasShop?'/my-cafe/dashboard':'/onboarding');page.dispose();
+  }
+});
+
+test('returning home stays there when the session is emitted again',async()=>{
+  const page=app('/my-cafe/dashboard');page.dispatch({type:'LOGIN',payload:user});await page.pump();
+  page.go('/');await page.pump();page.dispatch({type:'LOGIN',payload:user});await page.pump();
+  assert.equal(page.state.currentView,'landing');assert.equal(page.path,'/');page.dispose();
+});
 
 test('refresh resolves the exact nested settings page instead of generic settings',()=>{
   for(const [path,view] of [['/my-cafe/settings/shop','admin-shop-details'],['/my-cafe/settings/theme','admin-theme'],['/my-cafe/food/123','customer-food-detail'],['/signup','signup'],['/admin-login','company-admin-login']]) assert.equal(routes.parseShopRoute(path).view,view);
@@ -112,6 +141,63 @@ test('food deep links hydrate the selected food atomically with shop data',async
   const page=app('/cafe14/food/food-public-cafe14');page.dispatch({type:'LOGIN',payload:user});await page.pump();
   assert.equal(page.state.shopDataStatus,'ready');assert.equal(page.state.selectedFoodItem.id,'food-public-cafe14');
   assert.equal(page.path,'/cafe14/food/food-public-cafe14');page.dispose();
+});
+
+test('food round trips preserve menu filters and saved position without reloading the shop',async()=>{
+  const page=app('/cafe14');await page.pump();
+  page.dispatch({type:'SET_SEARCH_QUERY',payload:'Meal'});
+  page.dispatch({type:'SET_SELECTED_CATEGORY',payload:'Kottu'});
+  const position={shopId:page.state.shop.id,viewMode:'list',activeTabId:'Kottu',scrollY:840,horizontal:{'category:Kottu':192,'category-tabs':50,'special-offers':300}};
+  page.dispatch({type:'SAVE_MENU_POSITION',payload:position});
+  page.dispatch({type:'SELECT_FOOD_ITEM',payload:page.state.foodItems[0]});
+  page.dispatch({type:'SET_VIEW',payload:'customer-food-detail'});await page.pump();
+  assert.equal(page.path,'/cafe14/food/food-public-cafe14');
+  assert.equal(page.navigationOptions.at(-1).replace,false);
+  assert.equal(page.navigationOptions.at(-1).state.menuReturnPath,'/cafe14');
+  page.go('/cafe14');await page.pump();
+  assert.equal(page.state.currentView,'customer-menu');
+  assert.equal(page.state.searchQuery,'Meal');assert.equal(page.state.selectedCategory,'Kottu');
+  assert.equal(page.state.menuPosition,position);assert.equal(page.publicQueries.length,1);
+  page.go('/another-shop');await page.pump();
+  assert.equal(page.state.menuPosition,null);assert.equal(page.state.searchQuery,'');page.dispose();
+});
+
+test('switching food URLs in an already loaded shop selects the requested food without a reload',async()=>{
+  const page=app('/cafe14',{food:()=>[{id:'first',name:'First'},{id:'second',name:'Second'}]});await page.pump();
+  page.go('/cafe14/food/first');await page.pump();assert.equal(page.state.selectedFoodItem.id,'first');
+  page.go('/cafe14/food/second');await page.pump();assert.equal(page.state.selectedFoodItem.id,'second');
+  assert.equal(page.publicQueries.length,1);page.dispose();
+});
+
+test('menu restoration restores the page and each horizontal scroller instantly',()=>{
+  const scrollers=['category:Kottu','category-tabs','special-offers'].map((key,i)=>({dataset:{menuScroll:key},scrollLeft:100+i*30,scrollTo(options){this.restored=options;}}));
+  const root={querySelectorAll:()=>scrollers};let windowPosition;
+  const position=load('src/lib/menuPosition.ts',{}, {window:{scrollY:1250,scrollTo:options=>{windowPosition=options;}}});
+  const snapshot=position.captureMenuPosition(root,{shopId:'cafe',viewMode:'rows',activeTabId:'Kottu'});
+  scrollers.forEach(s=>s.scrollLeft=0);
+  position.restoreMenuPosition(root,snapshot);
+  assert.equal(windowPosition.top,1250);assert.equal(windowPosition.behavior,'instant');
+  scrollers.forEach((s,i)=>{assert.equal(s.restored.left,100+i*30);assert.equal(s.restored.behavior,'instant');});
+});
+
+test('the menu remounts in its saved category layout and restores before paint',async()=>{
+  const page=app('/cafe14');await page.pump();
+  page.dispatch({type:'SAVE_MENU_POSITION',payload:{shopId:page.state.shop.id,viewMode:'list',activeTabId:'Kottu',scrollY:940,horizontal:{}}});
+  const deps={},effects=[],initialValues=[];let restored;
+  const source=readFileSync(new URL('../src/pages/CustomerMenuPage.tsx',import.meta.url),'utf8');
+  for(const match of source.matchAll(/import \{([^}]+)\} from '([^']+)'/g)) {
+    deps[match[2]]=Object.fromEntries(match[1].split(',').map(name=>[name.trim(),()=>null]));
+  }
+  Object.assign(deps,{
+    react:{useMemo:fn=>fn(),useEffect(){},useRef:()=>({current:{}}),useLayoutEffect:fn=>effects.push(fn),useState:initial=>{const value=typeof initial==='function'?initial():initial;initialValues.push(value);return[value,()=>{}];}},
+    'react/jsx-runtime':jsx,'@/store':{useApp:()=>({state:page.state,dispatch:page.dispatch})},
+    '@/lib/timeUtils':{checkShopStatus:()=>({isOpen:true})},
+    '@/lib/menuPosition':{restoreMenuPosition:(_root,position)=>{restored=position;},captureMenuPosition:()=>null},
+  });
+  const {CustomerMenuPage}=load('src/pages/CustomerMenuPage.tsx',deps);
+  CustomerMenuPage();effects.forEach(fn=>fn());
+  assert.equal(initialValues[1],'list');assert.equal(initialValues[2],'Kottu');
+  assert.equal(restored.scrollY,940);page.dispose();
 });
 
 test('the details form only mounts after owner data is ready, preventing empty initial form values',async()=>{

@@ -48,6 +48,7 @@ export function SpecialOffersCarousel({ items, onItemClick }: SpecialOffersCarou
 
       <div
         ref={scrollRef}
+        data-menu-scroll="special-offers"
         className="flex gap-3 overflow-x-auto scrollbar-hide px-4 pb-2"
       >
         {items.map((item) => {

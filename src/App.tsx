@@ -49,24 +49,18 @@ function AppContent() {
 
     const handleAuth = async () => {
       try {
-        let isGoogleRedirect = false;
-
-        if (window.location.hash.includes('access_token') || window.location.search.includes('code')) {
-          isGoogleRedirect = true;
-        }
-
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
           console.error('Supabase getSession error:', error);
         }
 
-        if ((session?.user || isGoogleRedirect) && mounted) {
+        if (session?.user && mounted) {
           dispatch({
             type: 'LOGIN',
             payload: {
-              id: session?.user?.id || '',
-              email: session?.user?.email || '',
+              id: session.user.id,
+              email: session.user.email || '',
               shopName: '',
               shopId: '',
               subscription: freeSubscription(),
@@ -176,7 +170,7 @@ function AppContent() {
     case 'user-dashboard':
       return <UserDashboardPage />;
     case 'customer-menu':
-      return <CustomerMenuPage />;
+      return <CustomerMenuPage key={state.shop.id} />;
     case 'customer-food-detail':
     case 'admin-food-detail':
     case 'admin-add-food-detail':

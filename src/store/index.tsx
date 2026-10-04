@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useReducer, type ReactNode } from 'react';
-import type { AppState, View, AdminTab, FoodItem, Shop, User, Category, CompanyAdminSection, ManagedShop } from '@/types';
+import type { AppState, View, AdminTab, FoodItem, Shop, User, Category, CompanyAdminSection, ManagedShop, MenuPosition } from '@/types';
 
 import { isPublicShopView, parseShopRoute } from '@/lib/shopRoutes';
 
@@ -38,6 +38,7 @@ const initialCategories: Category[] = [
 const getInitialView = (): View => parseShopRoute(typeof window === 'undefined' ? '/' : window.location.pathname).view;
 
 const initialState: AppState = {
+  menuPosition: null,
   shopDataContext: '', shopDataStatus: 'idle', shopLoadError: '', shopLoadVersion: 0,
   currentView: getInitialView(),
   currentAdminTab: 'menu-preview',
@@ -54,6 +55,7 @@ const initialState: AppState = {
 };
 
 type Action =
+  | { type: 'SAVE_MENU_POSITION'; payload: MenuPosition }
   | { type: 'SHOP_LOAD_START'; payload: string }
   | { type: 'SHOP_LOAD_SUCCESS'; payload: { context: string; shop: Shop; food: FoodItem[]; selectedFoodId?: string } }
   | { type: 'SHOP_LOAD_ERROR'; payload: { context: string; message: string; notFound?: boolean } }
@@ -103,8 +105,10 @@ function extractCategories(foodItems: FoodItem[], categoryOrder?: string[]): Cat
 
 function appReducer(state: AppState, action: Action): AppState {
   switch (action.type) {
+    case 'SAVE_MENU_POSITION':
+      return { ...state, menuPosition: action.payload };
     case 'SHOP_LOAD_START':
-      return { ...state,shopDataContext:action.payload,shopDataStatus:'loading',shopLoadError:'',shopNotFound:false,
+      return { ...state,menuPosition:null,shopDataContext:action.payload,shopDataStatus:'loading',shopLoadError:'',shopNotFound:false,
         shop:initialShop,foodItems:[],categories:initialCategories,selectedFoodItem:null,searchQuery:'',selectedCategory:'all' };
     case 'SHOP_LOAD_SUCCESS':
       return state.shopDataContext !== action.payload.context ? state : { ...state,shopDataStatus:'ready',shopLoadError:'',shopNotFound:false,
@@ -164,7 +168,9 @@ function appReducer(state: AppState, action: Action): AppState {
       return { ...state, foodItems: items, categories: extractCategories(items, state.shop.categoryOrder) };
     }
     case 'LOGIN': {
-      const shouldRedirect = state.currentView === 'login' || state.currentView === 'signup' || state.currentView === 'landing';
+      // Restoring a saved session must not turn a visit to the home page into
+      // a dashboard request (and then onboarding for accounts without a shop).
+      const shouldRedirect = state.currentView === 'login' || state.currentView === 'signup';
       return {
         ...state,
         user: state.user?.id === action.payload.id
@@ -177,8 +183,9 @@ function appReducer(state: AppState, action: Action): AppState {
       };
     }
     case 'LOGOUT':
-      return { ...state, user: null, shop: initialShop, foodItems: [], categories: initialCategories, shopDataContext: '', shopDataStatus: 'idle', shopNotFound: false,
-        currentView: state.currentView.startsWith('company-admin') ? 'company-admin-login' : 'login' };
+      return { ...state, menuPosition: null, user: null, shop: initialShop, foodItems: [], categories: initialCategories, shopDataContext: '', shopDataStatus: 'idle', shopNotFound: false,
+        currentView: state.currentView === 'landing' ? 'landing'
+          : state.currentView.startsWith('company-admin') ? 'company-admin-login' : 'login' };
     case 'SET_COMPANY_ADMIN_SECTION':
       return { ...state, companyAdminSection: action.payload };
     case 'SELECT_MANAGED_SHOP':
