@@ -5,6 +5,7 @@ import { useApp } from '@/store';
 import { ThemeToggle } from '@/components/shared/ThemeToggle';
 import { motion, AnimatePresence } from 'framer-motion';
 import { LayoutDashboard } from 'lucide-react';
+import { SwitchAccountButton } from '@/components/shared/SwitchAccountButton';
 
 export function Navbar() {
   const { state, dispatch } = useApp();
@@ -81,6 +82,8 @@ export function Navbar() {
             <ThemeToggle />
 
             {state.user ? (
+              <>
+              <SwitchAccountButton />
               <Button
                 size="sm"
                 onClick={() => dispatch({ type: 'SET_VIEW', payload: 'user-dashboard' })}
@@ -89,6 +92,7 @@ export function Navbar() {
                 <LayoutDashboard className="w-4 h-4" />
                 Dashboard
               </Button>
+              </>
             ) : (
               <>
                 <Button
@@ -148,6 +152,9 @@ export function Navbar() {
             
             <div className="mt-auto flex flex-col gap-4 pt-6 border-t border-border/50">
               {state.user ? (
+                <>
+                <p className="text-sm text-muted-foreground break-all">{state.user.email}</p>
+                <SwitchAccountButton />
                 <Button
                   size="lg"
                   onClick={() => {
@@ -159,6 +166,7 @@ export function Navbar() {
                   <LayoutDashboard className="w-4 h-4" />
                   Go to Dashboard
                 </Button>
+                </>
               ) : (
                 <>
                   <Button

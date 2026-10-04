@@ -48,7 +48,7 @@ export function CompanyShopBillingDetail({ shopId }: { shopId: string }) {
             <div className="col-span-2"><dt className="text-muted-foreground">Subscription expiry</dt><dd>{date(shop.subscription_expires_at)}</dd></div>
           </dl>
           <div className="mt-4 flex flex-wrap gap-4 text-sm">
-            {shop.username && <a className="inline-flex items-center gap-1 text-primary" href={`/${encodeURIComponent(shop.username)}`} target="_blank" rel="noreferrer">View shop menu<ExternalLink className="h-3 w-3" /></a>}
+            {shop.username && <a className="inline-flex items-center gap-1 text-primary" href={`/${encodeURIComponent(shop.slug || shop.username)}`} target="_blank" rel="noreferrer">View shop menu<ExternalLink className="h-3 w-3" /></a>}
             {shop.slug && (shop.pro_active ? <a className="inline-flex items-center gap-1 text-primary" href={`/${encodeURIComponent(shop.slug)}`} target="_blank" rel="noreferrer">/{shop.slug}<ExternalLink className="h-3 w-3" /></a> : <span className="text-muted-foreground">/{shop.slug} · inactive</span>)}
           </div>
           <p className="mt-3 text-xs text-muted-foreground">Subscription access is shared by this owner's shops. The payment history below contains only requests submitted for this shop.</p>

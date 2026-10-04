@@ -11,8 +11,10 @@
     "test:company-billing": "node --test tests/company-billing.test.mjs",
     "test:themes": "node --test tests/shop-themes.test.mjs",
     "test:qr": "node --test tests/qr-export.test.mjs",
-    "test:analytics": "node --test tests/shop-analytics.test.mjs",
+    "test:analytics": "node --test tests/shop-analytics.test.mjs tests/shop-stats-refresh.test.mjs",
     "test:shop-loading": "node --test tests/shop-loading.test.mjs",
+    "test:urls": "node --test tests/shop-urls.test.mjs tests/shop-loading.test.mjs",
+    "test:auth": "node --test tests/auth-session.test.mjs tests/shop-loading.test.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

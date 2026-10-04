@@ -1,3 +1,4 @@
+import { getShopMenuUrl } from '@/lib/shopUrls';
 import { 
   Utensils, 
   Settings, 
@@ -42,7 +43,8 @@ export function UserDashboardPage() {
   const qrRef = useRef<SmallQrPreviewRef>(null);
   const [isDownloadingQr, setIsDownloadingQr] = useState(false);
 
-  const chartData = summarizeShopViews(shop?.daily_stats, 'week').data;
+  const viewStats = summarizeShopViews(shop?.daily_stats, 'week');
+  const statsAvailable = shop.daily_stats !== undefined;
 
   useEffect(() => {
     // Data is now loaded globally by AdminDataLoader
@@ -174,23 +176,24 @@ export function UserDashboardPage() {
               Add Your First Item
             </Button>
           </div>
-        ) : (
-          <>
+        ) : null}
+
             {/* Chart Section */}
             <div className="p-4 rounded-2xl bg-card border border-border shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="font-semibold">Menu Views</h3>
-              <p className="text-sm text-muted-foreground">All-time total</p>
+              <p className="text-sm text-muted-foreground">Last 7 days · Includes today</p>
             </div>
             <div className="text-right">
-              <p className="text-2xl font-bold">{(shop.view_count || 0).toLocaleString()}</p>
+              <p className="text-2xl font-bold">{statsAvailable ? viewStats.views.toLocaleString() : '—'}</p>
 
             </div>
           </div>
           <p className="text-sm font-medium mb-2">Daily visits · Last 7 days</p>
           <p className="text-xs text-muted-foreground mb-3">Sri Lanka time</p>
-          {shop.daily_stats !== undefined ? <MenuViewsChart data={chartData} /> : (
+          {shop.dailyStatsError && statsAvailable && <p role="alert" className="text-xs text-muted-foreground mb-3">{shop.dailyStatsError}</p>}
+          {statsAvailable ? <MenuViewsChart data={viewStats.data} /> : (
             <div className="text-sm text-muted-foreground">
               Daily statistics could not be loaded.
               <Button variant="link" onClick={() => dispatch({ type: 'RETRY_SHOP_LOAD' })}>Retry</Button>
@@ -198,6 +201,8 @@ export function UserDashboardPage() {
           )}
         </div>
 
+        {foodItems.length > 0 && (
+          <>
         {/* Quick Stats Grid */}
         <div className="grid grid-cols-2 gap-4">
           <div className="p-4 rounded-2xl bg-card border border-border shadow-sm flex flex-col items-center text-center">
@@ -211,8 +216,8 @@ export function UserDashboardPage() {
             <div className="w-10 h-10 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center mb-2">
               <QrCode className="w-5 h-5" />
             </div>
-            <p className="text-2xl font-bold">{(shop.qr_scan_count || 0).toLocaleString()}</p>
-            <p className="text-xs text-muted-foreground">Total QR Scans</p>
+            <p className="text-2xl font-bold">{statsAvailable ? viewStats.qrScans.toLocaleString() : '—'}</p>
+            <p className="text-xs text-muted-foreground">QR Visits · Last 7 days</p>
           </div>
         </div>
 
@@ -228,7 +233,7 @@ export function UserDashboardPage() {
               <div className="bg-muted/30 p-5 rounded-xl border border-border/50 flex flex-col items-center justify-center w-full max-w-[260px]">
                 <SmallQrPreview 
                    ref={qrRef}
-                   shopUrl={`${window.location.origin}/${shop.username || 'menuzo'}`}
+                   shopUrl={getShopMenuUrl(shop, window.location.origin)}
                    theme={shop.theme || { primary: '#090A0C', secondary: '#1C1E22', accent: '#FB8500' }}
                    shopLogo={shop.logo}
                    size={200}
@@ -240,7 +245,7 @@ export function UserDashboardPage() {
                 <p className="text-xs text-muted-foreground mb-1.5 font-medium">Your Menu Link</p>
                 <div className="flex items-center gap-2 bg-muted/70 p-2 rounded-xl border border-border/50">
                   <span className="text-sm text-foreground truncate flex-1 ml-2 font-medium select-all">
-                    {typeof window !== 'undefined' ? `${window.location.host}/${shop.username || 'menuzo'}` : `menuzo.com/${shop.username || 'menuzo'}`}
+                    {getShopMenuUrl(shop, window.location.origin).replace(/^https?:\/\//, '')}
                   </span>
                   <div className="flex items-center gap-1">
                     <Button size="icon" variant="ghost" disabled={isDownloadingQr} aria-label="Download high-resolution QR code" className="h-8 w-8 hover:bg-background rounded-lg flex-shrink-0 text-muted-foreground hover:text-foreground shadow-sm" onClick={async () => {
@@ -251,7 +256,7 @@ export function UserDashboardPage() {
                           if (typeof window !== 'undefined') {
                             localStorage.setItem(`qr_generated_${shop.id}`, 'true');
                             // Refresh the checklist only after the export succeeds.
-                            dispatch({ type: 'UPDATE_SHOP', payload: { ...shop } });
+                            dispatch({ type: 'UPDATE_SHOP', payload: {} });
                           }
                           toast.success('High-resolution QR code downloaded!');
                         } catch {
@@ -264,7 +269,7 @@ export function UserDashboardPage() {
                       <Download className="w-4 h-4" />
                     </Button>
                     <Button size="icon" variant="ghost" className="h-8 w-8 hover:bg-background rounded-lg flex-shrink-0 text-muted-foreground hover:text-foreground shadow-sm" onClick={() => {
-                      const url = `${window.location.origin}/${shop.username || 'menuzo'}`;
+                      const url = getShopMenuUrl(shop, window.location.origin);
                       navigator.clipboard.writeText(url);
                       toast.success('Menu link copied!');
                     }}>
@@ -274,7 +279,7 @@ export function UserDashboardPage() {
                       size="icon"
                       variant="default" 
                       className={`h-8 w-8 rounded-lg flex-shrink-0 shadow-sm ${isBrandTheme(shop.theme) ? 'bg-[#FB8500] hover:bg-[#FB8500]/90 text-black' : 'bg-primary hover:bg-primary/90 text-primary-foreground'}`}
-                      onClick={() => window.open(`/${shop.username || 'menuzo'}/menu`, '_blank')}
+                      onClick={() => window.open(getShopMenuUrl(shop, window.location.origin), '_blank', 'noopener,noreferrer')}
                     >
                       <ExternalLink className="w-4 h-4" />
                     </Button>

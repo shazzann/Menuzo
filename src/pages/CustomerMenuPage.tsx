@@ -1,3 +1,4 @@
+import { getShopMenuUrl } from '@/lib/shopUrls';
 import { useMemo, useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { ArrowLeft, Clock, MapPin, Phone, Store, Image as ImageIcon, Share2 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -9,7 +10,7 @@ import { FoodCard } from '@/components/shared/FoodCard';
 import { BottomNav } from '@/components/shared/BottomNav';
 import { useSEO } from '@/hooks/useSEO';
 import { checkShopStatus } from '@/lib/timeUtils';
-import { supabase } from '@/lib/supabase';
+import { trackMenuVisit } from '@/lib/menuVisits';
 import type { FoodItem } from '@/types';
 import { captureMenuPosition, restoreMenuPosition } from '@/lib/menuPosition';
 
@@ -56,6 +57,7 @@ export function CustomerMenuPage() {
   }, [categories, foodItems]);
 
   useSEO({
+    url: getShopMenuUrl(shop, window.location.origin),
     title: shop.name || 'Menu',
     description: shop.tagline || shop.description,
     image: shop.banner || shop.logo,
@@ -66,23 +68,9 @@ export function CustomerMenuPage() {
       const searchParams = new URLSearchParams(window.location.search);
       const isQr = searchParams.get('source') === 'qr';
       
-      const trackVisit = async () => {
-        try {
-          await supabase.rpc('increment_shop_visits', {
-            p_shop_id: shop.id,
-            p_is_qr: isQr
-          });
-        } catch (e) {
-          console.error('Analytics tracking failed:', e);
-        }
-      };
-
-      // Ensure we only track once per session to avoid double counting from React Strict Mode
-      const trackedKey = `tracked_visit_${shop.id}_${isQr}`;
-      if (!sessionStorage.getItem(trackedKey)) {
-        sessionStorage.setItem(trackedKey, 'true');
-        trackVisit();
-      }
+      void trackMenuVisit(shop.id, isQr).catch(error => {
+        console.error('Analytics tracking failed:', error);
+      });
     }
   }, [shop?.id]);
 
@@ -124,6 +112,7 @@ export function CustomerMenuPage() {
   const isCurrentlyOpen = shop.isOpen && timeStatus.isOpen;
 
   useSEO({
+    url: getShopMenuUrl(shop, window.location.origin),
     title: `${shop.name} - Menu`,
     description: shop.description || shop.tagline || `View the menu for ${shop.name}`,
     image: shop.banner || shop.logo || undefined
@@ -149,10 +138,10 @@ export function CustomerMenuPage() {
         await navigator.share({
           title: shop.name,
           text: `Check out the menu for ${shop.name}`,
-          url: window.location.href,
+          url: getShopMenuUrl(shop, window.location.origin),
         });
       } else {
-        await navigator.clipboard.writeText(window.location.href);
+        await navigator.clipboard.writeText(getShopMenuUrl(shop, window.location.origin));
         toast.success('Link copied to clipboard!');
       }
     } catch (err) {

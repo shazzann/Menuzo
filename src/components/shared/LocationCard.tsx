@@ -12,17 +12,17 @@ export function LocationCard({ location }: LocationCardProps) {
   const addressLines = location.split(',').map(line => line.trim()).filter(Boolean);
 
   return (
-    <div className="bg-[#232327] rounded-[18px] border border-white/[0.06] p-4 flex flex-col gap-4">
+    <div className="bg-card text-card-foreground rounded-[18px] border border-border p-4 flex flex-col gap-4">
       {/* Header and Address */}
       <div>
         <div className="flex items-center gap-2 mb-2">
           <MapPin className="w-5 h-5 text-primary" />
-          <h3 className="font-semibold text-white">Location</h3>
+          <h3 className="font-semibold text-card-foreground">Location</h3>
         </div>
         
         <div className="space-y-0.5">
           {addressLines.map((line, i) => (
-            <p key={i} className="text-[#A1A1AA] text-sm">{line}</p>
+            <p key={i} className="text-muted-foreground text-sm">{line}</p>
           ))}
         </div>
       </div>
@@ -39,7 +39,7 @@ export function LocationCard({ location }: LocationCardProps) {
             <div className="absolute inset-0 bg-gradient-to-b from-[#0f0f0f]/30 to-[#0f0f0f]/5 pointer-events-none" />
             
             {/* Bottom Fade Mask */}
-            <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-[#232327]/80 to-transparent pointer-events-none" />
+            <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-card/80 to-transparent pointer-events-none" />
           </ThemedMap>
         </div>
       </div>

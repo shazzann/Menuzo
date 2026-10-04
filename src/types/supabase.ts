@@ -262,6 +262,14 @@ export interface Database {
         }
         Returns: PaymentRequest
       }
+      get_shop_menu_url: {
+        Args: { p_shop_id: string }
+        Returns: { menu_slug: string | null }
+      }
+      resolve_menu_shop_url: {
+        Args: { p_slug: string }
+        Returns: Database['public']['Tables']['shops']['Row'] & { menu_slug: string | null }
+      }
       resolve_menu_shop: {
         Args: { p_slug: string }
         Returns: Database['public']['Tables']['shops']['Row'][]

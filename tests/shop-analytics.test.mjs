@@ -7,11 +7,11 @@ import * as jsx from 'react/jsx-runtime';
 
 const now = new Date('2026-10-04T20:00:00Z'); // October 5 in Sri Lanka.
 class FixedDate extends Date { constructor(...args) { super(...(args.length ? args : [now])); } }
-function load(path, deps = {}) {
+function load(path, deps = {}, globals = {}) {
   const source = readFileSync(new URL(`../${path}`, import.meta.url), 'utf8');
   const { outputText } = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX } });
   const module = { exports: {} };
-  vm.runInNewContext(outputText, { module, exports: module.exports, Date: FixedDate, Intl, require(name) { assert.ok(name in deps, name); return deps[name]; } });
+  vm.runInNewContext(outputText, { module, exports: module.exports, Date: FixedDate, Intl, ...globals, require(name) { assert.ok(name in deps, name); return deps[name]; } });
   return module.exports;
 }
 const analytics = load('src/lib/shopAnalytics.ts');
@@ -61,10 +61,10 @@ function nodes(tree) {
   return [tree, ...nodes(tree.props?.children)];
 }
 function page(dailyStats) {
-  let range = 'today'; const actions = [];
+  let range; const actions = [];
   const Chart = () => null;
   const { AdminAnalyticsPage } = load('src/pages/AdminAnalyticsPage.tsx', {
-    react: { useState: () => [range, value => { range = value; }] }, 'react/jsx-runtime': jsx,
+    react: { useState: initial => { range ??= initial; return [range, value => { range = value; }]; } }, 'react/jsx-runtime': jsx,
     'lucide-react': new Proxy({}, { get: () => () => null }),
     '@/components/ui/button': { Button: 'button' }, '@/components/shared/BottomNav': { BottomNav: () => null },
     '@/components/admin/MenuViewsChart': { MenuViewsChart: Chart }, '@/lib/shopAnalytics': analytics,
@@ -90,4 +90,28 @@ test('failed daily stats show an error and retry instead of a zero graph', () =>
   assert.ok(!rendered.some(node => node.type === app.Chart));
   rendered.find(node => node.type === 'button' && node.props.children === 'Retry').props.onClick();
   assert.equal(app.actions[0].type, 'RETRY_SHOP_LOAD');
+});
+
+
+test('dashboard and Analytics default show identical seven-day counts and graph data, even with an empty menu', () => {
+  const report = page(stats); const analyticsTree = report.render();
+  assert.equal(analyticsTree.find(node => node.type === 'button' && node.props['aria-pressed']).props.children, 'Last 7 days');
+  const source = readFileSync(new URL('../src/pages/UserDashboardPage.tsx',import.meta.url),'utf8');
+  const deps = {};
+  for (const match of source.matchAll(/import \{([^}]+)\} from '([^']+)'/g)) {
+    deps[match[2]] = Object.fromEntries(match[1].split(',').map(name => [name.trim(), () => null]));
+  }
+  Object.assign(deps, {
+    react: { useState: initial => [initial, () => {}], useRef: () => ({current:null}), useEffect() {} },
+    'react/jsx-runtime': jsx, '@/lib/shopAnalytics': analytics,
+    '@/lib/shopUrls': {getShopMenuUrl:()=> 'https://menuzo.test/cafe'},
+    '@/components/admin/MenuViewsChart': { MenuViewsChart: report.Chart },
+    '@/lib/subscription':{isProActive:()=>false},
+    '@/store': {useApp:()=>({state:{shop:{id:'shop',name:'Cafe',username:'cafe',view_count:9999,qr_scan_count:999,daily_stats:stats},foodItems:[],user:null},dispatch(){}})},
+  });
+  const {UserDashboardPage} = load('src/pages/UserDashboardPage.tsx', deps);
+  const dashboard = nodes(UserDashboardPage());
+  assert.deepEqual(JSON.parse(JSON.stringify(dashboard.find(node => node.type===report.Chart).props.data)), JSON.parse(JSON.stringify(analyticsTree.find(node=>node.type===report.Chart).props.data)));
+  const counters = dashboard.filter(node=>node.props.className==='text-2xl font-bold').map(node=>node.props.children);
+  assert.ok(counters.includes('13')); assert.ok(!counters.includes('9,999'));
 });

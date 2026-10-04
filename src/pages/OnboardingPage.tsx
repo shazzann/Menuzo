@@ -6,6 +6,7 @@ import { Store, Loader2, User, ChevronRight, ArrowLeft } from 'lucide-react';
 import { trackEvent } from '@/lib/analytics';
 import { RestaurantService } from '@/services/restaurant.service';
 import { toast } from 'sonner';
+import { SwitchAccountButton } from '@/components/shared/SwitchAccountButton';
 
 export function OnboardingPage() {
   const { dispatch, state } = useApp();
@@ -52,6 +53,7 @@ export function OnboardingPage() {
       });
       
       trackEvent('restaurant_created');
+      dispatch({ type: 'RETRY_SHOP_LOAD' });
       dispatch({ type: 'SET_VIEW', payload: 'admin-shop-details' });
     } catch (err: any) {
       toast.error(`Error creating shop: ${err.message}`);
@@ -75,6 +77,10 @@ export function OnboardingPage() {
             Welcome to Menuzo
           </h2>
           <p className="text-muted-foreground">Let's start by getting your restaurant's name.</p>
+          <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-muted p-3">
+            <p className="text-sm text-muted-foreground break-all">Signed in as {state.user?.email}</p>
+            <SwitchAccountButton />
+          </div>
           
           <div className="space-y-4 pt-4">
             <div className="relative">

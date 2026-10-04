@@ -1,3 +1,4 @@
+import { getShopMenuUrl } from '@/lib/shopUrls';
 import { useState, useEffect } from 'react';
 import { ArrowLeft, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -76,7 +77,7 @@ export function AdminQrPage() {
       {/* Content */}
       <div className="px-4 py-4">
         <AdminQrSettings
-          shopUrl={`${window.location.origin}/${shop.username || 'menuzo'}`}
+          shopUrl={getShopMenuUrl(shop, window.location.origin)}
           themePrimary={shop.theme?.primary || '#090A0C'}
           themeAccent={shop.theme?.accent || '#FB8500'}
           shopLogo={shop.logo}
@@ -91,7 +92,7 @@ export function AdminQrPage() {
               localStorage.setItem(`qr_generated_${shop.id}`, 'true');
               toast.success('QR Code downloaded successfully!');
               // Let the UI know something updated to re-render dashboard progress
-              dispatch({ type: 'UPDATE_SHOP', payload: { ...shop } });
+              dispatch({ type: 'UPDATE_SHOP', payload: {} });
             }
           }}
         />

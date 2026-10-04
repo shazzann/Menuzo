@@ -1,3 +1,4 @@
+import { getShopMenuSlug, getShopMenuUrl } from '@/lib/shopUrls';
 import { useState } from 'react';
 import { ArrowLeft, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -51,17 +52,17 @@ export function AdminSecurityPage() {
         <div className="space-y-4">
           <h3 className="font-semibold text-sm">Account Information</h3>
           <div className="space-y-2">
-            <Label className="text-xs">Shop URL Username</Label>
+            <Label className="text-xs">Current Menu URL</Label>
             <div className="flex items-center gap-2">
               <Input 
                 type="text" 
-                value={shop.username || 'your-shop-name'} 
+                value={getShopMenuSlug(shop)}
                 disabled
                 className="flex-1 bg-muted text-muted-foreground opacity-100"
               />
             </div>
             <p className="text-xs text-muted-foreground">
-              Your menu is available at: {window.location.origin}/{shop.username || 'username'}
+              Your menu is available at: {getShopMenuUrl(shop, window.location.origin)}
             </p>
           </div>
           <div className="space-y-2">

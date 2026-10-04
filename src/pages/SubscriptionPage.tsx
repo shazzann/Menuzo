@@ -63,6 +63,7 @@ export function SubscriptionPage() {
       setBank(details);
       setRequests(history);
       setCustomUrl(alias);
+      dispatch({ type: 'SET_SHOP_MENU_URL', payload: { userId, shopId: shop.id, slug: alias?.slug || shop.username } });
       setSelectedId(current => availablePeriods.some(period => period.id === current) ? current : availablePeriods[0]?.id || '');
       dispatch({ type: 'SET_SUBSCRIPTION', payload: { userId, subscription } });
       setLoadError('');
@@ -71,7 +72,7 @@ export function SubscriptionPage() {
     } finally {
       if (requestId === generation.current && pageActive.current) setLoading(false);
     }
-  }, [userId, shop.id, dispatch]);
+  }, [userId, shop.id, shop.username, dispatch]);
 
   useEffect(() => {
     let cancelled = false;
@@ -204,8 +205,8 @@ export function SubscriptionPage() {
           </div>
           {!showComparison && <aside className="space-y-5">
             <section className={`${panel} bg-primary/5 border-primary/20`}><Crown className="w-7 h-7 text-primary mb-4" /><p className="text-xs text-muted-foreground uppercase tracking-wide">Current plan</p><h3 className="text-2xl font-bold mt-1">{proActive ? 'Pro active' : 'Free'}</h3><p className="text-sm text-muted-foreground mt-2">{proActive && user?.subscription.expiresAt ? `Active until ${new Date(user.subscription.expiresAt).toLocaleDateString()}` : user?.subscription.status === 'expired' ? 'Your paid subscription has expired. Your standard menu link is still available.' : 'Keep sharing your menu. Upgrade when you are ready.'}</p></section>
-            <section className={panel}><Link2 className="w-6 h-6 text-primary mb-3" /><h3 className="font-semibold">Your custom URL</h3>{proActive && customUrl ? <><p className="text-xs text-emerald-600 mt-2 mb-3">Active with your Pro subscription</p><a className="text-sm text-primary break-all hover:underline" href={`/${customUrl.slug}`} target="_blank" rel="noopener noreferrer">{window.location.host}/{customUrl.slug}</a><Button className="w-full mt-4 gap-2" variant="outline" size="sm" onClick={() => void copy(`${window.location.origin}/${customUrl.slug}`)}><Copy className="w-4 h-4" />Copy custom URL</Button></> : <p className="text-sm text-muted-foreground mt-2">{proActive ? 'Your custom URL will appear here once assigned.' : 'Available after your Pro subscription is activated and your requested URL is assigned.'}</p>}<div className="mt-5 pt-4 border-t border-border"><p className="text-xs text-muted-foreground mb-1">Standard menu link</p><a href={`/${shop.username}`} className="text-xs break-all hover:underline" target="_blank" rel="noopener noreferrer">{window.location.host}/{shop.username}</a></div></section>
-            <p className="text-xs text-muted-foreground px-2 flex items-start gap-2"><ShieldCheck className="w-4 h-4 shrink-0" />Only a verified, active subscription unlocks Pro and your custom URL.</p>
+            <section className={panel}><Link2 className="w-6 h-6 text-primary mb-3" /><h3 className="font-semibold">Your custom URL</h3>{customUrl ? <><p className="text-xs text-emerald-600 mt-2 mb-3">Your purchased URL stays active after Pro expires</p><a className="text-sm text-primary break-all hover:underline" href={`/${customUrl.slug}`} target="_blank" rel="noopener noreferrer">{window.location.host}/{customUrl.slug}</a><Button className="w-full mt-4 gap-2" variant="outline" size="sm" onClick={() => void copy(`${window.location.origin}/${customUrl.slug}`)}><Copy className="w-4 h-4" />Copy custom URL</Button></> : <p className="text-sm text-muted-foreground mt-2">{proActive ? 'Your custom URL will appear here once assigned.' : 'Available after your Pro subscription is activated and your requested URL is assigned.'}</p>}<div className="mt-5 pt-4 border-t border-border"><p className="text-xs text-muted-foreground mb-1">Original link · redirects to your current menu</p><a href={`/${shop.username}`} className="text-xs break-all hover:underline" target="_blank" rel="noopener noreferrer">{window.location.host}/{shop.username}</a></div></section>
+            <p className="text-xs text-muted-foreground px-2 flex items-start gap-2"><ShieldCheck className="w-4 h-4 shrink-0" />Payment approval unlocks Pro and your assigned custom URL. Your purchased URL stays active even after Pro expires.</p>
           </aside>}
         </div>
       </main>

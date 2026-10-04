@@ -1,3 +1,4 @@
+import { getShopMenuSlug } from '@/lib/shopUrls';
 import { useState } from 'react';
 import { Camera, Save, Store, ArrowLeft, Edit3, X, MapPin, Clock, Plus, Trash2, Image as ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -349,10 +350,10 @@ export function AdminShopDetailsPage() {
               <div className="space-y-2">
                 <Label htmlFor="shopUsername">Shop URL / Username</Label>
                 <div className="flex items-center">
-                  <span className="text-muted-foreground bg-muted px-3 h-10 flex items-center justify-center rounded-l-md border border-r-0 border-input text-sm">menuzo.com/</span>
+                  <span className="text-muted-foreground bg-muted px-3 h-10 flex items-center justify-center rounded-l-md border border-r-0 border-input text-sm">{window.location.host}/</span>
                   <Input
                     id="shopUsername"
-                    value={shop.username || ''}
+                    value={getShopMenuSlug(shop)}
                     readOnly
                     className="rounded-l-none bg-muted/50 cursor-not-allowed text-muted-foreground focus-visible:ring-0"
                     onClick={() => {
@@ -362,7 +363,7 @@ export function AdminShopDetailsPage() {
                 </div>
                 {isEditing && (
                   <p className="text-xs text-muted-foreground mt-1">
-                    Keep this standard link. Request a custom menu URL with your Pro payment from Subscription & payments.
+                    Your current menu link is used for QR codes and sharing. Previous links continue to redirect here.
                   </p>
                 )}
               </div>

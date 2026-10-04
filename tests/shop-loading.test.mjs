@@ -10,10 +10,11 @@ function load(path,deps={},globals={},extra='') {
   const source=readFileSync(new URL(`../${path}`,import.meta.url),'utf8');
   const {outputText}=ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,jsx:ts.JsxEmit.ReactJSX}});
   const module={exports:{}};
-  vm.runInNewContext(outputText+extra,{module,exports:module.exports,console,require(name){assert.ok(name in deps,name);return deps[name];},...globals});
+  vm.runInNewContext(outputText+extra,{module,exports:module.exports,console,URL,require(name){assert.ok(name in deps,name);return deps[name];},...globals});
   return module.exports;
 }
 const routes=load('src/lib/shopRoutes.ts');
+const shopUrls=load('src/lib/shopUrls.ts');
 const formatting=load('src/lib/shopData.ts',{'./timeUtils':{filterExpiredSpecialDates:value=>value}});
 const user={id:'owner',email:'owner@example.test',subscription:{plan:'free',status:'active',expiresAt:null}};
 const row=(id,username)=>({id,username,name:`${username} name`,logo:`${username}.png`,banner:'banner.jpg',description:'Saved description',is_open:true,opening_hours:[]});
@@ -33,13 +34,14 @@ function app(path,options={}) {
   const store=load('src/store/index.tsx',{
     react:{...React,useReducer(fn,initial){reducer=fn;state=initial;return[state,()=>{}];}},
     'react/jsx-runtime':jsx,'@/lib/shopRoutes':routes,
-  },{window:{location:{pathname:path}}});
+  },{window:{location:{pathname:new URL(path,"https://menuzo.test").pathname}}});
   store.AppProvider({children:null});
   const dispatch=action=>{actions.push(action);state=reducer(state,action);};
-  const router={useLocation:()=>({pathname:path}),useNavigate:()=>navigate};
+  const router={useLocation:()=>{const url=new URL(path,'https://menuzo.test');return{pathname:url.pathname,search:url.search,hash:url.hash};},useNavigate:()=>navigate};
   const navigate=(next,options)=>{navigations.push(next);navigationOptions.push(options);path=next;};
   const deps={
-    '@/store':{useApp:()=>({state,dispatch})},'react-router-dom':router,'@/lib/shopRoutes':routes,'@/lib/shopData':formatting,
+    '@/services/company-billing.service':{CompanyBillingService:{isAdmin:async()=>{if(options.adminError)throw Error('role check offline');return options.isAdmin || false;}}},
+    '@/store':{useApp:()=>({state,dispatch})},'react-router-dom':router,'@/lib/shopRoutes':routes,'@/lib/shopData':formatting,'@/lib/shopUrls':shopUrls,
     '@/services':{
       RestaurantService:{
         getRestaurantByUsername:async slug=>{publicQueries.push(slug);return options.publicShop ? options.publicShop(slug) : row('public-'+slug,slug);},
@@ -78,6 +80,41 @@ test('login and signup still open the dashboard or onboarding after authenticati
     page.dispatch({type:'LOGIN',payload:user});await page.pump();
     assert.equal(page.state.currentView,hasShop?'user-dashboard':'onboarding');
     assert.equal(page.path,hasShop?'/my-cafe/dashboard':'/onboarding');page.dispose();
+  }
+});
+
+test('company admin sessions without a shop go to the admin portal instead of onboarding',async()=>{
+  for(const path of ['/login','/my-cafe/dashboard','/onboarding']) {
+    const page=app(path,{ownerShop:()=>null,isAdmin:true});page.dispatch({type:'LOGIN',payload:user});await page.pump();
+    assert.equal(page.state.currentView,'company-admin');assert.equal(page.path,'/admin-portal');page.dispose();
+  }
+});
+
+test('onboarding checks existing ownership on refresh and in-app navigation',async()=>{
+  const page=app('/onboarding');page.dispatch({type:'LOGIN',payload:user});await page.pump();
+  assert.equal(page.path,'/my-cafe/dashboard');assert.equal(page.state.shop.id,'owned-shop');
+  page.dispatch({type:'SET_VIEW',payload:'onboarding'});await page.pump();
+  assert.equal(page.path,'/my-cafe/dashboard');page.dispose();
+});
+
+test('only confirmed new accounts enter onboarding; failed role checks can retry',async()=>{
+  const options={ownerShop:()=>null,adminError:true};const page=app('/login',options);
+  page.dispatch({type:'LOGIN',payload:user});await page.pump();
+  assert.equal(page.state.shopDataStatus,'error');assert.notEqual(page.state.currentView,'onboarding');
+  options.adminError=false;page.dispatch({type:'RETRY_SHOP_LOAD'});await page.pump();
+  assert.equal(page.state.currentView,'onboarding');assert.equal(page.state.shopDataStatus,'not-found');page.dispose();
+});
+
+test('creating a shop from onboarding reloads saved owner details',async()=>{
+  let created=false;const page=app('/onboarding',{ownerShop:()=>created?row('owned-shop','my-cafe'):null});
+  page.dispatch({type:'LOGIN',payload:user});await page.pump();assert.equal(page.state.shopDataStatus,'not-found');
+  created=true;page.dispatch({type:'RETRY_SHOP_LOAD'});page.dispatch({type:'SET_VIEW',payload:'admin-shop-details'});await page.pump();
+  assert.equal(page.state.shopDataStatus,'ready');assert.equal(page.path,'/my-cafe/settings/shop');page.dispose();
+});
+
+test('an absent session preserves public/login/signup routes on startup',async()=>{
+  for(const path of ['/','/signup','/login','/cafe14']) {
+    const page=app(path);page.dispatch({type:'SESSION_CLEARED'});await page.pump();assert.equal(page.path,path);page.dispose();
   }
 });
 
@@ -194,7 +231,8 @@ test('the menu remounts in its saved category layout and restores before paint',
     '@/lib/timeUtils':{checkShopStatus:()=>({isOpen:true})},
     '@/lib/menuPosition':{restoreMenuPosition:(_root,position)=>{restored=position;},captureMenuPosition:()=>null},
   });
-  const {CustomerMenuPage}=load('src/pages/CustomerMenuPage.tsx',deps);
+  deps['@/lib/shopUrls']=shopUrls;
+  const {CustomerMenuPage}=load('src/pages/CustomerMenuPage.tsx',deps,{window:{location:{origin:'https://menuzo.test'}}});
   CustomerMenuPage();effects.forEach(fn=>fn());
   assert.equal(initialValues[1],'list');assert.equal(initialValues[2],'Kottu');
   assert.equal(restored.scrollY,940);page.dispose();
@@ -221,4 +259,32 @@ test('the details form only mounts after owner data is ready, preventing empty i
   response.resolve(row('owned-shop','my-cafe'));await page.pump();
   const rendered=AppContent();assert.equal(rendered.type,components.AdminShopDetailsPage);
   assert.equal(page.state.shop.name,'my-cafe name');assert.equal(rendered.key,'owned-shop');page.dispose();
+});
+
+
+test('old standard and historical custom URLs redirect to the preferred URL without a second shop load',async()=>{
+  for(const slug of ['original-shop','former-custom']) {
+    const page=app('/'+slug,{publicShop:()=>({...row('same-shop','original-shop'),menu_slug:'purchased-custom'})});
+    await page.pump();
+    assert.equal(page.path,'/purchased-custom');assert.equal(page.state.shop.id,'same-shop');
+    assert.equal(page.state.shop.username,'original-shop');assert.equal(page.state.shop.menuSlug,'purchased-custom');
+    assert.equal(page.state.shopDataContext,'public:purchased-custom');assert.equal(page.state.shopDataStatus,'ready');
+    assert.equal(page.publicQueries.length,1);assert.equal(page.navigationOptions[0].replace,true);page.dispose();
+  }
+});
+
+test('old food QR links preserve item, source query and anchor during canonical redirect',async()=>{
+  const page=app('/original-shop/food/meal?source=qr&table=2#details',{
+    publicShop:()=>({...row('same-shop','original-shop'),menu_slug:'purchased-custom'}),
+    food:()=>[{id:'meal',name:'Meal',final_price:100}],
+  });
+  await page.pump();assert.equal(page.path,'/purchased-custom/food/meal?source=qr&table=2#details');
+  assert.equal(page.state.selectedFoodItem.id,'meal');assert.equal(page.publicQueries.length,1);page.dispose();
+});
+
+test('owner dashboard paths also use the purchased URL while owner lookup remains account-based',async()=>{
+  const page=app('/original-shop/dashboard',{ownerShop:()=>({...row('owned-shop','original-shop'),menu_slug:'purchased-custom'})});
+  page.dispatch({type:'LOGIN',payload:user});await page.pump();
+  assert.equal(page.path,'/purchased-custom/dashboard');assert.equal(page.state.shop.username,'original-shop');
+  assert.equal(page.ownerQueries[0],user.id);page.dispose();
 });

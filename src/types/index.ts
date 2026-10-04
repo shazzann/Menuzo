@@ -52,6 +52,8 @@ export interface Shop {
   view_count?: number;
   qr_scan_count?: number;
   daily_stats?: DailyStat[];
+  dailyStatsError?: string;
+  menuSlug?: string;
 }
 
 export interface DailyStat {

@@ -3,12 +3,18 @@ import { useApp } from '@/store';
 import { RestaurantService, MenuService } from '@/services';
 import { isOwnerShopView } from '@/lib/shopRoutes';
 import { formatShop, formatFood } from '@/lib/shopData';
+import { CompanyBillingService } from '@/services/company-billing.service';
 
 export function AdminDataLoader() {
   const { state, dispatch } = useApp();
   const userId = state.user?.id;
-  const active = isOwnerShopView(state.currentView);
+  const active = isOwnerShopView(state.currentView) || state.currentView === 'onboarding';
   const version = state.shopLoadVersion;
+  useEffect(() => {
+    if (state.currentView === 'onboarding' && userId && state.shopDataContext === `owner:${userId}` && state.shopDataStatus === 'ready') {
+      dispatch({ type: 'SET_VIEW', payload: 'user-dashboard' });
+    }
+  }, [state.currentView, userId, state.shopDataContext, state.shopDataStatus, dispatch]);
   useEffect(() => {
     if (!active || !userId) return;
     let cancelled = false;
@@ -21,6 +27,12 @@ export function AdminDataLoader() {
         const row = await RestaurantService.getRestaurantByUserId(userId);
         if (cancelled) return;
         if (!row) {
+          const admin = await CompanyBillingService.isAdmin();
+          if (cancelled) return;
+          if (admin) {
+            dispatch({ type: 'SET_VIEW', payload: 'company-admin' });
+            return;
+          }
           dispatch({ type: 'SHOP_LOAD_ERROR', payload: { context, message: 'Create your shop to continue.', notFound: true } });
           dispatch({ type: 'SET_VIEW', payload: 'onboarding' });
           return;

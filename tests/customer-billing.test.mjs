@@ -223,6 +223,7 @@ function loaderHarness() {
   const document = { hidden: false };
   const dispatch = (action) => actions.push(plain(action));
   const { SubscriptionDataLoader } = loadSource('src/components/shared/SubscriptionDataLoader.tsx', {
+    '@/services/restaurant.service': { RestaurantService: { getShopMenuUrl: async () => null } },
     react: { useEffect: (callback) => { effect = callback; } },
     '@/store': { useApp: () => ({ state: { user: userId ? { id: userId } : null }, dispatch }) },
     '@/lib/subscription': subscription,

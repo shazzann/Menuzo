@@ -3,9 +3,10 @@ import type { Database } from '@/types/supabase';
 import { filterExpiredSpecialDates } from './timeUtils';
 
 export function formatShop(row: Database['public']['Tables']['shops']['Row'], slug?: string): Shop {
-  const details = row as typeof row & { contacts?: Shop['contacts']; theme?: Shop['theme']; category_order?: string[] };
+  const details = row as typeof row & { contacts?: Shop['contacts']; theme?: Shop['theme']; category_order?: string[]; menu_slug?: string | null };
   return {
-    id:row.id,username:slug || row.username || '',name:row.name,tagline:row.tagline || '',
+    id:row.id,username:row.username || slug || '',name:row.name,tagline:row.tagline || '',
+    menuSlug:details.menu_slug || slug || row.username || '',
     description:row.description || '',location:row.location || '',contactNumber:row.contact_number || '',
     contacts:details.contacts || [],theme:details.theme,email:row.email || '',isOpen:!!row.is_open,
     logo:row.logo || '',banner:row.banner || '',

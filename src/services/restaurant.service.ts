@@ -35,15 +35,26 @@ export const RestaurantService = {
       .maybeSingle(); // maybeSingle instead of single so it doesn't throw if not found
       
     if (error) throw error;
+    if (!data) return null;
+    const menuUrl = await this.getShopMenuUrl(data.id);
+    return { ...data, ...menuUrl };
+  },
+
+  async getShopMenuUrl(shopId: string) {
+    const { data, error } = await supabase.rpc('get_shop_menu_url', { p_shop_id: shopId });
+    if (error && error.code !== 'PGRST202' && error.code !== '42883') throw error;
     return data;
   },
 
   async getRestaurantByUsername(username: string) {
-    // The resolver checks paid URL entitlement on the server for every visit.
+    const canonical = await supabase.rpc('resolve_menu_shop_url', { p_slug: username.toLowerCase() });
+    if (!canonical.error) return canonical.data || null;
+    if (canonical.error.code !== 'PGRST202' && canonical.error.code !== '42883') throw canonical.error;
+    // Compatibility while the URL history migration is being deployed.
     const resolved = await supabase.rpc('resolve_menu_shop', { p_slug: username.toLowerCase() });
     if (!resolved.error) return resolved.data?.[0] || null;
     // Keep permanent links working while the new migration is being deployed.
-    // Never fall back to name matching, which could revive an expired paid URL.
+    // Avoid ambiguous shop-name matching when resolving a saved link.
     if (resolved.error.code !== 'PGRST202' && resolved.error.code !== '42883') throw resolved.error;
     const { data, error } = await supabase
       .from('shops')

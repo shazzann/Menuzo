@@ -27,11 +27,13 @@ import { BrandBookPage } from '@/pages/BrandBookPage';
 import { Toaster } from '@/components/ui/sonner';
 
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { watchAuthSession } from '@/lib/authSession';
+import { SwitchAccountButton } from '@/components/shared/SwitchAccountButton';
 import { BrowserRouter, useLocation } from 'react-router-dom';
 import { RouterSync } from '@/components/shared/RouterSync';
 import { PublicDataLoader } from '@/components/shared/PublicDataLoader';
 import { AdminDataLoader } from '@/components/shared/AdminDataLoader';
+import { ShopAnalyticsDataLoader } from '@/components/shared/ShopAnalyticsDataLoader';
 import { ShopThemeApplier } from '@/components/shared/ShopThemeApplier';
 import { SubscriptionDataLoader } from '@/components/shared/SubscriptionDataLoader';
 import { SubscriptionPage } from '@/pages/SubscriptionPage';
@@ -44,69 +46,24 @@ function AppContent() {
   const location = useLocation();
   const [isAuthLoading, setIsAuthLoading] = useState(true);
 
-  useEffect(() => {
-    let mounted = true;
+  const [authError, setAuthError] = useState('');
+  const [authAttempt, setAuthAttempt] = useState(0);
 
-    const handleAuth = async () => {
-      try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error('Supabase getSession error:', error);
-        }
-
-        if (session?.user && mounted) {
-          dispatch({
-            type: 'LOGIN',
-            payload: {
-              id: session.user.id,
-              email: session.user.email || '',
-              shopName: '',
-              shopId: '',
-              subscription: freeSubscription(),
-            },
-          });
-        }
-      } catch (error) {
-        console.error('Auth initialization error:', error);
-      } finally {
-        if (mounted) setIsAuthLoading(false);
-      }
-    };
-
-    handleAuth();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event: any, session: any) => {
-      if (event === 'SIGNED_IN' && session?.user && mounted) {
-        dispatch({
-          type: 'LOGIN',
-          payload: {
-            id: session.user.id,
-            email: session.user.email || '',
-            shopName: '',
-            shopId: '',
-            subscription: freeSubscription(),
-          },
-        });
-      } else if (event === 'SIGNED_OUT' && mounted) {
-        dispatch({ type: 'LOGOUT' });
-      }
-    });
-
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
-    };
-  }, [dispatch]);
+  useEffect(() => watchAuthSession(user => {
+    if (!user) { dispatch({ type: 'SESSION_CLEARED' }); return; }
+    dispatch({ type: 'LOGIN', payload: {
+      id: user.id, email: user.email || '', shopName: '', shopId: '', subscription: freeSubscription(),
+    } });
+  }, (loading, error) => { setIsAuthLoading(loading); setAuthError(error); }), [dispatch, authAttempt]);
 
   const isPrivateView = currentView.startsWith('admin-') || currentView === 'user-dashboard' || currentView === 'onboarding';
 
   useEffect(() => {
-    if (!isAuthLoading && isPrivateView && !state.user) {
+    if (!isAuthLoading && !authError && isPrivateView && !state.user) {
       if (currentView === 'admin-subscription') sessionStorage.setItem('menuzo_upgrade_intent', 'pro');
       dispatch({ type: 'SET_VIEW', payload: 'login' });
     }
-  }, [isAuthLoading, isPrivateView, currentView, state.user, dispatch]);
+  }, [isAuthLoading, authError, isPrivateView, currentView, state.user, dispatch]);
 
   useEffect(() => {
     if (state.user && state.shop.id && isOwnerShopView(currentView)
@@ -116,6 +73,13 @@ function AppContent() {
       dispatch({ type: 'SET_VIEW', payload: 'admin-subscription' });
     }
   }, [state.user?.id, state.shop.id, state.shopDataContext, state.shopDataStatus, currentView, dispatch]);
+
+  if (authError) {
+    return <div className="min-h-screen flex flex-col items-center justify-center gap-4 p-6">
+      <p role="alert">{authError}</p>
+      <button className="rounded-xl bg-primary px-5 py-2 text-primary-foreground" onClick={() => setAuthAttempt(value => value + 1)}>Try again</button>
+    </div>;
+  }
 
   if (isAuthLoading) {
     return (
@@ -131,14 +95,16 @@ function AppContent() {
 
   const shopContext = isPublicShopView(currentView)
     ? `public:${parseShopRoute(location.pathname).slug || ''}`
-    : isOwnerShopView(currentView) && state.user ? `owner:${state.user.id}` : null;
+    : (isOwnerShopView(currentView) || currentView === 'onboarding') && state.user ? `owner:${state.user.id}` : null;
   if (shopContext) {
     const matchingContext = state.shopDataContext === shopContext;
     if (matchingContext && state.shopDataStatus === 'not-found' && isPublicShopView(currentView)) return <ShopNotFoundPage />;
-    if (!matchingContext || state.shopDataStatus !== 'ready') {
+    const confirmedNewShop = currentView === 'onboarding' && matchingContext && state.shopDataStatus === 'not-found';
+    if (!confirmedNewShop && (currentView === 'onboarding' || !matchingContext || state.shopDataStatus !== 'ready')) {
       const failed = matchingContext && state.shopDataStatus === 'error';
       return <div className="min-h-screen flex flex-col items-center justify-center gap-4 p-6">
         <p role={failed ? 'alert' : 'status'}>{failed ? state.shopLoadError : 'Loading shop details…'}</p>
+        {failed && state.user && !isPublicShopView(currentView) && <SwitchAccountButton />}
         {failed && <button className="rounded-xl bg-primary px-5 py-2 text-primary-foreground" onClick={() => dispatch({ type: 'RETRY_SHOP_LOAD' })}>Try again</button>}
       </div>;
     }
@@ -212,6 +178,7 @@ function App() {
           <RouterSync />
           <PublicDataLoader />
           <AdminDataLoader />
+          <ShopAnalyticsDataLoader />
           <SubscriptionDataLoader />
           <ShopThemeApplier />
           <AppContent />

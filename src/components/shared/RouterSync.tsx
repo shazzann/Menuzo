@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useApp } from '@/store';
 import type { AppState, View } from '@/types';
+import { getShopMenuSlug, replaceMenuSlug } from '@/lib/shopUrls';
 import { isOwnerShopView, isPublicShopView, parseShopRoute } from '@/lib/shopRoutes';
 
 function getUrlForView(view: View, username: string, state: AppState, foodId?: string): string | null {
@@ -58,10 +59,25 @@ export function RouterSync() {
       return;
     }
     const route = parseShopRoute(location.pathname);
+    const publicReady = isPublicShopView(state.currentView) && isPublicShopView(route.view)
+      && state.shopDataContext === `public:${route.slug}` && state.shopDataStatus === 'ready';
+    const menuSlug = getShopMenuSlug(state.shop);
+    if (publicReady && menuSlug && route.slug !== menuSlug) {
+      const pathname = replaceMenuSlug(location.pathname, menuSlug);
+      pendingPath.current = pathname;
+      lastPath.current = pathname;
+      dispatch({ type: 'REKEY_PUBLIC_SHOP', payload: { shopId: state.shop.id, from: route.slug!, to: menuSlug } });
+      navigate(pathname + (location.search || '') + (location.hash || ''), {
+        replace: true,
+        state: location.state?.menuReturnPath
+          ? { ...location.state, menuReturnPath: replaceMenuSlug(location.state.menuReturnPath, menuSlug) } : location.state,
+      });
+      return;
+    }
     const ownerReady = state.user && state.shopDataContext === `owner:${state.user.id}` && state.shopDataStatus === 'ready';
     if (isOwnerShopView(state.currentView) && !ownerReady) return;
     const slug = isPublicShopView(state.currentView) && isPublicShopView(route.view)
-      ? route.slug || state.shop.username : state.shop.username;
+      ? route.slug || getShopMenuSlug(state.shop) : getShopMenuSlug(state.shop);
     const expected = getUrlForView(state.currentView, slug, state, route.foodId);
     if (expected && expected !== location.pathname) {
       pendingPath.current = expected;
@@ -72,6 +88,6 @@ export function RouterSync() {
         state: openingFood ? { menuReturnPath: location.pathname } : null,
       });
     }
-  }, [state, location.pathname, navigate, dispatch]);
+  }, [state, location.pathname, location.search, location.hash, location.state, navigate, dispatch]);
   return null;
 }

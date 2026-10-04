@@ -44,22 +44,10 @@ export function SignupPage() {
 
       trackEvent('signup_completed', { email: formData.email });
       
-      // Update global state with the new user context
-      dispatch({ 
-        type: 'LOGIN', 
-        payload: {
-          id: userId,
-          email: formData.email,
-          shopName: '',
-          shopId: '',
-          subscription: { plan: 'free', expiresAt: null, status: 'active' }
-        }
-      });
-
+      // The shared auth listener verifies the signed-in user. Do not publish
+      // the signup response's user as a session (it may require confirmation).
       toast.success("Account created successfully!");
-      
-      // 3. Redirect to Onboarding
-      dispatch({ type: 'SET_VIEW', payload: 'onboarding' });
+      dispatch({ type: 'SET_VIEW', payload: 'user-dashboard' });
 
     } catch (error: any) {
       toast.error(error.message || "An error occurred during signup.");

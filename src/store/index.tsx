@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useReducer, type ReactNode } from 'react';
-import type { AppState, View, AdminTab, FoodItem, Shop, User, Category, CompanyAdminSection, ManagedShop, MenuPosition } from '@/types';
+import type { AppState, View, AdminTab, FoodItem, Shop, User, Category, CompanyAdminSection, ManagedShop, MenuPosition, DailyStat } from '@/types';
 
 import { isPublicShopView, parseShopRoute } from '@/lib/shopRoutes';
 
@@ -56,6 +56,9 @@ const initialState: AppState = {
 
 type Action =
   | { type: 'SAVE_MENU_POSITION'; payload: MenuPosition }
+  | { type: 'REKEY_PUBLIC_SHOP'; payload: { shopId: string; from: string; to: string } }
+  | { type: 'SET_SHOP_STATS'; payload: { userId: string; shopId: string; stats?: DailyStat[]; error?: string } }
+  | { type: 'SET_SHOP_MENU_URL'; payload: { userId: string; shopId: string; slug: string } }
   | { type: 'SHOP_LOAD_START'; payload: string }
   | { type: 'SHOP_LOAD_SUCCESS'; payload: { context: string; shop: Shop; food: FoodItem[]; selectedFoodId?: string } }
   | { type: 'SHOP_LOAD_ERROR'; payload: { context: string; message: string; notFound?: boolean } }
@@ -76,6 +79,7 @@ type Action =
   | { type: 'SET_FOOD_ITEMS'; payload: FoodItem[] }
   | { type: 'LOGIN'; payload: User }
   | { type: 'LOGOUT' }
+  | { type: 'SESSION_CLEARED' }
   | { type: 'SET_COMPANY_ADMIN_SECTION'; payload: CompanyAdminSection }
   | { type: 'SELECT_MANAGED_SHOP'; payload: ManagedShop | null }
   | { type: 'SET_SHOP_NOT_FOUND'; payload: boolean };
@@ -105,6 +109,15 @@ function extractCategories(foodItems: FoodItem[], categoryOrder?: string[]): Cat
 
 function appReducer(state: AppState, action: Action): AppState {
   switch (action.type) {
+    case 'REKEY_PUBLIC_SHOP':
+      return state.shop.id === action.payload.shopId && state.shopDataContext === `public:${action.payload.from}`
+        ? { ...state, shopDataContext: `public:${action.payload.to}` } : state;
+    case 'SET_SHOP_STATS':
+      return state.shop.id === action.payload.shopId && state.user?.id === action.payload.userId && state.shopDataContext === `owner:${action.payload.userId}` && state.shopDataStatus === 'ready'
+        ? { ...state, shop: { ...state.shop, ...(action.payload.stats ? { daily_stats: action.payload.stats } : {}), dailyStatsError: action.payload.error || '' } } : state;
+    case 'SET_SHOP_MENU_URL':
+      return state.shop.id === action.payload.shopId && state.user?.id === action.payload.userId && state.shopDataContext === `owner:${action.payload.userId}`
+        ? { ...state, shop: { ...state.shop, menuSlug: action.payload.slug } } : state;
     case 'SAVE_MENU_POSITION':
       return { ...state, menuPosition: action.payload };
     case 'SHOP_LOAD_START':
@@ -182,6 +195,8 @@ function appReducer(state: AppState, action: Action): AppState {
         currentAdminTab: shouldRedirect ? 'dashboard' : state.currentAdminTab,
       };
     }
+    case 'SESSION_CLEARED':
+      return state.user ? appReducer(state, { type: 'LOGOUT' }) : state;
     case 'LOGOUT':
       return { ...state, menuPosition: null, user: null, shop: initialShop, foodItems: [], categories: initialCategories, shopDataContext: '', shopDataStatus: 'idle', shopNotFound: false,
         currentView: state.currentView === 'landing' ? 'landing'

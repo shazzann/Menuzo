@@ -1,3 +1,4 @@
+import { getShopMenuUrl } from '@/lib/shopUrls';
 import { useEffect, useLayoutEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft, ChefHat, Sparkles, Share2 } from 'lucide-react';
@@ -28,6 +29,7 @@ export function FoodDetailPage() {
   }, [selectedFoodItem, state.foodItems.length, backView, dispatch]);
 
   useSEO({
+    url: getShopMenuUrl(shop, window.location.origin, selectedFoodItem?.id),
     title: selectedFoodItem ? `${selectedFoodItem.name} | ${shop.name}` : shop.name,
     description: selectedFoodItem?.description || selectedFoodItem?.tagline || shop.description,
     image: selectedFoodItem?.image || shop.logo,
@@ -50,7 +52,7 @@ export function FoodDetailPage() {
     : 0;
 
   const handleShare = async () => {
-    const url = window.location.href;
+    const url = getShopMenuUrl(shop, window.location.origin, item.id);
     if (navigator.share) {
       try {
         await navigator.share({

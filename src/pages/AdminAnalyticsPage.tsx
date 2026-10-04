@@ -14,7 +14,7 @@ export function AdminAnalyticsPage() {
   const { user, foodItems, categories, shop } = state;
   const proActive = isProActive(user?.subscription);
   const currentPlan = proActive ? 'pro' : 'free';
-  const [timeRange, setTimeRange] = useState<AnalyticsRange>('today');
+  const [timeRange, setTimeRange] = useState<AnalyticsRange>('week');
 
   const handleTabChange = (tab: AdminTab) => {
     dispatch({ type: 'SET_ADMIN_TAB', payload: tab });
@@ -166,19 +166,20 @@ export function AdminAnalyticsPage() {
           </div>
           
           <p className="text-xs text-muted-foreground mb-3">{ANALYTICS_RANGE_LABELS[timeRange]} · Sri Lanka time · Includes today</p>
+          {shop.dailyStatsError && statsAvailable && <p role="alert" className="text-xs text-muted-foreground mb-3">{shop.dailyStatsError}</p>}
           {!statsAvailable && (
             <div role="alert" className="mb-3 p-4 rounded-xl bg-muted text-sm">
               Daily statistics could not be loaded.
               <Button variant="link" onClick={() => dispatch({ type: 'RETRY_SHOP_LOAD' })}>Retry</Button>
             </div>
           )}
-          <div className="space-y-3">
-            <div className="p-5 rounded-xl bg-card border border-border flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-primary/10 rounded-xl">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="min-w-0 p-3 sm:p-5 rounded-xl bg-card border border-border flex items-center">
+              <div className="min-w-0 flex items-center gap-2 sm:gap-4">
+                <div className="shrink-0 p-2 sm:p-3 bg-primary/10 rounded-xl">
                   <Eye className="w-6 h-6 text-primary" />
                 </div>
-                <div>
+                <div className="min-w-0 break-words">
                   <p className="text-sm text-muted-foreground">Menu Views</p>
                   <p className="text-2xl font-bold">{statsAvailable ? viewStats.views.toLocaleString() : '—'}</p>
                 </div>
@@ -186,12 +187,12 @@ export function AdminAnalyticsPage() {
 
             </div>
 
-            <div className="p-5 rounded-xl bg-card border border-border flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-blue-500/10 rounded-xl">
+            <div className="min-w-0 p-3 sm:p-5 rounded-xl bg-card border border-border flex items-center">
+              <div className="min-w-0 flex items-center gap-2 sm:gap-4">
+                <div className="shrink-0 p-2 sm:p-3 bg-blue-500/10 rounded-xl">
                   <QrCode className="w-6 h-6 text-blue-500" />
                 </div>
-                <div>
+                <div className="min-w-0 break-words">
                   <p className="text-sm text-muted-foreground">QR Visits</p>
                   <p className="text-2xl font-bold">{statsAvailable ? viewStats.qrScans.toLocaleString() : '—'}</p>
                 </div>
