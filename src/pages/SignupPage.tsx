@@ -1,57 +1,25 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Loader2, Store, Mail, Lock } from 'lucide-react';
+import { ArrowLeft, Loader2, Store } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { useApp } from '@/store';
 import { trackEvent } from '@/lib/analytics';
 import { AuthService } from '@/services';
+import { GoogleIcon } from '@/components/shared/GoogleIcon';
 import { toast } from 'sonner';
 
 export function SignupPage() {
   const { dispatch } = useApp();
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    email: '',
-    password: ''
-  });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    trackEvent('signup_started', { method: 'email' });
+  const handleGoogleSignup = async () => {
+    trackEvent('signup_started', { method: 'google' });
     setLoading(true);
-    
     try {
-      // 1. Create Auth User
-      const authData = await AuthService.signUp(
-        formData.email,
-        formData.password,
-        'Pending',
-        'Pending'
-      );
-
-      const userId = authData.user?.id;
-      if (!userId) throw new Error("Could not create user account.");
-
-      // Ensure the user is fully logged in before creating the shop (bypasses some RLS issues)
-      if (!authData.session) {
-        try {
-          await AuthService.signIn(formData.email, formData.password);
-        } catch (signInErr: any) {
-          throw new Error("Account created, but could not sign in. Please ensure email confirmation is not required: " + signInErr.message);
-        }
-      }
-
-      trackEvent('signup_completed', { email: formData.email });
-      
-      // The shared auth listener verifies the signed-in user. Do not publish
-      // the signup response's user as a session (it may require confirmation).
-      toast.success("Account created successfully!");
-      dispatch({ type: 'SET_VIEW', payload: 'user-dashboard' });
-
+      // Redirects to Google; the shared auth listener picks up the session on return.
+      await AuthService.signInWithGoogle();
     } catch (error: any) {
-      toast.error(error.message || "An error occurred during signup.");
-    } finally {
+      toast.error(error.message || 'Could not continue with Google. Please try again.');
       setLoading(false);
     }
   };
@@ -64,7 +32,7 @@ export function SignupPage() {
         </Button>
       </div>
 
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-md bg-card border border-border shadow-2xl rounded-3xl p-8"
@@ -77,35 +45,18 @@ export function SignupPage() {
           <p className="text-muted-foreground">Setup your digital menu in minutes.</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="relative">
-            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-            <Input 
-              required
-              type="email"
-              placeholder="Email Address" 
-              className="pl-12 h-12"
-              value={formData.email}
-              onChange={(e) => setFormData({...formData, email: e.target.value})}
-            />
-          </div>
-          <div className="relative">
-            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-            <Input 
-              required
-              type="password"
-              placeholder="Password" 
-              className="pl-12 h-12"
-              value={formData.password}
-              onChange={(e) => setFormData({...formData, password: e.target.value})}
-            />
-          </div>
-          
-          <Button type="submit" className="w-full h-12 text-lg font-bold mt-4" disabled={loading}>
-            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Get Started'}
-          </Button>
-        </form>
-        
+        <Button type="button" className="w-full h-12 text-base font-semibold" disabled={loading} onClick={handleGoogleSignup}>
+          {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
+            <>
+              <GoogleIcon className="w-5 h-5 mr-2" />
+              Sign up with Google
+            </>
+          )}
+        </Button>
+        <p className="mt-3 text-center text-xs text-muted-foreground">
+          Restaurant accounts use Google sign-in. No password to remember.
+        </p>
+
         <div className="mt-6 text-center text-sm text-muted-foreground">
           Already have an account? <button onClick={() => dispatch({ type: 'SET_VIEW', payload: 'login' })} className="text-primary font-semibold hover:underline">Log in</button>
         </div>

@@ -131,7 +131,7 @@ export function UserDashboardPage() {
         {/* Welcome Section */}
         <div>
           <h2 className="text-2xl font-bold mb-1">
-            Welcome back{user?.email ? `, ${user.email.split('@')[0]}` : ''}!
+            Welcome back{user?.name ? `, ${user.name}` : ''}!
           </h2>
           <p className="text-muted-foreground">Here is what is happening with your menu today.</p>
         </div>

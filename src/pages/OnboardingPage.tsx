@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Store, Loader2, User, ChevronRight, ArrowLeft } from 'lucide-react';
 import { trackEvent } from '@/lib/analytics';
 import { RestaurantService } from '@/services/restaurant.service';
+import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { SwitchAccountButton } from '@/components/shared/SwitchAccountButton';
 
@@ -52,6 +53,11 @@ export function OnboardingPage() {
          }
       });
       
+      // Remember the owner's name for the dashboard greeting. Not worth failing onboarding over.
+      const ownerName = basicInfo.ownerName.trim();
+      const { error: nameError } = await supabase.auth.updateUser({ data: { owner_name: ownerName } });
+      if (!nameError) dispatch({ type: 'SET_USER', payload: { ...state.user!, name: ownerName } });
+
       trackEvent('restaurant_created');
       dispatch({ type: 'RETRY_SHOP_LOAD' });
       dispatch({ type: 'SET_VIEW', payload: 'admin-shop-details' });

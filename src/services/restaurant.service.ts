@@ -7,6 +7,10 @@ type ShopUpdate = Database['public']['Tables']['shops']['Update'];
 
 export const RestaurantService = {
   async createRestaurant(userId: string, name: string, email: string, username: string) {
+    // Recreate the owner's profile if it was deleted, or the insert fails on shops_user_id_fkey.
+    const { error: profileError } = await supabase.rpc('ensure_my_profile');
+    if (profileError) throw profileError;
+
     const payload: ShopInsert = {
       user_id: userId,
       name,

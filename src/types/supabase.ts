@@ -227,6 +227,7 @@ export interface Database {
         Returns: ShopBillingDetails
       }
       is_company_billing_admin: { Args: Record<string, never>; Returns: boolean }
+      ensure_my_profile: { Args: Record<string, never>; Returns: undefined }
       admin_list_billing_requests: {
         Args: { p_status: string; p_query: string; p_offset: number }
         Returns: BillingPage<AdminPaymentRequest>

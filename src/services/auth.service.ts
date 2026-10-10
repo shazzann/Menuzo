@@ -1,19 +1,19 @@
 import { supabase } from '@/lib/supabase';
 
 export const AuthService = {
-  async signUp(email: string, password: string, _shopName: string, fullName: string) {
-    const { data: authData, error: authError } = await supabase.auth.signUp({
-      email,
-      password,
+  // Shop owners sign up and sign in with Google only (enforced for shop creation in the database).
+  async signInWithGoogle() {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
       options: {
-        data: { full_name: fullName }
-      }
+        redirectTo: window.location.origin + '/login',
+        queryParams: {
+          access_type: 'offline',
+          prompt: 'consent',
+        },
+      },
     });
-
-    if (authError) throw authError;
-    if (!authData.user) throw new Error('Failed to create account');
-
-    return authData;
+    if (error) throw error;
   },
 
   async signIn(email: string, password: string) {

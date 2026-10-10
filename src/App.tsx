@@ -51,8 +51,11 @@ function AppContent() {
 
   useEffect(() => watchAuthSession(user => {
     if (!user) { dispatch({ type: 'SESSION_CLEARED' }); return; }
+    const meta = user.user_metadata ?? {};
+    const name = [meta.owner_name, meta.full_name, meta.name]
+      .find((value): value is string => typeof value === 'string' && value.trim() !== '')?.trim();
     dispatch({ type: 'LOGIN', payload: {
-      id: user.id, email: user.email || '', shopName: '', shopId: '', subscription: freeSubscription(),
+      id: user.id, email: user.email || '', name, shopName: '', shopId: '', subscription: freeSubscription(),
     } });
   }, (loading, error) => { setIsAuthLoading(loading); setAuthError(error); }), [dispatch, authAttempt]);
 

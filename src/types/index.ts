@@ -71,6 +71,8 @@ export interface ThemeConfig {
 export interface User {
   id: string;
   email: string;
+  /** Owner's display name: entered at onboarding, else the Google account name. */
+  name?: string;
   shopName: string;
   shopId: string;
   subscription: {
