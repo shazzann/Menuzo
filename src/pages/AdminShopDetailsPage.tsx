@@ -1,6 +1,6 @@
 import { getShopMenuSlug } from '@/lib/shopUrls';
 import { useState } from 'react';
-import { Camera, Save, Store, ArrowLeft, Edit3, X, MapPin, Clock, Plus, Trash2, Image as ImageIcon } from 'lucide-react';
+import { Camera, Save, Store, ArrowLeft, Edit3, X, MapPin, Clock, Plus, Trash2, ChevronDown, Image as ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -579,9 +579,9 @@ export function AdminShopDetailsPage() {
                 <div className="bg-card rounded-2xl border overflow-hidden shadow-sm divide-y divide-border/40">
                   {formData.openingHours.map((schedule, i) => ({ ...schedule, originalIndex: i })).filter(h => h.type === 'regular').map((schedule) => (
                     <div key={schedule.originalIndex} className="flex items-center justify-between p-3 relative hover:bg-muted/30 transition-colors group">
-                      <div className="flex items-center">
+                      <div className="relative flex items-center">
                         <select
-                          className="h-8 w-[100px] bg-transparent text-sm font-medium focus:outline-none focus:ring-0 cursor-pointer appearance-none px-1"
+                          className="h-8 w-[118px] bg-transparent text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 rounded-md cursor-pointer disabled:cursor-default appearance-none pl-1 pr-6"
                           value={schedule.dayOfWeek}
                           onChange={(e) => handleHoursChange(schedule.originalIndex, 'dayOfWeek', parseInt(e.target.value))}
                           disabled={!isEditing}
@@ -594,6 +594,7 @@ export function AdminShopDetailsPage() {
                           <option value={5}>Friday</option>
                           <option value={6}>Saturday</option>
                         </select>
+                        {isEditing && <ChevronDown className="pointer-events-none absolute right-1 w-4 h-4 text-muted-foreground" />}
                       </div>
 
                       <div className="flex items-center gap-2">

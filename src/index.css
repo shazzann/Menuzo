@@ -66,6 +66,17 @@
     font-family: 'Inter', sans-serif;
   }
 
+  /* Native dropdown lists are drawn by the browser; give them the theme's colours
+     so options stay readable instead of inheriting light text on a white popup. */
+  .dark {
+    color-scheme: dark;
+  }
+
+  select option {
+    background-color: hsl(var(--popover));
+    color: hsl(var(--popover-foreground));
+  }
+
   h1,
   h2,
   h3,

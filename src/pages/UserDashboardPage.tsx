@@ -22,7 +22,6 @@ import { toast } from 'sonner';
 import { SmallQrPreview, type SmallQrPreviewRef } from '@/components/admin/SmallQrPreview';
 import type { AdminTab } from '@/types';
 import { isBrandTheme } from '@/lib/themeUtils';
-import { normalizeQrColorStyle, normalizeQrPattern, QR_COLOR_STYLES, QR_PATTERNS } from '@/lib/qrCode';
 import { isProActive } from '@/lib/subscription';
 import {
   AlertDialog,
@@ -47,9 +46,6 @@ export function UserDashboardPage() {
   const viewStats = summarizeShopViews(shop?.daily_stats, 'week');
   const statsAvailable = shop.daily_stats !== undefined;
   const { isComplete: onboardingComplete } = useOnboardingStatus();
-  const qrTheme = shop.theme as { qrStyle?: string; qrPattern?: string } | undefined;
-  const qrColorStyle = normalizeQrColorStyle(qrTheme?.qrStyle);
-  const qrPattern = normalizeQrPattern(qrTheme?.qrPattern);
 
   useEffect(() => {
     // Data is now loaded globally by AdminDataLoader
