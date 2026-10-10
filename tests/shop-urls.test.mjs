@@ -28,7 +28,7 @@ function page(name,share) {
     '@/lib/shopUrls':urls,'@/lib/shopAnalytics':load('src/lib/shopAnalytics.ts'),'@/lib/subscription':{isProActive:()=>false},'@/lib/themeUtils':{isBrandTheme:()=>true},
     '@/lib/timeUtils':{checkShopStatus:()=>({isOpen:true})},
     '@/lib/qrCode':{normalizeQrColorStyle:()=>'classic',normalizeQrPattern:()=>'square',QR_PATTERNS:[],QR_COLOR_STYLES:[]},
-    '@/components/dashboard/OnboardingChecklist':{OnboardingChecklist:'OnboardingChecklist',useOnboardingStatus:()=>({isComplete:false})},'@/hooks/useSEO':{useSEO(){}},
+    '@/hooks/useOnboardingStatus':{useOnboardingStatus:()=>({isComplete:false})},'@/hooks/useSEO':{useSEO(){}},
     sonner:{toast:{success(){},error(){}}},
   });
   const navigator={clipboard:{writeText:async url=>calls.push(url)},...(share?{share:async data=>calls.push(data.url)}:{})};

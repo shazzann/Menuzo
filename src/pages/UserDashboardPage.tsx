@@ -16,13 +16,15 @@ import { summarizeShopViews, viewsTrend } from '@/lib/shopAnalytics';
 import { Button } from '@/components/ui/button';
 import { useApp } from '@/store';
 import { BottomNav } from '@/components/shared/BottomNav';
-import { OnboardingChecklist, useOnboardingStatus } from '@/components/dashboard/OnboardingChecklist';
+import { OnboardingChecklist } from '@/components/dashboard/OnboardingChecklist';
+import { useOnboardingStatus } from '@/hooks/useOnboardingStatus';
 import { useEffect, useState, useRef } from 'react';
 import { toast } from 'sonner';
 import { SmallQrPreview, type SmallQrPreviewRef } from '@/components/admin/SmallQrPreview';
 import type { AdminTab } from '@/types';
 import { isBrandTheme } from '@/lib/themeUtils';
 import { isProActive } from '@/lib/subscription';
+import { markQrGenerated } from '@/lib/qrProgress';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -262,11 +264,8 @@ export function UserDashboardPage() {
                         setIsDownloadingQr(true);
                         try {
                           await qrRef.current.download(`${shop.name.toLowerCase().replace(/\s+/g, '-')}-qr`);
-                          if (typeof window !== 'undefined') {
-                            localStorage.setItem(`qr_generated_${shop.id}`, 'true');
-                            // Refresh the checklist only after the export succeeds.
-                            dispatch({ type: 'UPDATE_SHOP', payload: {} });
-                          }
+                          // Complete the checklist only after the export succeeds.
+                          void markQrGenerated(shop, dispatch);
                           toast.success('High-resolution QR code downloaded!');
                         } catch {
                           toast.error('Could not download the QR code. Please try again.');

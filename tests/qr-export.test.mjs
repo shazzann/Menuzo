@@ -63,3 +63,17 @@ test('only square and rounded shapes are offered, and older saved patterns map o
   }
   assert.equal(qr.getQrOptions({...base,qrStyle:'minimal'}).dotsOptions.color,'#000000','Unknown colour styles fall back to black and white');
 });
+test('the QR onboarding step is remembered on the shop, not only in one browser',()=>{
+  const storage={};
+  const progress=load('src/lib/qrProgress.ts');
+  globalThis.localStorage={getItem:k=>storage[k]??null,setItem:(k,v)=>{storage[k]=v;}};
+  try {
+    const plain={id:'s1',theme:{primary:'#090A0C',secondary:'#1C1E22',accent:'#FB8500',qrStyle:'brand'}};
+    assert.equal(progress.hasGeneratedQr(plain),false,'A new shop has not generated a QR yet');
+    assert.equal(progress.hasGeneratedQr({...plain,theme:{...plain.theme,qrPattern:'square'}}),true,'A saved QR design counts');
+    const marked=progress.withQrGenerated(plain.theme);
+    assert.ok(marked.qrGeneratedAt);assert.equal(marked.qrStyle,'brand','Other theme settings are kept');
+    assert.equal(progress.withQrGenerated(marked).qrGeneratedAt,marked.qrGeneratedAt,'The first date is kept');
+    assert.equal(progress.hasGeneratedQr({...plain,theme:marked}),true);
+  } finally { delete globalThis.localStorage; }
+});

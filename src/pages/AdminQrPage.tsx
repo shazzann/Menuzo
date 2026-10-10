@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { useApp } from '@/store';
 import { AdminQrSettings } from '@/components/admin/AdminQrSettings';
 import { normalizeQrColorStyle, normalizeQrPattern } from '@/lib/qrCode';
+import { markQrGenerated, withQrGenerated } from '@/lib/qrProgress';
 
 export function AdminQrPage() {
   const { state, dispatch } = useApp();
@@ -22,7 +23,8 @@ export function AdminQrPage() {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      const updatedTheme = { ...(shop.theme as any), qrStyle, qrPattern };
+      // Saving a QR design also completes the onboarding QR step.
+      const updatedTheme = { ...withQrGenerated(shop.theme), qrStyle, qrPattern };
 
       if (shop.id && shop.id !== 'shop-1') {
         const { RestaurantService } = await import('@/services');
@@ -30,9 +32,6 @@ export function AdminQrPage() {
       }
 
       dispatch({ type: 'UPDATE_SHOP', payload: { theme: updatedTheme } });
-      if (typeof window !== 'undefined') {
-        localStorage.setItem(`qr_generated_${shop.id}`, 'true');
-      }
       toast.success('QR settings saved!');
     } catch (err: any) {
       console.error('Error saving QR settings:', err);
@@ -88,12 +87,8 @@ export function AdminQrPage() {
           onChangeStyle={setQrStyle}
           onChangePattern={setQrPattern}
           onDownload={() => {
-            if (typeof window !== 'undefined' && shop.id) {
-              localStorage.setItem(`qr_generated_${shop.id}`, 'true');
-              toast.success('QR Code downloaded successfully!');
-              // Let the UI know something updated to re-render dashboard progress
-              dispatch({ type: 'UPDATE_SHOP', payload: {} });
-            }
+            toast.success('QR Code downloaded successfully!');
+            void markQrGenerated(shop, dispatch);
           }}
         />
       </div>
