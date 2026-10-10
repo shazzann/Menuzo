@@ -3,7 +3,7 @@ import { ArrowLeft, Save, Edit3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { useApp } from '@/store';
-import { isValidThemeColor } from '@/lib/themeUtils';
+import { isValidThemeColor, normalizeShopTheme } from '@/lib/themeUtils';
 import { AdminThemeSettings } from '@/components/admin/AdminThemeSettings';
 
 export function AdminThemePage() {
@@ -11,14 +11,11 @@ export function AdminThemePage() {
   const { shop } = state;
   const [isSaving, setIsSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [theme, setTheme] = useState(shop.theme || {
-    primary: '#090A0C',
-    secondary: '#1C1E22',
-    accent: '#FB8500',
-  });
+  // Show the colours the shop actually renders with (old orange defaults map to the brand theme).
+  const [theme, setTheme] = useState(() => ({ ...shop.theme, ...normalizeShopTheme(shop.theme) }));
 
   useEffect(() => {
-    setTheme(shop.theme || { primary: '#090A0C', secondary: '#1C1E22', accent: '#FB8500' });
+    setTheme({ ...shop.theme, ...normalizeShopTheme(shop.theme) });
   }, [shop.theme]);
 
   const handleSave = async () => {
@@ -63,7 +60,7 @@ export function AdminThemePage() {
           {isEditing ? (
             <div className="flex items-center gap-1.5">
               <Button type="button" variant="ghost" size="sm" onClick={() => {
-                setTheme(shop.theme || { primary: '#090A0C', secondary: '#1C1E22', accent: '#FB8500' });
+                setTheme({ ...shop.theme, ...normalizeShopTheme(shop.theme) });
                 setIsEditing(false);
               }} className="px-2">
                 Cancel

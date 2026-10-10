@@ -13,7 +13,17 @@ export function isValidThemeColor(value: string): boolean {
   return /^#(?:[\da-f]{3}|[\da-f]{6})$/i.test(value);
 }
 
+// Shops created before the signup default was fixed got orange as the page
+// background and the accent, which leaves text and buttons unreadable.
+const LEGACY_SIGNUP_THEME: ThemeConfig = { primary: '#F97316', secondary: '#1C1917', accent: '#F97316' };
+
+function isLegacySignupTheme(theme?: ThemeConfig): boolean {
+  return !!theme && Object.entries(LEGACY_SIGNUP_THEME).every(([key, value]) =>
+    String(theme[key as keyof ThemeConfig]).toUpperCase() === value);
+}
+
 export function normalizeShopTheme(theme?: ThemeConfig): ThemeConfig {
+  if (isLegacySignupTheme(theme)) return { ...BRAND_THEME };
   return Object.fromEntries(Object.entries(BRAND_THEME).map(([key, fallback]) => {
     const value = theme?.[key as keyof ThemeConfig];
     return [key, typeof value === 'string' && isValidThemeColor(value) ? value : fallback];

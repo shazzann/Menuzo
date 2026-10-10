@@ -26,7 +26,9 @@ function page(name,share) {
     'react/jsx-runtime':jsx,'react-router-dom':{useLocation:()=>({}),useNavigate:()=>()=>{}},
     '@/store':{useApp:()=>({state:{shop,foodItems:[food],categories:[{id:'all',name:'All'}],selectedFoodItem:food,user:{subscription:{plan:'free'}},currentView:name==='FoodDetailPage'?'customer-food-detail':'customer-menu',searchQuery:'',selectedCategory:'all'},dispatch(){}})},
     '@/lib/shopUrls':urls,'@/lib/shopAnalytics':load('src/lib/shopAnalytics.ts'),'@/lib/subscription':{isProActive:()=>false},'@/lib/themeUtils':{isBrandTheme:()=>true},
-    '@/lib/timeUtils':{checkShopStatus:()=>({isOpen:true})},'@/hooks/useSEO':{useSEO(){}},
+    '@/lib/timeUtils':{checkShopStatus:()=>({isOpen:true})},
+    '@/lib/qrCode':{normalizeQrColorStyle:()=>'classic',normalizeQrPattern:()=>'square',QR_PATTERNS:[],QR_COLOR_STYLES:[]},
+    '@/components/dashboard/OnboardingChecklist':{OnboardingChecklist:'OnboardingChecklist',useOnboardingStatus:()=>({isComplete:false})},'@/hooks/useSEO':{useSEO(){}},
     sonner:{toast:{success(){},error(){}}},
   });
   const navigator={clipboard:{writeText:async url=>calls.push(url)},...(share?{share:async data=>calls.push(data.url)}:{})};

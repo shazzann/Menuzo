@@ -11,17 +11,18 @@ import {
   ChevronRight,
   Download
 } from 'lucide-react';
-import { MenuViewsChart } from '@/components/admin/MenuViewsChart';
-import { summarizeShopViews } from '@/lib/shopAnalytics';
+import { MenuViewsChart, TrendBadge } from '@/components/admin/MenuViewsChart';
+import { summarizeShopViews, viewsTrend } from '@/lib/shopAnalytics';
 import { Button } from '@/components/ui/button';
 import { useApp } from '@/store';
 import { BottomNav } from '@/components/shared/BottomNav';
-import { OnboardingChecklist } from '@/components/dashboard/OnboardingChecklist';
+import { OnboardingChecklist, useOnboardingStatus } from '@/components/dashboard/OnboardingChecklist';
 import { useEffect, useState, useRef } from 'react';
 import { toast } from 'sonner';
 import { SmallQrPreview, type SmallQrPreviewRef } from '@/components/admin/SmallQrPreview';
 import type { AdminTab } from '@/types';
 import { isBrandTheme } from '@/lib/themeUtils';
+import { normalizeQrColorStyle, normalizeQrPattern, QR_COLOR_STYLES, QR_PATTERNS } from '@/lib/qrCode';
 import { isProActive } from '@/lib/subscription';
 import {
   AlertDialog,
@@ -45,6 +46,10 @@ export function UserDashboardPage() {
 
   const viewStats = summarizeShopViews(shop?.daily_stats, 'week');
   const statsAvailable = shop.daily_stats !== undefined;
+  const { isComplete: onboardingComplete } = useOnboardingStatus();
+  const qrTheme = shop.theme as { qrStyle?: string; qrPattern?: string } | undefined;
+  const qrColorStyle = normalizeQrColorStyle(qrTheme?.qrStyle);
+  const qrPattern = normalizeQrPattern(qrTheme?.qrPattern);
 
   useEffect(() => {
     // Data is now loaded globally by AdminDataLoader
@@ -178,23 +183,31 @@ export function UserDashboardPage() {
           </div>
         ) : null}
 
-            {/* Chart Section */}
-            <div className="p-4 rounded-2xl bg-card border border-border shadow-sm">
-          <div className="flex items-center justify-between mb-4">
+        {/* Chart Section */}
+        <div className="pt-4 rounded-2xl bg-card border border-border shadow-sm overflow-hidden">
+          <div className="flex items-start justify-between gap-3 px-4">
             <div>
               <h3 className="font-semibold">Menu Views</h3>
-              <p className="text-sm text-muted-foreground">Last 7 days · Includes today</p>
+              <p className="text-sm text-muted-foreground">Last 7 days</p>
             </div>
-            <div className="text-right">
-              <p className="text-2xl font-bold">{statsAvailable ? viewStats.views.toLocaleString() : '—'}</p>
-
+            <div className="flex flex-col items-end gap-1">
+              <p className="text-3xl font-extrabold tracking-tight tabular-nums leading-none text-primary">
+                {statsAvailable ? viewStats.views.toLocaleString() : '—'}
+              </p>
+              <TrendBadge value={viewsTrend(shop.daily_stats, 'week')} />
             </div>
           </div>
-          <p className="text-sm font-medium mb-2">Daily visits · Last 7 days</p>
-          <p className="text-xs text-muted-foreground mb-3">Sri Lanka time</p>
-          {shop.dailyStatsError && statsAvailable && <p role="alert" className="text-xs text-muted-foreground mb-3">{shop.dailyStatsError}</p>}
-          {statsAvailable ? <MenuViewsChart data={viewStats.data} /> : (
-            <div className="text-sm text-muted-foreground">
+          {shop.dailyStatsError && statsAvailable && <p role="alert" className="text-xs text-muted-foreground mt-3 px-4">{shop.dailyStatsError}</p>}
+          {statsAvailable ? (
+            <>
+              <MenuViewsChart data={viewStats.data} className="mt-2" />
+              <div className="flex items-center gap-2 px-4 py-3 border-t border-border/50 text-xs text-muted-foreground">
+                <QrCode className="w-3.5 h-3.5 text-foreground" />
+                <span><span className="font-semibold text-foreground">{viewStats.qrScans.toLocaleString()}</span> from QR scans</span>
+              </div>
+            </>
+          ) : (
+            <div className="px-4 pb-4 pt-2 text-sm text-muted-foreground">
               Daily statistics could not be loaded.
               <Button variant="link" onClick={() => dispatch({ type: 'RETRY_SHOP_LOAD' })}>Retry</Button>
             </div>
@@ -217,7 +230,7 @@ export function UserDashboardPage() {
               <QrCode className="w-5 h-5" />
             </div>
             <p className="text-2xl font-bold">{statsAvailable ? viewStats.qrScans.toLocaleString() : '—'}</p>
-            <p className="text-xs text-muted-foreground">QR Visits · Last 7 days</p>
+            <p className="text-xs text-muted-foreground">QR scans · Last 7 days</p>
           </div>
         </div>
 
@@ -289,19 +302,21 @@ export function UserDashboardPage() {
             </div>
 
             {/* QR Information */}
-            <div className="p-4 border-b border-border/50 bg-muted/10 grid grid-cols-2 gap-4">
+            {/* <div className="p-4 border-b border-border/50 bg-muted/10 grid grid-cols-2 gap-4">
               <div>
                 <p className="text-xs text-muted-foreground mb-1">Current Style</p>
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: (shop.theme as any)?.qrStyle === 'brand' ? shop.theme?.accent || '#FB8500' : '#000' }} />
-                  <span className="text-sm font-medium capitalize">{(shop.theme as any)?.qrStyle === 'brand' ? 'Brand QR' : 'Classic QR'}</span>
+                  <div className="w-3 h-3 rounded-full border border-border" style={{ backgroundColor: qrColorStyle === 'brand' ? shop.theme?.accent || '#FB8500' : '#000' }} />
+                  <span className="text-sm font-medium">
+                    {QR_PATTERNS.find(p => p.value === qrPattern)?.label} · {QR_COLOR_STYLES.find(c => c.value === qrColorStyle)?.label}
+                  </span>
                 </div>
               </div>
               <div>
                 <p className="text-xs text-muted-foreground mb-1">Logo</p>
                 <span className="text-sm font-medium">{shop.logo ? 'Enabled' : 'Disabled'}</span>
               </div>
-            </div>
+            </div> */}
 
             {/* Actions */}
             <div className="p-2 flex flex-col sm:flex-row gap-2 bg-muted/5">
@@ -317,7 +332,8 @@ export function UserDashboardPage() {
           </div>
         </div>
 
-        {/* Quick Actions */}
+        {/* Quick Actions — only while the shop is still being set up */}
+        {!onboardingComplete && (
         <div>
           <h3 className="font-semibold mb-3">Quick Actions</h3>
           <div className="grid gap-3">
@@ -368,6 +384,7 @@ export function UserDashboardPage() {
             </Button>
           </div>
         </div>
+        )}
         </>
         )}
       </main>

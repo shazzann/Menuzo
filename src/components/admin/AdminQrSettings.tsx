@@ -1,10 +1,9 @@
-import { getShopQrColors } from '@/lib/themeUtils';
-import { useRef, useEffect, useMemo, useState } from 'react';
-import { Check, CircleDot, Grid3x3 } from 'lucide-react';
+import { useRef, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { createStyledQr, downloadQrPng, getQrOptions, QR_PATTERNS as PATTERNS } from '@/lib/qrCode';
+import { createStyledQr, downloadQrPng, getQrOptions, QR_COLOR_STYLES, QR_PATTERNS,
+  type QrColorStyle, type QrPattern } from '@/lib/qrCode';
 import { toast } from 'sonner';
-import type { DotType } from 'qr-code-styling';
 import { cn } from '@/lib/utils';
 
 interface AdminQrSettingsProps {
@@ -12,13 +11,62 @@ interface AdminQrSettingsProps {
   themePrimary: string;
   themeAccent: string;
   shopLogo?: string;
-  qrStyle: 'classic' | 'brand';
-  qrPattern: DotType;
-  onChangeStyle: (style: 'classic' | 'brand') => void;
-  onChangePattern: (pattern: DotType) => void;
+  qrStyle: QrColorStyle;
+  qrPattern: QrPattern;
+  onChangeStyle: (style: QrColorStyle) => void;
+  onChangePattern: (pattern: QrPattern) => void;
   shopName: string;
   isSaving?: boolean;
   onDownload?: () => void;
+}
+
+function useStyledQr(options: ReturnType<typeof getQrOptions>) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!ref.current) return;
+    const host = document.createElement('div');
+    ref.current.replaceChildren(host);
+    createStyledQr(options).append(host);
+    return () => host.remove();
+  }, [options]);
+  return ref;
+}
+
+function QrThumb({ shopUrl, qrStyle, qrPattern, primary, accent }: {
+  shopUrl: string; qrStyle: QrColorStyle; qrPattern: QrPattern; primary: string; accent: string;
+}) {
+  const options = useMemo(() => getQrOptions({ shopUrl, size: 64, qrStyle, qrPattern, primary, accent }),
+    [shopUrl, qrStyle, qrPattern, primary, accent]);
+  const ref = useStyledQr(options);
+  return (
+    <div className="p-1.5 rounded-lg border shadow-sm transition-colors duration-300" style={{ backgroundColor: options.backgroundOptions?.color }}>
+      <div ref={ref} className="w-16 h-16 [&_svg]:w-full [&_svg]:h-full" aria-hidden />
+    </div>
+  );
+}
+
+function QrOptionCard({ label, selected, onSelect, children }: {
+  label: string; selected: boolean; onSelect: () => void; children: ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      aria-pressed={selected}
+      className={cn(
+        "relative p-4 rounded-xl border-2 transition-all flex flex-col items-center justify-center gap-3",
+        selected ? "border-primary bg-primary/5" : "border-border bg-card hover:border-primary/50"
+      )}
+    >
+      {selected && (
+        <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+          <Check className="w-3 h-3 text-primary-foreground" />
+        </div>
+      )}
+      {children}
+      <span className="font-medium text-sm">{label}</span>
+    </button>
+  );
 }
 
 export function AdminQrSettings({ 
@@ -34,19 +82,11 @@ export function AdminQrSettings({
   isSaving,
   onDownload
 }: AdminQrSettingsProps) {
-  const qrRef = useRef<HTMLDivElement>(null);
   const [downloading, setDownloading] = useState(false);
   const options = useMemo(() => getQrOptions({ shopUrl, shopLogo, size: 180, imageSize: 0.25,
     qrStyle, qrPattern, primary: themePrimary, accent: themeAccent }),
     [shopUrl, shopLogo, qrStyle, qrPattern, themePrimary, themeAccent]);
-
-  useEffect(() => {
-    if (!qrRef.current) return;
-    const host = document.createElement('div');
-    qrRef.current.replaceChildren(host);
-    createStyledQr(options).append(host);
-    return () => host.remove();
-  }, [options]);
+  const qrRef = useStyledQr(options);
 
   return (
     <div className="space-y-8 pb-24 animate-in fade-in duration-300">
@@ -89,98 +129,29 @@ export function AdminQrSettings({
         <p className="text-xs text-muted-foreground">High-resolution PNG · 2048 × 2048 pixels</p>
       </div>
 
-      {/* QR Color Theme */}
+      {/* QR Colour */}
       <div className="px-4 space-y-4 mt-8">
-        <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wider">Color Theme</h3>
-        
+        <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wider">Colour</h3>
         <div className="grid grid-cols-2 gap-4">
-          {/* Classic Card */}
-          <div 
-            onClick={() => onChangeStyle('classic')}
-            className={cn(
-              "relative p-4 rounded-xl border-2 transition-all cursor-pointer flex flex-col items-center justify-center gap-2",
-              qrStyle === 'classic' 
-                ? "border-primary bg-primary/5" 
-                : "border-border bg-card hover:border-primary/50"
-            )}
-          >
-            {qrStyle === 'classic' && (
-              <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
-                <Check className="w-3 h-3 text-primary-foreground" />
-              </div>
-            )}
-            <div className="w-12 h-12 bg-white rounded-lg border flex items-center justify-center shadow-sm">
-              <div className="w-6 h-6 bg-black rounded-sm" />
-            </div>
-            <span className="font-medium text-sm mt-2">Classic</span>
-          </div>
-
-          {/* Brand Theme Card */}
-          <div 
-            onClick={() => onChangeStyle('brand')}
-            className={cn(
-              "relative p-4 rounded-xl border-2 transition-all cursor-pointer flex flex-col items-center justify-center gap-2",
-              qrStyle === 'brand' 
-                ? "border-primary bg-primary/5" 
-                : "border-border bg-card hover:border-primary/50"
-            )}
-          >
-            {qrStyle === 'brand' && (
-              <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
-                <Check className="w-3 h-3 text-primary-foreground" />
-              </div>
-            )}
-            <div 
-              className="w-12 h-12 rounded-lg border flex items-center justify-center shadow-sm transition-colors duration-300"
-              style={{ backgroundColor: getShopQrColors(themePrimary, themeAccent).bgColor }}
-            >
-              <div 
-                className="w-6 h-6 rounded-sm transition-colors duration-300" 
-                style={{ backgroundColor: getShopQrColors(themePrimary, themeAccent).fgColor }}
-              />
-            </div>
-            <span className="font-medium text-sm mt-2">Brand Theme</span>
-          </div>
+          {QR_COLOR_STYLES.map(color => (
+            <QrOptionCard key={color.value} label={color.label} selected={qrStyle === color.value}
+              onSelect={() => onChangeStyle(color.value)}>
+              <QrThumb shopUrl={shopUrl} qrStyle={color.value} qrPattern={qrPattern} primary={themePrimary} accent={themeAccent} />
+            </QrOptionCard>
+          ))}
         </div>
       </div>
 
-      {/* QR Pattern Selection */}
+      {/* QR Shape */}
       <div className="px-4 space-y-4 mt-8">
-        <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wider">Pattern Style</h3>
-        
-        <div className="grid grid-cols-2 gap-3">
-          {PATTERNS.map((pattern) => {
-            const isSelected = qrPattern === pattern.value;
-            return (
-              <div
-                key={pattern.value}
-                onClick={() => onChangePattern(pattern.value)}
-                className={cn(
-                  "relative p-3 rounded-xl border-2 transition-all cursor-pointer flex items-center gap-3",
-                  isSelected
-                    ? "border-primary bg-primary/5"
-                    : "border-border bg-card hover:border-primary/50"
-                )}
-              >
-                {isSelected && (
-                  <div className="absolute top-2 right-2 w-4 h-4 rounded-full bg-primary flex items-center justify-center">
-                    <Check className="w-2.5 h-2.5 text-primary-foreground" />
-                  </div>
-                )}
-                <div className={cn(
-                  "w-10 h-10 rounded-lg flex items-center justify-center",
-                  isSelected ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
-                )}>
-                  {pattern.value === 'dots' || pattern.value === 'rounded' ? (
-                    <CircleDot className="w-5 h-5" />
-                  ) : (
-                    <Grid3x3 className="w-5 h-5" />
-                  )}
-                </div>
-                <span className="font-medium text-sm">{pattern.label}</span>
-              </div>
-            );
-          })}
+        <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wider">Shape</h3>
+        <div className="grid grid-cols-2 gap-4">
+          {QR_PATTERNS.map(pattern => (
+            <QrOptionCard key={pattern.value} label={pattern.label} selected={qrPattern === pattern.value}
+              onSelect={() => onChangePattern(pattern.value)}>
+              <QrThumb shopUrl={shopUrl} qrStyle={qrStyle} qrPattern={pattern.value} primary={themePrimary} accent={themeAccent} />
+            </QrOptionCard>
+          ))}
         </div>
       </div>
 

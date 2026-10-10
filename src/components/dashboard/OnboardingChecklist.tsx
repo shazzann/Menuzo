@@ -3,10 +3,9 @@ import { Button } from '@/components/ui/button';
 import { useApp } from '@/store';
 import { motion } from 'framer-motion';
 
-export function OnboardingChecklist() {
-  const { state, dispatch } = useApp();
-  
-  // Calculate completion
+export function useOnboardingStatus() {
+  const { state } = useApp();
+
   const hasRestaurant = !!state.shop?.name && state.shop.name !== 'My Kitchen' && state.shop.name !== 'My Awesome Shop';
   const hasTheme = !!state.shop?.theme;
   const hasFood = state.foodItems && state.foodItems.length > 0;
@@ -21,9 +20,15 @@ export function OnboardingChecklist() {
   ] as const;
   
   const completedCount = steps.filter(s => s.completed).length;
+  return { steps, completedCount, isComplete: completedCount === steps.length };
+}
+
+export function OnboardingChecklist() {
+  const { dispatch } = useApp();
+  const { steps, completedCount, isComplete } = useOnboardingStatus();
   const progress = Math.round((completedCount / steps.length) * 100);
   
-  if (completedCount === steps.length) return null; // Hide if fully done
+  if (isComplete) return null; // Hide if fully done
 
   return (
     <motion.div 

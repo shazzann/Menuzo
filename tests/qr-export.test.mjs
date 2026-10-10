@@ -56,3 +56,10 @@ test('failed downloads reject so callers cannot report success',async()=>{
   failure=new Error('Export failed');
   try {await assert.rejects(qr.downloadQrPng(qr.getQrOptions(base),'qr'),/Export failed/);} finally {failure=undefined;}
 });
+test('only square and rounded shapes are offered, and older saved patterns map onto them',()=>{
+  assert.equal(qr.QR_PATTERNS.map(p=>p.value).join(),'square,rounded');
+  for(const [saved,expected] of [['square','square'],['classy','square'],[undefined,'square'],['rounded','rounded'],['dots','rounded'],['extra-rounded','rounded'],['classy-rounded','rounded']]) {
+    assert.equal(qr.getQrOptions({...base,qrPattern:saved}).dotsOptions.type,expected,String(saved));
+  }
+  assert.equal(qr.getQrOptions({...base,qrStyle:'minimal'}).dotsOptions.color,'#000000','Unknown colour styles fall back to black and white');
+});

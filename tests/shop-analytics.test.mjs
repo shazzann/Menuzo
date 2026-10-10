@@ -67,7 +67,7 @@ function page(dailyStats) {
     react: { useState: initial => { range ??= initial; return [range, value => { range = value; }]; } }, 'react/jsx-runtime': jsx,
     'lucide-react': new Proxy({}, { get: () => () => null }),
     '@/components/ui/button': { Button: 'button' }, '@/components/shared/BottomNav': { BottomNav: () => null },
-    '@/components/admin/MenuViewsChart': { MenuViewsChart: Chart }, '@/lib/shopAnalytics': analytics,
+    '@/components/admin/MenuViewsChart': { MenuViewsChart: Chart, TrendBadge: () => null }, '@/lib/shopAnalytics': analytics,
     '@/lib/utils': { cn: (...args) => args.join(' ') }, '@/lib/subscription': { isProActive: () => false },
     '@/store': { useApp: () => ({ state: { user: null, foodItems: [], categories: [], shop: { view_count: 9999, qr_scan_count: 999, daily_stats: dailyStats } }, dispatch: action => actions.push(action) }) },
   });
@@ -79,7 +79,7 @@ test('clicking analytics filters updates the visible counts and graph together, 
     app.render().find(node => node.type === 'button' && node.props.children === label).props.onClick();
     const rendered = app.render();
     assert.equal(rendered.find(node => node.type === app.Chart).props.data.length, count);
-    const counters = rendered.filter(node => node.props.className === 'text-2xl font-bold').map(node => node.props.children);
+    const counters = rendered.filter(node => node.props.className?.includes('tabular-nums')).map(node => node.props.children);
     assert.ok(counters.includes(views)); assert.ok(counters.includes(qr)); assert.ok(!counters.includes('9,999'));
     assert.equal(rendered.find(node => node.type === 'button' && node.props.children === label).props['aria-pressed'], true);
   }
@@ -107,11 +107,19 @@ test('dashboard and Analytics default show identical seven-day counts and graph 
     '@/lib/shopUrls': {getShopMenuUrl:()=> 'https://menuzo.test/cafe'},
     '@/components/admin/MenuViewsChart': { MenuViewsChart: report.Chart },
     '@/lib/subscription':{isProActive:()=>false},
+    '@/components/dashboard/OnboardingChecklist':{OnboardingChecklist:()=>null,useOnboardingStatus:()=>({isComplete:false})},
     '@/store': {useApp:()=>({state:{shop:{id:'shop',name:'Cafe',username:'cafe',view_count:9999,qr_scan_count:999,daily_stats:stats},foodItems:[],user:null},dispatch(){}})},
   });
   const {UserDashboardPage} = load('src/pages/UserDashboardPage.tsx', deps);
   const dashboard = nodes(UserDashboardPage());
   assert.deepEqual(JSON.parse(JSON.stringify(dashboard.find(node => node.type===report.Chart).props.data)), JSON.parse(JSON.stringify(analyticsTree.find(node=>node.type===report.Chart).props.data)));
-  const counters = dashboard.filter(node=>node.props.className==='text-2xl font-bold').map(node=>node.props.children);
+  const counters = dashboard.filter(node=>node.props.className?.includes('tabular-nums')).map(node=>node.props.children);
   assert.ok(counters.includes('13')); assert.ok(!counters.includes('9,999'));
+});
+
+test('trend compares visits with the previous period of the same length', () => {
+  assert.equal(analytics.viewsTrend(stats, 'week'), -35); // 13 this week vs 20 the week before
+  assert.equal(analytics.viewsTrend(stats, 'today'), null, 'No visits yesterday, so no percentage');
+  assert.equal(analytics.viewsTrend(stats, 'month'), null, 'Only 30 days are loaded');
+  assert.equal(analytics.viewsTrend(undefined, 'week'), null);
 });

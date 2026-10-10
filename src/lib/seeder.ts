@@ -24,7 +24,7 @@ export const loadDemoRestaurant = (dispatch: ReturnType<typeof useApp>['dispatch
       contactNumber: '+94 11 234 5678',
       email: 'hello@thespicegarden.lk',
       isOpen: true,
-      theme: { primary: '#f97316', secondary: '#1c1917', accent: '#f97316', qrStyle: 'brand' }
+      theme: { primary: '#090A0C', secondary: '#1C1E22', accent: '#FB8500', qrStyle: 'brand' }
     };
 
     const categories = [

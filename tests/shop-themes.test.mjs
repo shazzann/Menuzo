@@ -77,3 +77,18 @@ test('runtime uses preview tokens and cleans every override on navigation and un
   cleanup();assert.equal(values.size,0);assert.equal(attributes.size,0);assert.ok(classes.has('light'));
   state={...state,currentView:'landing'};ShopThemeApplier();effect();assert.equal(values.size,0);
 });
+
+test('shops saved with the old orange signup default render with the readable brand theme', () => {
+  for (const legacy of [{primary:'#f97316',secondary:'#1c1917',accent:'#f97316'},{primary:'#F97316',secondary:'#1C1917',accent:'#F97316',qrStyle:'brand'}]) {
+    assert.equal(JSON.stringify(themes.normalizeShopTheme(legacy)), JSON.stringify(themes.BRAND_THEME));
+    assert.ok(themes.isBrandTheme(legacy));
+  }
+  // A shop that deliberately chose an orange page with different cards is left alone.
+  assert.equal(themes.normalizeShopTheme({primary:'#f97316',secondary:'#ffffff',accent:'#f97316'}).primary,'#f97316');
+});
+test('new shops start on the brand theme', () => {
+  for (const path of ['src/services/restaurant.service.ts','src/lib/seeder.ts']) {
+    const source = readFileSync(new URL(`../${path}`, import.meta.url), 'utf8');
+    assert.ok(source.includes("theme: { primary: '#090A0C', secondary: '#1C1E22', accent: '#FB8500'"), path);
+  }
+});

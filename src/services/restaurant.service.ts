@@ -14,7 +14,8 @@ export const RestaurantService = {
       username,
       is_open: true,
       category_order: [],
-      theme: { primary: '#f97316', secondary: '#1c1917', accent: '#f97316', qrStyle: 'brand' }
+      // Menuzo brand theme: dark page, orange highlights.
+      theme: { primary: '#090A0C', secondary: '#1C1E22', accent: '#FB8500', qrStyle: 'brand' }
     };
     
     const { data, error } = await supabase

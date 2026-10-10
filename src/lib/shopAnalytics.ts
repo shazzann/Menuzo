@@ -40,3 +40,16 @@ export function summarizeShopViews(stats: DailyStat[] | undefined, range: Analyt
     qrScans: data.reduce((total, day) => total + day.qrScans, 0),
   };
 }
+
+const RANGE_DAYS = { today: 1, week: 7, month: 30 } as const;
+
+// Percentage change in menu visits against the previous period of the same length.
+// Only 30 days of stats are loaded, so the 30-day range has nothing to compare against.
+export function viewsTrend(stats: DailyStat[] | undefined, range: AnalyticsRange, now = new Date()): number | null {
+  if (range === 'month' || !stats) return null;
+  // Sri Lanka has no daylight saving, so whole days shift the window cleanly.
+  const previousNow = new Date(now.getTime() - RANGE_DAYS[range] * 24 * 60 * 60 * 1000);
+  const previous = summarizeShopViews(stats, range, previousNow).views;
+  if (previous === 0) return null;
+  return Math.round(((summarizeShopViews(stats, range, now).views - previous) / previous) * 100);
+}

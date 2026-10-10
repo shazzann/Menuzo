@@ -5,18 +5,18 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { useApp } from '@/store';
 import { AdminQrSettings } from '@/components/admin/AdminQrSettings';
-import type { DotType } from 'qr-code-styling';
+import { normalizeQrColorStyle, normalizeQrPattern } from '@/lib/qrCode';
 
 export function AdminQrPage() {
   const { state, dispatch } = useApp();
   const { shop } = state;
   const [isSaving, setIsSaving] = useState(false);
-  const [qrStyle, setQrStyle] = useState<'classic' | 'brand'>((shop.theme as any)?.qrStyle || 'classic');
-  const [qrPattern, setQrPattern] = useState<DotType>((shop.theme as any)?.qrPattern || 'square');
+  const [qrStyle, setQrStyle] = useState(normalizeQrColorStyle((shop.theme as any)?.qrStyle));
+  const [qrPattern, setQrPattern] = useState(normalizeQrPattern((shop.theme as any)?.qrPattern));
 
   useEffect(() => {
-    setQrStyle((shop.theme as any)?.qrStyle || 'classic');
-    setQrPattern((shop.theme as any)?.qrPattern || 'square');
+    setQrStyle(normalizeQrColorStyle((shop.theme as any)?.qrStyle));
+    setQrPattern(normalizeQrPattern((shop.theme as any)?.qrPattern));
   }, [shop.theme]);
 
   const handleSave = async () => {
