@@ -1,318 +1,53 @@
-import { useState } from 'react';
-import { Check, Copy } from 'lucide-react';
-import { Label } from '@/components/ui/label';
-import { cn } from '@/lib/utils';
 import type { ThemeConfig } from '@/types';
-import { toast } from 'sonner';
-import { SHOP_THEME_PRESETS as PRESETS, contrastRatio as getContrastRatio, getShopThemeStyles, isBrandTheme, readableForeground, readableColor, normalizeShopTheme } from '@/lib/themeUtils';
+import { 
+  ThemeLivePreview, 
+  ThemeCollection, 
+  CURATED_THEMES, 
+  type CuratedTheme 
+} from './theme';
 
 interface AdminThemeSettingsProps {
   theme: ThemeConfig;
+  appliedTheme?: ThemeConfig;
   onChange: (theme: ThemeConfig) => void;
-  isEditing: boolean;
   shopName: string;
 }
 
-export function AdminThemeSettings({ theme, onChange, isEditing, shopName }: AdminThemeSettingsProps) {
-  const [copiedHex, setCopiedHex] = useState<string | null>(null);
-  const [recentColors] = useState<string[]>(['#090A0C', '#1C1E22', '#FB8500', '#F0F9FF', '#E0F2FE', '#0EA5E9']);
-
-  const handleColorChange = (key: keyof ThemeConfig, value: string) => {
-    onChange({ ...theme, [key]: value });
+export function AdminThemeSettings({ 
+  theme, 
+  appliedTheme = theme,
+  onChange, 
+  shopName 
+}: AdminThemeSettingsProps) {
+  const isMatchingTheme = (themeColors: ThemeConfig) => {
+    return (
+      themeColors.primary.toLowerCase() === theme.primary.toLowerCase() &&
+      themeColors.secondary.toLowerCase() === theme.secondary.toLowerCase() &&
+      themeColors.accent.toLowerCase() === theme.accent.toLowerCase()
+    );
   };
 
+  const activeTheme = CURATED_THEMES.find((t) => isMatchingTheme(t.colors));
 
-  const copyToClipboard = async (hex: string) => {
-    try {
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        await navigator.clipboard.writeText(hex);
-      } else {
-        // Fallback for non-secure contexts
-        const textArea = document.createElement("textarea");
-        textArea.value = hex;
-        document.body.appendChild(textArea);
-        textArea.select();
-        document.execCommand("copy");
-        document.body.removeChild(textArea);
-      }
-      setCopiedHex(hex);
-      toast.success(`Copied ${hex} to clipboard!`);
-      setTimeout(() => setCopiedHex(null), 2000);
-    } catch (err) {
-      console.error('Failed to copy', err);
-      toast.error('Failed to copy color');
-    }
+  const handleSelectCuratedTheme = (selected: CuratedTheme) => {
+    onChange(selected.colors);
   };
-
-  const getContrastColor = readableForeground;
-  const previewTheme = normalizeShopTheme(theme);
-  const brand = isBrandTheme(theme);
-
-  const calculateOverallContrast = () => {
-    // We check contrast between background (primary) and text/highlights (accent)
-    const ratioBgToText = getContrastRatio(previewTheme.primary, brand ? previewTheme.accent : readableColor(previewTheme.accent, previewTheme.primary));
-    // And contrast between surfaces (secondary) and text/highlights (accent)
-    const ratioSurfaceToText = getContrastRatio(previewTheme.secondary, brand ? previewTheme.accent : readableColor(previewTheme.accent, previewTheme.secondary));
-    
-    return {
-      ratioBgToText,
-      ratioSurfaceToText,
-      minRatio: Math.min(ratioBgToText, ratioSurfaceToText)
-    };
-  };
-
-  const contrastResult = calculateOverallContrast();
-  let contrastScore = 'Poor contrast warning';
-  let contrastStars = 1;
-  let contrastColor = 'text-red-500';
-
-  if (contrastResult.minRatio >= 7) {
-    contrastScore = 'Excellent highlight contrast';
-    contrastStars = 5;
-    contrastColor = 'text-green-500';
-  } else if (contrastResult.minRatio >= 4.5) {
-    contrastScore = 'Readable highlights';
-    contrastStars = 4;
-    contrastColor = 'text-green-500';
-  } else if (contrastResult.minRatio >= 3) {
-    contrastScore = 'Acceptable for large text';
-    contrastStars = 3;
-    contrastColor = 'text-yellow-500';
-  } else if (contrastResult.minRatio >= 2) {
-    contrastScore = 'Low contrast warning';
-    contrastStars = 2;
-    contrastColor = 'text-orange-500';
-  }
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-300 pb-10">
-      {/* 1. Live Theme Preview */}
-      <div>
-        <div className="bg-card rounded-2xl border shadow-sm overflow-hidden p-4">
-          <p className="text-xs font-medium text-muted-foreground mb-3 uppercase tracking-wider">Live Preview</p>
-          <div className="rounded-xl border bg-background overflow-hidden relative" data-shop-theme={brand ? 'brand' : 'custom'} style={{ ...getShopThemeStyles(theme), height: brand ? '180px' : '260px' }}>
-            <div className="absolute inset-0 bg-gradient-to-b from-black/60 to-transparent z-10" />
-            <div 
-              className="absolute inset-0 bg-cover bg-center" 
-              style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1514933651103-005eec06c04b?w=800&q=80)' }}
-            />
-            <div className="absolute top-4 left-4 z-20">
-              <h3 className="text-white font-bold text-lg">{shopName || 'Restaurant Name'}</h3>
-              <div className="flex gap-1 mt-1">
-                {[1, 2, 3, 4, 5].map(star => (
-                  <svg key={star} className="w-3 h-3" style={{ color: theme.accent }} fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                  </svg>
-                ))}
-              </div>
-            </div>
-            
-            <div className="absolute bottom-0 left-0 right-0 rounded-t-2xl z-20 p-4 bg-background">
-              <div className="flex gap-2 mb-3 overflow-hidden">
-                <div className="px-3 py-1 rounded-full text-[10px] font-medium bg-primary text-primary-foreground">All</div>
-                <div className="px-3 py-1 rounded-full text-[10px] font-medium border bg-card text-card-foreground">Burgers</div>
-                <div className="px-3 py-1 rounded-full text-[10px] font-medium border bg-card text-card-foreground">Drinks</div>
-              </div>
-              
-              <div className="rounded-xl p-3 flex gap-3 shadow-sm border border-border/50 bg-card text-card-foreground">
-                <div className="w-16 h-16 rounded-lg bg-muted flex-shrink-0 relative overflow-hidden">
-                  <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400&q=80)' }} />
-                </div>
-                <div className="flex-1 min-w-0 flex flex-col justify-center">
-                  <div className="flex items-start justify-between">
-                    <h4 className="font-semibold text-sm">Classic Burger</h4>
-                  </div>
-                  <p className="text-[10px] text-muted-foreground mt-0.5 line-clamp-1">Juicy beef patty with fresh lettuce</p>
-                  <div className="mt-1.5 flex items-center justify-between">
-                    <span className="font-bold text-sm text-primary">Rs. 1200</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+    <div className="space-y-5 sm:space-y-6 animate-in fade-in duration-300">
+      {/* 1. Preserved Live Theme Preview with Show/Hide toggle */}
+      <ThemeLivePreview 
+        theme={theme} 
+        shopName={shopName} 
+        activeThemeName={activeTheme?.name} 
+      />
 
-      {/* 2. Brand Colors */}
-      <div className="bg-card rounded-2xl border p-5 space-y-6">
-        <div>
-          <h3 className="font-semibold text-lg flex items-center gap-2">
-            Brand Colors
-            {!PRESETS.some(p => p.colors.primary === theme.primary && p.colors.secondary === theme.secondary && p.colors.accent === theme.accent) && (
-              <span className="text-[10px] font-medium bg-primary/10 text-primary px-2 py-0.5 rounded-full">Customized</span>
-            )}
-          </h3>
-          <p className="text-sm text-muted-foreground mt-1">
-            Choose the three colors that represent your brand. Menuzo uses these for backgrounds, surfaces and accents, adjusting text shades for readability.
-          </p>
-        </div>
-
-        <div className="space-y-4">
-          {[
-            { id: 'primary', label: 'Primary Color', desc: 'Backgrounds, Main Layout (60%)', value: theme.primary },
-            { id: 'secondary', label: 'Secondary Color', desc: 'Cards, Sections, Surfaces (30%)', value: theme.secondary },
-            { id: 'accent', label: 'Accent Color', desc: 'Buttons, Highlights, Prices (10%)', value: theme.accent },
-          ].map((colorType) => (
-            <div key={colorType.id} className="flex items-center gap-4 p-3 rounded-xl border bg-muted/30">
-              <div className="relative flex-shrink-0">
-                <input
-                  type="color"
-                  value={colorType.value}
-                  onChange={(e) => handleColorChange(colorType.id as keyof ThemeConfig, e.target.value)}
-                  disabled={!isEditing}
-                  className="absolute inset-0 opacity-0 w-12 h-12 cursor-pointer"
-                />
-                <div 
-                  className="w-12 h-12 rounded-lg border shadow-sm flex items-center justify-center transition-transform hover:scale-105"
-                  style={{ backgroundColor: colorType.value }}
-                />
-              </div>
-              
-              <div className="flex-1 min-w-0">
-                <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="flex-1 min-w-0 max-w-full pr-2">
-                    <Label className="font-medium text-sm">{colorType.label}</Label>
-                    <p className="text-xs text-muted-foreground mt-0.5 truncate">{colorType.desc}</p>
-                  </div>
-                  <div className="flex items-center gap-1 bg-background border rounded-md px-2 py-1.5 focus-within:ring-1 focus-within:ring-ring">
-                    <input 
-                      type="text" 
-                      disabled={!isEditing}
-                      value={colorType.value}
-                      onChange={(e) => {
-                        let val = e.target.value;
-                        if (!val.startsWith('#')) val = '#' + val.replace(/#/g, '');
-                        val = val.substring(0, 7);
-                        handleColorChange(colorType.id as keyof ThemeConfig, val);
-                      }}
-                      className="w-[60px] text-xs font-medium bg-transparent border-none outline-none uppercase tracking-wider disabled:opacity-50"
-                      spellCheck={false}
-                    />
-                    <div className="h-3 w-px bg-border mx-0.5" />
-                    <button 
-                      type="button"
-                      onClick={() => copyToClipboard(colorType.value)}
-                      className="text-muted-foreground hover:text-foreground transition-colors p-1 flex-shrink-0"
-                      title="Copy color code"
-                    >
-                      {copiedHex === colorType.value ? (
-                        <Check className="w-3.5 h-3.5 text-green-500" />
-                      ) : (
-                        <Copy className="w-3.5 h-3.5" />
-                      )}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-        <div className="pt-2">
-          <Label className="text-xs text-muted-foreground mb-2 block">Recent Colors</Label>
-          <div className="flex items-center gap-2">
-            {recentColors.map((color, i) => (
-              <button
-                key={i}
-                type="button"
-                className="w-6 h-6 rounded-lg border shadow-sm transition-transform hover:scale-110 flex items-center justify-center"
-                style={{ backgroundColor: color }}
-                onClick={() => copyToClipboard(color)}
-                title={`Copy ${color}`}
-              >
-                {copiedHex === color && (
-                  <Check className="w-4 h-4" style={{ color: getContrastColor(color) }} />
-                )}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* 5. Color Usage Guide & 6. Accessibility */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="bg-card rounded-2xl border p-4">
-          <h4 className="text-sm font-semibold mb-3">60-30-10 Rule</h4>
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-xs">
-              <span className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-[4px]" style={{ backgroundColor: theme.primary }} />
-                Backgrounds (60%)
-              </span>
-            </div>
-            <div className="flex items-center justify-between text-xs">
-              <span className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-[4px]" style={{ backgroundColor: theme.secondary }} />
-                Main Elements (30%)
-              </span>
-            </div>
-            <div className="flex items-center justify-between text-xs">
-              <span className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-[4px]" style={{ backgroundColor: theme.accent }} />
-                Highlights (10%)
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-card rounded-2xl border p-4 flex flex-col justify-center">
-          <div className="flex items-center justify-between mb-1">
-            <h4 className="text-sm font-semibold">Contrast Checker</h4>
-            <span className="text-xs font-mono bg-muted px-2 py-0.5 rounded-md" title="Minimum contrast of rendered highlight text on the page and cards">{contrastResult.minRatio.toFixed(1)}:1</span>
-          </div>
-          <div className={`flex items-center gap-1 mb-1 ${contrastColor}`}>
-            {[1, 2, 3, 4, 5].map(star => (
-              <svg key={star} className={cn("w-4 h-4", star <= contrastStars ? "opacity-100" : "opacity-20")} fill="currentColor" viewBox="0 0 20 20">
-                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-              </svg>
-            ))}
-          </div>
-          <p className="text-xs text-muted-foreground">{contrastScore}</p>
-        </div>
-      </div>
-
-
-      {/* 3. Recommended Color Palettes */}
-      <div className="space-y-4">
-        <div>
-          <h3 className="font-semibold text-lg">Recommended Palettes</h3>
-          <p className="text-sm text-muted-foreground mt-1">Professionally designed color combinations.</p>
-        </div>
-        
-        <div className="grid grid-cols-1 gap-3">
-          {PRESETS.map((preset) => (
-            <button
-              key={preset.name}
-              type="button"
-              disabled={!isEditing}
-              onClick={() => onChange(preset.colors)}
-              className={cn(
-                "flex items-center justify-between p-4 rounded-xl border transition-all",
-                theme.primary === preset.colors.primary && theme.secondary === preset.colors.secondary && theme.accent === preset.colors.accent
-                  ? "border-primary bg-primary/5 ring-1 ring-primary"
-                  : "bg-card hover:bg-muted/50",
-                !isEditing && "opacity-80 cursor-default"
-              )}
-            >
-              <div className="flex flex-col items-start overflow-hidden flex-1 pr-4">
-                <h4 className="font-medium text-sm flex items-center gap-2">
-                  {preset.name}
-                  {theme.primary === preset.colors.primary && theme.secondary === preset.colors.secondary && theme.accent === preset.colors.accent && (
-                    <Check className="w-4 h-4 text-primary" />
-                  )}
-                </h4>
-                <p className="text-xs text-muted-foreground truncate w-full text-left">{preset.description}</p>
-              </div>
-              
-              <div className="flex items-center gap-1.5 flex-shrink-0">
-                <div className="w-6 h-6 rounded-lg shadow-sm border border-border/50" style={{ backgroundColor: preset.colors.primary }} title="Primary" />
-                <div className="w-6 h-6 rounded-lg shadow-sm border border-border/50" style={{ backgroundColor: preset.colors.secondary }} title="Secondary" />
-                <div className="w-6 h-6 rounded-lg shadow-sm border border-border/50" style={{ backgroundColor: preset.colors.accent }} title="Accent" />
-              </div>
-            </button>
-          ))}
-        </div>
-      </div>
-
+      {/* 2. Curated Theme Collection with Search & Category Filters */}
+      <ThemeCollection
+        currentTheme={theme}
+        appliedTheme={appliedTheme}
+        onSelectTheme={handleSelectCuratedTheme}
+      />
     </div>
   );
 }

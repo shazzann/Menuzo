@@ -18,7 +18,7 @@ import { useApp } from '@/store';
 import { BottomNav } from '@/components/shared/BottomNav';
 import { OnboardingChecklist } from '@/components/dashboard/OnboardingChecklist';
 import { useOnboardingStatus } from '@/hooks/useOnboardingStatus';
-import { useEffect, useState, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { toast } from 'sonner';
 import { SmallQrPreview, type SmallQrPreviewRef } from '@/components/admin/SmallQrPreview';
 import type { AdminTab } from '@/types';
@@ -41,18 +41,13 @@ export function UserDashboardPage() {
   const { state, dispatch } = useApp();
   const { shop, foodItems, user } = state;
   const proActive = isProActive(user?.subscription);
-  const [isLoadingData, setIsLoadingData] = useState(true);
+  const isLoadingData = state.shopDataStatus === 'loading';
   const qrRef = useRef<SmallQrPreviewRef>(null);
   const [isDownloadingQr, setIsDownloadingQr] = useState(false);
 
   const viewStats = summarizeShopViews(shop?.daily_stats, 'week');
   const statsAvailable = shop.daily_stats !== undefined;
   const { isComplete: onboardingComplete } = useOnboardingStatus();
-
-  useEffect(() => {
-    // Data is now loaded globally by AdminDataLoader
-    setIsLoadingData(false);
-  }, []);
 
   const handleTabChange = (tab: AdminTab) => {
     dispatch({ type: 'SET_ADMIN_TAB', payload: tab });

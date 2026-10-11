@@ -32,12 +32,11 @@ function VisitsTooltip({ active, payload }: { active?: boolean; payload?: { payl
 }
 
 export function MenuViewsChart({ data, className }: { data: ChartData; className?: string }) {
-  const empty = data.every(day => day.views === 0);
   return (
     <div>
-      <div className={cn('h-36 w-full min-w-0', className)} role="img" aria-label="Menu visits by day for the selected period">
+      <div className={cn('h-36 w-full min-w-0 pb-3', className)} role="img" aria-label="Menu visits by day for the selected period">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={data} margin={{ top: 8, right: 0, left: 0, bottom: 0 }}>
+          <AreaChart data={data} margin={{ top: 8, right: 0, left: 0, bottom: 12 }}>
             <defs>
               <linearGradient id="menu-visits-fill" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.45} />
@@ -50,7 +49,6 @@ export function MenuViewsChart({ data, className }: { data: ChartData; className
           </AreaChart>
         </ResponsiveContainer>
       </div>
-      {empty && <p className="text-center text-sm text-muted-foreground mt-2">No visits yet — share your menu link or QR code to get started.</p>}
       <table className="sr-only">
         <caption>Menu visits by day</caption>
         <thead><tr><th>Date</th><th>Menu visits</th><th>QR scans</th></tr></thead>
