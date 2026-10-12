@@ -196,7 +196,8 @@ function App() {
           <ShopThemeApplier />
           <AppContent />
         </BrowserRouter>
-        <Toaster />
+        {/* Top of the screen, clear of bottom navigation and the theme action bar. */}
+        <Toaster position="top-center" />
       </AppProvider>
     </ThemeProvider>
   );

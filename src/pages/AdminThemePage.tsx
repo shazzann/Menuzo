@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import { useApp } from '@/store';
 import type { ThemeConfig } from '@/types';
 import type { Json } from '@/types/database.types';
-import { isValidThemeColor, normalizeShopTheme } from '@/lib/themeUtils';
+import { isValidThemeColor, normalizeShopTheme, withThemeColors } from '@/lib/themeUtils';
 import { AdminThemeSettings } from '@/components/admin/AdminThemeSettings';
 import { ThemeActionBar } from '@/components/admin/theme';
 import { useCuratedThemes } from '@/components/admin/theme/useCuratedThemes';
@@ -45,12 +45,14 @@ export function AdminThemePage() {
     }
     setIsSaving(true);
     try {
+      // Replace only the colours; keep QR settings and onboarding progress saved with the theme.
+      const savedTheme = withThemeColors(shop.theme, selectedTheme);
       if (shop.id && shop.id !== 'shop-1') {
         const { RestaurantService } = await import('@/services');
-        await RestaurantService.updateRestaurant(shop.id, { theme: selectedTheme as unknown as Json });
+        await RestaurantService.updateRestaurant(shop.id, { theme: savedTheme as unknown as Json });
       }
 
-      dispatch({ type: 'UPDATE_SHOP', payload: { theme: selectedTheme } });
+      dispatch({ type: 'UPDATE_SHOP', payload: { theme: savedTheme } });
       setDraftTheme(null);
       toast.success('Theme applied successfully!');
     } catch (err: unknown) {

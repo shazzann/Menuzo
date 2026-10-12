@@ -105,3 +105,11 @@ test('themes from the Theme Library become shop owner theme cards', () => {
   assert.match(slug, /^caf-noir-gold-[a-z0-9]{1,5}$/); assert.match(slug, /^[a-z0-9]+(-[a-z0-9]+)*$/, 'Matches the database slug rule');
   assert.notEqual(service.themeSlug('Same'), service.themeSlug('Same'));
 });
+
+test('applying a theme changes only the colours and keeps QR settings and onboarding progress', () => {
+  const saved = { primary:'#090A0C', secondary:'#1C1E22', accent:'#FB8500', qrStyle:'brand', qrPattern:'rounded', qrGeneratedAt:'2026-10-11T20:47:40.423Z' };
+  const next = themes.withThemeColors(saved, { primary:'#102042', secondary:'#94A3C2', accent:'#817B74' });
+  assert.equal(JSON.stringify(next), JSON.stringify({ ...saved, primary:'#102042', secondary:'#94A3C2', accent:'#817B74' }));
+  assert.equal(saved.primary, '#090A0C', 'The current theme object is not changed');
+  assert.equal(JSON.stringify(themes.withThemeColors(undefined, { primary:'#000000', secondary:'#111111', accent:'#222222' })), JSON.stringify({ primary:'#000000', secondary:'#111111', accent:'#222222' }));
+});

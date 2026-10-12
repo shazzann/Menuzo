@@ -30,6 +30,12 @@ export function normalizeShopTheme(theme?: ThemeConfig): ThemeConfig {
   })) as unknown as ThemeConfig;
 }
 
+// The saved theme also holds QR settings and onboarding progress (qrStyle, qrPattern,
+// qrGeneratedAt); changing colours must keep them.
+export function withThemeColors<T extends object>(current: T | undefined, colors: ThemeConfig): T & ThemeConfig {
+  return { ...(current as T), primary: colors.primary, secondary: colors.secondary, accent: colors.accent };
+}
+
 export function isBrandTheme(theme?: ThemeConfig): boolean {
   const t = normalizeShopTheme(theme);
   return Object.entries(BRAND_THEME).every(([key, value]) => t[key as keyof ThemeConfig].toUpperCase() === value);
