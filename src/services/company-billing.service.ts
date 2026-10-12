@@ -41,6 +41,19 @@ export const CompanyBillingService = {
     });
     if (error) throw error;
   },
+  // Ends paid access now; only a new payment or a new end date brings it back.
+  async revokeSubscription(shopId: string, reason: string) {
+    const { error } = await supabase.rpc('admin_revoke_subscription', {
+      p_shop_id: shopId, p_reason: reason.trim(),
+    });
+    if (error) throw error;
+  },
+  async setSubscriptionExpiry(shopId: string, expiresAt: string, reason: string) {
+    const { error } = await supabase.rpc('admin_set_subscription_expiry', {
+      p_shop_id: shopId, p_expires_at: expiresAt, p_reason: reason.trim(),
+    });
+    if (error) throw error;
+  },
   async assignUrl(shopId: string, slug: string) {
     const { error } = await supabase.rpc('admin_assign_shop_url', {
       p_shop_id: shopId, p_slug: slug.trim().toLowerCase(),

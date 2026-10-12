@@ -16,6 +16,7 @@ const SHOP_VIEWS: string[] = [
   'admin-theme',
   'admin-qr',
   'admin-security',
+  'admin-subscription',
   'admin-food-detail',
 ];
 

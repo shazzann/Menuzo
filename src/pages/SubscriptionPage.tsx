@@ -171,7 +171,7 @@ export function SubscriptionPage() {
                     {!periods.length && <p className="text-sm text-muted-foreground">No subscription periods are available yet.</p>}
                     <ul className="grid sm:grid-cols-2 gap-3 text-sm">{['Up to 100 menu items', 'Up to 20 categories', 'Custom menu URL', 'Priority support'].map(feature => <li key={feature} className="flex items-center gap-2"><Check className="w-4 h-4 text-primary" />{feature}</li>)}</ul>
                     {!ready && <p className="text-sm bg-muted rounded-xl p-4 text-muted-foreground">Pro payments are coming soon. Prices and bank transfer details will appear here when available.</p>}
-                    <Button className="w-full sm:w-auto gap-2" disabled={!selected || !shop.id} onClick={() => { setCheckoutPeriod(selected || null); setTransferMade(false); setReceiptSent(false); setStep(1); }}>View bank payment details<ArrowRight className="w-4 h-4" /></Button>
+                    <Button className="w-full sm:w-auto gap-2" disabled={!selected || !shop.id} onClick={() => { setCheckoutPeriod(selected || null); setTransferMade(false); setReceiptSent(false); setStep(1); }}>Proceed to pay<ArrowRight className="w-4 h-4" /></Button>
                   </div>}
                   {step === 1 && <form className="space-y-6" onSubmit={event => { event.preventDefault(); if (ready && transferMade) { setReceiptSent(false); setStep(2); } }}>
                     <div><h3 className="text-xl font-bold flex items-center gap-2"><Landmark className="w-5 h-5" />Make a bank transfer</h3><p className="text-sm text-muted-foreground mt-2">Transfer the exact amount below, then keep your receipt to send on WhatsApp.</p></div>

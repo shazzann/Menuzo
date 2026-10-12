@@ -651,7 +651,7 @@ function enterRenewalTransfer(page, periodId = 'monthly') {
   assert.ok(period);
   period.props.onChange();
   const start = findElement(page.render().tree, node => typeof node.props.onClick === 'function'
-    && ['Upgrade to Pro', 'View bank payment details'].includes(textOf(node)));
+    && ['Upgrade to Pro', 'Proceed to pay'].includes(textOf(node)));
   assert.ok(start); start.props.onClick();
   assert.equal(findElement(page.render().tree, node => node.props.id === 'preferred-url'), undefined);
   for (const [id, value] of [['payer-name','Jane Smith'],['transfer-reference','RENEWAL-123'],['transfer-date','2026-09-28']]) {

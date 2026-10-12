@@ -44,35 +44,36 @@ export function SubscriptionPlanComparison({ periods, selectedId, loading, ready
         ? <span className="inline-flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400"><Sparkles className="h-3.5 w-3.5" />Save {formatPaymentAmount(savings,yearly.currency)} a year with yearly Pro</span>
         : 'Choose the period that works for your restaurant.'}</p>
     </div>
-    <div className="grid gap-6 md:grid-cols-2">
+    {/* Free and Pro stay side by side on every screen size so they are easy to compare. */}
+    <div className="grid grid-cols-2 gap-3 sm:gap-6">
       {(['free','pro'] as const).map(tier => {
         const pro = tier === 'pro';
         const Icon = pro ? Crown : Store;
-        return <article key={tier} className={`relative flex flex-col overflow-hidden rounded-3xl border bg-card ${pro ? 'border-primary/60 shadow-xl shadow-primary/10' : 'border-border'}`}>
+        return <article key={tier} className={`relative flex min-w-0 flex-col overflow-hidden rounded-2xl sm:rounded-3xl border bg-card ${pro ? 'border-primary/60 shadow-xl shadow-primary/10' : 'border-border'}`}>
           {pro && <div className="pointer-events-none absolute inset-x-0 top-0 h-56 bg-gradient-to-b from-primary/10 to-transparent" aria-hidden="true" />}
-          <div className="relative flex h-full flex-col p-6 sm:p-8">
-            <div className="mb-6 flex items-center justify-between gap-3">
-              <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${pro ? 'bg-primary/15 text-primary' : 'bg-muted text-muted-foreground'}`}><Icon className="h-6 w-6" /></div>
-              <span className={`rounded-full px-3 py-1 text-xs font-medium ${pro ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>{pro ? 'More room to grow' : 'Your current plan'}</span>
+          <div className="relative flex h-full flex-col p-3.5 sm:p-8">
+            <div className="mb-3 sm:mb-6 flex items-center justify-between gap-2 sm:gap-3">
+              <div className={`flex h-9 w-9 sm:h-12 sm:w-12 items-center justify-center rounded-xl sm:rounded-2xl ${pro ? 'bg-primary/15 text-primary' : 'bg-muted text-muted-foreground'}`}><Icon className="h-5 w-5 sm:h-6 sm:w-6" /></div>
+              <span className={`hidden sm:inline rounded-full px-3 py-1 text-xs font-medium ${pro ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>{pro ? 'More room to grow' : 'Your current plan'}</span>
             </div>
-            <h3 className="text-2xl font-bold">{pro ? 'Menuzo Pro' : 'Free'}</h3>
-            <p className="mt-2 min-h-12 text-sm leading-relaxed text-muted-foreground">{pro ? 'For a fuller menu, a memorable link, and a growing restaurant.' : 'Everything you need to put your first digital menu on the table.'}</p>
-            <div className="my-6 min-h-20" aria-live={pro ? 'polite' : undefined}>
+            <h3 className="text-lg sm:text-2xl font-bold leading-tight">{pro ? 'Menuzo Pro' : 'Free'}</h3>
+            <p className="mt-1.5 sm:mt-2 min-h-[3.75rem] sm:min-h-12 text-xs sm:text-sm leading-relaxed text-muted-foreground">{pro ? 'For a fuller menu, a memorable link, and a growing restaurant.' : 'Everything you need to put your first digital menu on the table.'}</p>
+            <div className="my-3 sm:my-6 min-h-[5.5rem] sm:min-h-20" aria-live={pro ? 'polite' : undefined}>
               <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-                <strong className="text-3xl font-bold tracking-tight sm:text-4xl">{pro ? loading ? 'Loading…' : payable && selected ? formatPaymentAmount(selected.amount,selected.currency) : 'Coming soon' : 'Free'}</strong>
-                <span className="text-sm text-muted-foreground">{pro ? payable && selected ? selected.months === 1 ? '/ month' : selected.months === 12 ? '/ year' : `/ ${selected.months} months` : '' : 'forever'}</span>
+                <strong className="text-lg font-bold tracking-tight sm:text-4xl">{pro ? loading ? 'Loading…' : payable && selected ? formatPaymentAmount(selected.amount,selected.currency) : 'Coming soon' : 'Free'}</strong>
+                <span className="text-xs sm:text-sm text-muted-foreground">{pro ? payable && selected ? selected.months === 1 ? '/ month' : selected.months === 12 ? '/ year' : `/ ${selected.months} months` : '' : 'forever'}</span>
               </div>
-              <p className="mt-2 text-xs text-muted-foreground">{pro ? payable && selected ? `One payment for ${selected.months} ${selected.months === 1 ? 'month' : 'months'}. No automatic renewals.` : 'Published pricing will appear here when available.' : 'No payment needed. Keep your standard menu link.'}</p>
+              <p className="mt-1.5 sm:mt-2 text-[11px] sm:text-xs leading-snug text-muted-foreground">{pro ? payable && selected ? `One payment for ${selected.months} ${selected.months === 1 ? 'month' : 'months'}. No automatic renewals.` : 'Published pricing will appear here when available.' : 'No payment needed. Keep your standard menu link.'}</p>
             </div>
-            <Button className="h-12 w-full gap-2 rounded-xl" variant={pro ? 'default' : 'outline'} disabled={pro && !ready} onClick={pro ? onUpgrade : onKeepFree}>{pro ? <>Upgrade to Pro<ArrowRight className="h-4 w-4" /></> : 'Continue with Free'}</Button>
-            <div className="my-6 border-t border-border" />
-            <p className="mb-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">{pro ? 'Your upgrade includes' : 'Your essentials'}</p>
-            <ul className="space-y-4">
+            <Button className="h-10 sm:h-12 w-full gap-1.5 sm:gap-2 rounded-xl px-2 text-xs sm:text-sm" variant={pro ? 'default' : 'outline'} disabled={pro && !ready} onClick={pro ? onUpgrade : onKeepFree}>{pro ? <>Upgrade to Pro<ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" /></> : 'Continue with Free'}</Button>
+            <div className="my-4 sm:my-6 border-t border-border" />
+            <p className="mb-3 sm:mb-4 text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-muted-foreground">{pro ? 'Your upgrade includes' : 'Your essentials'}</p>
+            <ul className="space-y-3 sm:space-y-4">
               {features.map(feature => {
                 const value = feature[tier];
-                return <li key={feature.label} className="flex items-start gap-3 text-sm">
+                return <li key={feature.label} className="flex items-start gap-2 sm:gap-3 text-xs sm:text-sm">
                   {value === false ? <Minus aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground/60" /> : <Check aria-hidden="true" className={`mt-0.5 h-4 w-4 shrink-0 ${pro ? 'text-primary' : 'text-muted-foreground'}`} />}
-                  <div className="min-w-0"><span className={value === false ? 'text-muted-foreground' : 'font-medium'}>{typeof value === 'string' ? `${feature.label}: ${value}` : feature.label}</span>{value === false && <span className="ml-1 text-xs text-muted-foreground">· Pro only</span>}{pro && feature.detail && <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{feature.detail}</p>}</div>
+                  <div className="min-w-0"><span className={value === false ? 'text-muted-foreground' : 'font-medium'}>{typeof value === 'string' ? `${feature.label}: ${value}` : feature.label}</span>{value === false && <span className="ml-1 text-[11px] sm:text-xs text-muted-foreground">· Pro only</span>}{pro && feature.detail && <p className="mt-1 hidden sm:block text-xs leading-relaxed text-muted-foreground">{feature.detail}</p>}</div>
                 </li>;
               })}
             </ul>

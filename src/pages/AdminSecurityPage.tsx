@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { ArrowLeft, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { PasswordInput } from '@/components/shared/PasswordInput';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { useApp } from '@/store';
@@ -100,15 +101,15 @@ export function AdminSecurityPage() {
             <form onSubmit={handlePasswordChange} className="p-4 rounded-xl bg-muted space-y-3">
               <div className="space-y-2">
                 <Label className="text-xs">Current Password</Label>
-                <Input type="password" value={passwordData.current} onChange={(e) => setPasswordData({ ...passwordData, current: e.target.value })} placeholder="••••••••" />
+                <PasswordInput value={passwordData.current} onChange={(e) => setPasswordData({ ...passwordData, current: e.target.value })} placeholder="••••••••" />
               </div>
               <div className="space-y-2">
                 <Label className="text-xs">New Password</Label>
-                <Input type="password" value={passwordData.new} onChange={(e) => setPasswordData({ ...passwordData, new: e.target.value })} placeholder="••••••••" />
+                <PasswordInput value={passwordData.new} onChange={(e) => setPasswordData({ ...passwordData, new: e.target.value })} placeholder="••••••••" />
               </div>
               <div className="space-y-2">
                 <Label className="text-xs">Confirm New Password</Label>
-                <Input type="password" value={passwordData.confirm} onChange={(e) => setPasswordData({ ...passwordData, confirm: e.target.value })} placeholder="••••••••" />
+                <PasswordInput value={passwordData.confirm} onChange={(e) => setPasswordData({ ...passwordData, confirm: e.target.value })} placeholder="••••••••" />
               </div>
               <div className="flex gap-2 pt-2">
                 <Button type="button" variant="outline" onClick={() => setShowPasswordForm(false)} className="flex-1">Cancel</Button>

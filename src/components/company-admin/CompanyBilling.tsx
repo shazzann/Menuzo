@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { CompanyBillingService, companyBillingError } from '@/services/company-billing.service';
-import { formatPaymentAmount } from '@/lib/billing';
+import { endOfSriLankaDay, formatPaymentAmount, sriLankaDateInput } from '@/lib/billing';
 import { CompanyShopBillingDetail } from './CompanyShopBillingDetail';
 import type { AdminPaymentRequest, AdminShopSubscription, CompanyBillingSection } from '@/types/company-billing';
 
@@ -13,6 +13,20 @@ const inputClass = 'w-full rounded-xl border border-border bg-background px-3 py
 const date = (value: string | null) => value ? new Date(value).toLocaleString() : '—';
 function Status({ value }: { value: string }) {
   return <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${['approved', 'active'].includes(value) ? 'bg-emerald-500/10 text-emerald-600' : value === 'pending' ? 'bg-amber-500/10 text-amber-600' : 'bg-muted text-muted-foreground'}`}>{value}</span>;
+}
+
+type ShopAction = 'status' | 'revoke' | 'expiry';
+
+// Subscription controls live in the View shop window, next to the shop's billing history.
+function SubscriptionActions({ shop, now, onAction }: { shop: AdminShopSubscription; now: number; onAction: (action: ShopAction) => void }) {
+  const paid = ['pro', 'enterprise'].includes(shop.subscription_plan || '');
+  const hasTimeLeft = !!shop.subscription_expires_at && new Date(shop.subscription_expires_at).getTime() > now;
+  return <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border bg-muted/30 p-3">
+    <p className="mr-auto text-sm font-medium">{paid ? 'Manage subscription' : 'No paid subscription to manage'}</p>
+    <Button size="sm" variant="outline" disabled={!paid || (!shop.pro_active && shop.subscription_status !== 'cancelled')} onClick={() => onAction('status')}>{shop.subscription_status === 'cancelled' ? 'Restore access' : 'Suspend access'}</Button>
+    <Button size="sm" variant="outline" disabled={!paid} onClick={() => onAction('expiry')}>Change end date</Button>
+    <Button size="sm" variant="outline" className="text-destructive hover:text-destructive" disabled={!paid || !hasTimeLeft} onClick={() => onAction('revoke')}>Revoke</Button>
+  </div>;
 }
 
 export function CompanyBilling({ section }: { section: CompanyBillingSection }) {
@@ -35,6 +49,11 @@ export function CompanyBilling({ section }: { section: CompanyBillingSection }) 
   const [verified, setVerified] = useState(false);
   const [busy, setBusy] = useState(false);
   const [actionError, setActionError] = useState('');
+  // Subscription row action: suspend/restore, revoke (end now), or change the end date.
+  const [shopAction, setShopAction] = useState<ShopAction>('status');
+  const [endDate, setEndDate] = useState('');
+  // Captured when the list loads, so rendering stays pure.
+  const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
     let cancelled = false;
@@ -46,7 +65,7 @@ export function CompanyBilling({ section }: { section: CompanyBillingSection }) 
           if (!cancelled) { setRequests(data.rows); setTotal(data.total); }
         } else {
           const data = await CompanyBillingService.subscriptions(query, offset);
-          if (!cancelled) { setShops(data.rows); setTotal(data.total); }
+          if (!cancelled) { setShops(data.rows); setTotal(data.total); setNow(Date.now()); }
         }
       } catch (err) {
         if (!cancelled) setError(companyBillingError(err));
@@ -61,8 +80,10 @@ export function CompanyBilling({ section }: { section: CompanyBillingSection }) 
     setSelected(request); setDecision('approved'); setReason('');
     setSlug(request.requested_slug || ''); setVerified(false); setActionError('');
   };
-  const openShop = (shop: AdminShopSubscription) => {
-    setEditing(shop); setReason(''); setSlug(shop.slug || ''); setActionError('');
+  const openShop = (shop: AdminShopSubscription, action: ShopAction = 'status') => {
+    setEditing(shop); setShopAction(action); setReason(''); setSlug(shop.slug || ''); setActionError('');
+    const expiry = shop.subscription_expires_at ? new Date(shop.subscription_expires_at) : null;
+    setEndDate(sriLankaDateInput(expiry && expiry.getTime() > now ? expiry : now));
   };
   const submitReview = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -81,8 +102,12 @@ export function CompanyBilling({ section }: { section: CompanyBillingSection }) 
     setBusy(true); setActionError('');
     try {
       if (section === 'shop-urls') await CompanyBillingService.assignUrl(editing.shop_id, slug);
+      else if (shopAction === 'revoke') await CompanyBillingService.revokeSubscription(editing.shop_id, reason);
+      else if (shopAction === 'expiry') await CompanyBillingService.setSubscriptionExpiry(editing.shop_id, endOfSriLankaDay(endDate), reason);
       else await CompanyBillingService.changeStatus(editing.shop_id, editing.subscription_status === 'cancelled' ? 'active' : 'cancelled', reason);
-      toast.success(section === 'shop-urls' ? 'Shop URL updated.' : 'Subscription status updated.');
+      toast.success(section === 'shop-urls' ? 'Shop URL updated.'
+        : shopAction === 'revoke' ? 'Subscription revoked. Paid features have stopped.'
+        : shopAction === 'expiry' ? 'Subscription end date updated.' : 'Subscription status updated.');
       setEditing(null); setVersion(v => v + 1);
     } catch (err) { setActionError(companyBillingError(err)); }
     finally { setBusy(false); }
@@ -94,7 +119,7 @@ export function CompanyBilling({ section }: { section: CompanyBillingSection }) 
         <p className="mt-2 text-sm text-muted-foreground">{isPayments ? 'Review bank transfers and track customer payment decisions.' : 'Manage paid access, expiry dates, and custom menu URLs.'}</p></div>
       <Button variant="outline" onClick={() => { setLoading(true); setVersion(v => v + 1); }} disabled={loading}><RefreshCw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />Refresh</Button>
     </div>
-    {!isPayments && <p className="rounded-xl border border-border bg-muted/30 p-4 text-sm">Subscriptions belong to the owner account. Suspending or restoring access affects all shops owned by that account. Approval extends an active subscription from its existing expiry.</p>}
+    {!isPayments && <p className="rounded-xl border border-border bg-muted/30 p-4 text-sm">Subscriptions belong to the owner account. Suspending, restoring, revoking, or changing the end date affects all shops owned by that account. Approval extends an active subscription from its existing expiry.</p>}
     <div className="flex flex-wrap gap-3">
       <label className="relative flex-1 min-w-52"><Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" /><input aria-label="Search billing records" className={`${inputClass} pl-9`} placeholder={isPayments ? 'Shop, owner, transfer reference, or request ID' : 'Shop, owner, or custom URL'} value={query} onChange={e => { setLoading(true); setQuery(e.target.value); setOffset(0); }} /></label>
       {isPayments && <select aria-label="Payment status" className={`${inputClass} w-auto`} value={status} onChange={e => { setLoading(true); setStatus(e.target.value); setOffset(0); }}>
@@ -116,8 +141,7 @@ export function CompanyBilling({ section }: { section: CompanyBillingSection }) 
           <td className="p-4"><p className="mb-1 capitalize">{shop.subscription_plan || 'free'}</p><Status value={shop.pro_active ? 'active' : shop.subscription_status === 'cancelled' ? 'suspended' : shop.subscription_plan === 'free' || !shop.subscription_plan ? 'free' : 'expired'} /></td>
           <td className="p-4 whitespace-nowrap">{date(shop.subscription_expires_at)}</td>
           <td className="p-4">{shop.slug ? <><p className="break-all">/{shop.slug}</p><a className="inline-flex items-center gap-1 text-primary" href={`/${shop.slug}`} target="_blank" rel="noreferrer">Open menu <ExternalLink className="h-3 w-3" /></a></> : 'Not assigned'}</td>
-          <td className="p-4"><div className="flex flex-wrap gap-2"><Button size="sm" variant="outline" onClick={() => setViewingShop(shop)}>View shop</Button>{section === 'shop-urls' ? <Button size="sm" variant="outline" disabled={!shop.pro_active && !shop.slug} onClick={() => openShop(shop)}>Manage URL</Button>
-            : <Button size="sm" variant="outline" disabled={!['pro','enterprise'].includes(shop.subscription_plan || '') || (!shop.pro_active && shop.subscription_status !== 'cancelled')} onClick={() => openShop(shop)}>{shop.subscription_status === 'cancelled' ? 'Restore access' : 'Suspend access'}</Button>}</div></td>
+          <td className="p-4"><div className="flex flex-wrap gap-2"><Button size="sm" variant="outline" onClick={() => setViewingShop(shop)}>View shop</Button>{section === 'shop-urls' && <Button size="sm" variant="outline" disabled={!shop.pro_active && !shop.slug} onClick={() => openShop(shop)}>Manage URL</Button>}</div></td>
         </tr>)}</tbody>
       </table></div>}
     {!error && !loading && total > 0 && <div className="flex items-center justify-between text-sm"><span>{offset + 1}–{Math.min(offset + 50, total)} of {total}</span><div className="flex gap-2"><Button variant="outline" disabled={offset === 0} onClick={() => { setLoading(true); setOffset(v => Math.max(0,v - 50)); }}>Previous</Button><Button variant="outline" disabled={offset + 50 >= total} onClick={() => { setLoading(true); setOffset(v => v + 50); }}>Next</Button></div></div>}
@@ -153,16 +177,19 @@ export function CompanyBilling({ section }: { section: CompanyBillingSection }) 
 
     <Dialog open={!!viewingShop} onOpenChange={open => { if (!open) setViewingShop(null); }}><DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl">
       <DialogHeader><DialogTitle>Shop subscription & payments</DialogTitle><DialogDescription>{viewingShop?.shop_name} · Subscription details and past payments</DialogDescription></DialogHeader>
+      {viewingShop && section !== 'shop-urls' && <SubscriptionActions shop={viewingShop} now={now} onAction={action => { const shop = viewingShop; setViewingShop(null); openShop(shop, action); }} />}
       {viewingShop && <CompanyShopBillingDetail key={viewingShop.shop_id} shopId={viewingShop.shop_id} />}
     </DialogContent></Dialog>
 
     <Dialog open={!!editing} onOpenChange={open => { if (!open && !busy) setEditing(null); }}><DialogContent>
-      <DialogHeader><DialogTitle>{section === 'shop-urls' ? 'Manage custom URL' : editing?.subscription_status === 'cancelled' ? 'Restore paid access' : 'Suspend paid access'}</DialogTitle><DialogDescription>{editing?.shop_name} · {editing?.owner_email}</DialogDescription></DialogHeader>
+      <DialogHeader><DialogTitle>{section === 'shop-urls' ? 'Manage custom URL' : shopAction === 'revoke' ? 'Revoke subscription' : shopAction === 'expiry' ? 'Change subscription end date' : editing?.subscription_status === 'cancelled' ? 'Restore paid access' : 'Suspend paid access'}</DialogTitle><DialogDescription>{editing?.shop_name} · {editing?.owner_email}</DialogDescription></DialogHeader>
       {editing && <form onSubmit={submitShop} className="space-y-4">
         {section === 'shop-urls' ? <><label className="block text-sm">Custom URL<input className={`${inputClass} mt-1`} value={slug} disabled={busy} minLength={3} maxLength={50} pattern="[a-z0-9]+(-[a-z0-9]+)*" onChange={e => setSlug(e.target.value.toLowerCase())} /></label><p className="text-sm text-muted-foreground">Leave blank to stop using this as the main URL. Previous URLs still redirect to the shop. Assigning a new URL requires active paid access; expiry does not disable a purchased URL.</p></>
+          : shopAction === 'revoke' ? <><p className="text-sm">This affects all shops owned by {editing.owner_email}. Paid features stop immediately and the subscription ends now (it was due to end {date(editing.subscription_expires_at)}). It cannot be restored: the owner renews with a new payment, or you can set a new end date.</p><label className="block text-sm">Reason<textarea className={`${inputClass} mt-1`} required minLength={3} maxLength={1000} value={reason} disabled={busy} onChange={e => setReason(e.target.value)} /></label></>
+          : shopAction === 'expiry' ? <><p className="text-sm">This affects all shops owned by {editing.owner_email}. Current end date: {date(editing.subscription_expires_at)}.{editing.subscription_status === 'cancelled' ? ' Access stays suspended until you restore it.' : ''}</p><label className="block text-sm">New end date<input type="date" className={`${inputClass} mt-1`} required value={endDate} min={sriLankaDateInput(now)} disabled={busy} onChange={e => setEndDate(e.target.value)} /></label><p className="text-xs text-muted-foreground">Access ends at 11:59 PM (Sri Lanka time) on this date. To end access now, use Revoke.</p><label className="block text-sm">Reason<textarea className={`${inputClass} mt-1`} required minLength={3} maxLength={1000} value={reason} disabled={busy} onChange={e => setReason(e.target.value)} /></label></>
           : <><p className="text-sm">This affects all shops owned by {editing.owner_email}. {editing.subscription_status === 'cancelled' ? 'Restoring access keeps the existing expiry; expired subscriptions need a new payment.' : 'Paid features stop working immediately. The purchased custom URL and existing links keep working. The expiry date is retained.'}</p><label className="block text-sm">Reason<textarea className={`${inputClass} mt-1`} required minLength={3} maxLength={1000} value={reason} disabled={busy} onChange={e => setReason(e.target.value)} /></label></>}
         {actionError && <p role="alert" className="text-sm text-destructive">{actionError}</p>}
-        <Button type="submit" disabled={busy}>{busy ? 'Saving…' : 'Confirm change'}</Button>
+        <Button type="submit" disabled={busy} variant={section !== 'shop-urls' && shopAction === 'revoke' ? 'destructive' : 'default'}>{busy ? 'Saving…' : section !== 'shop-urls' && shopAction === 'revoke' ? 'Revoke subscription' : 'Confirm change'}</Button>
       </form>}
     </DialogContent></Dialog>
   </div>;

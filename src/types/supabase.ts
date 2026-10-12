@@ -268,6 +268,14 @@ export interface Database {
         Args: { p_shop_id: string; p_status: string; p_reason: string }
         Returns: undefined
       }
+      admin_revoke_subscription: {
+        Args: { p_shop_id: string; p_reason: string }
+        Returns: undefined
+      }
+      admin_set_subscription_expiry: {
+        Args: { p_shop_id: string; p_expires_at: string; p_reason: string }
+        Returns: undefined
+      }
       admin_assign_shop_url: {
         Args: { p_shop_id: string; p_slug: string }
         Returns: undefined

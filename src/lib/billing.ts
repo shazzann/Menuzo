@@ -27,3 +27,17 @@ export function billingErrorMessage(error: unknown) {
   if (detail?.code === 'P0001') return detail.message || 'Please check your transfer details.';
   return 'We could not save your request. Your plan has not changed. Please refresh and try again.';
 }
+
+// Admins pick subscription end dates as calendar days in Sri Lanka time
+// (UTC+05:30, no daylight saving); access ends at the last second of that day.
+export function sriLankaDateInput(value: string | number | Date): string {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Colombo', year: 'numeric', month: '2-digit', day: '2-digit',
+  }).formatToParts(new Date(value));
+  const part = (type: string) => parts.find(p => p.type === type)!.value;
+  return `${part('year')}-${part('month')}-${part('day')}`;
+}
+
+export function endOfSriLankaDay(date: string): string {
+  return new Date(`${date}T23:59:59+05:30`).toISOString();
+}

@@ -16,6 +16,7 @@ function load(path, dependencies, globals = {}) {
   return module.exports;
 }
 const plain = value => JSON.parse(JSON.stringify(value));
+const billingHelpers = load('src/lib/billing.ts', {}, { Intl });
 test('admin service uses guarded RPCs and never writes entitlement tables directly', async () => {
   const calls = [];
   const { CompanyBillingService: service } = load('src/services/company-billing.service.ts', {
@@ -47,7 +48,12 @@ function textOf(node) {
 }
 function find(node, predicate) {
   if (Array.isArray(node)) { for (const child of node) { const found = find(child,predicate); if (found) return found; } }
-  else if (React.isValidElement(node)) { if (predicate(node)) return node; return find(node.props.children,predicate); }
+  else if (React.isValidElement(node)) {
+    if (predicate(node)) return node;
+    // Look inside small hook-free components (e.g. the subscription action bar).
+    if (typeof node.type === 'function' && node.type.name === 'SubscriptionActions') return find(node.type(node.props),predicate);
+    return find(node.props.children,predicate);
+  }
 }
 function harness(options = {}) {
   const states = [], effects = [], timers = [], calls = [];
@@ -58,6 +64,8 @@ function harness(options = {}) {
     requests: async () => { if (options.loadError) throw options.loadError; return { rows: options.rows || [request], total: (options.rows || [request]).length }; },
     subscriptions: async () => ({ rows: options.shops || [], total: (options.shops || []).length }),
     review: async (...args) => { calls.push(args); if (options.reviewError) throw options.reviewError; },
+    revokeSubscription: async (...args) => { calls.push(['revoke', ...args]); },
+    setSubscriptionExpiry: async (...args) => { calls.push(['expiry', ...args]); },
   };
   const { CompanyBilling } = load('src/components/company-admin/CompanyBilling.tsx', {
     react: {
@@ -69,7 +77,7 @@ function harness(options = {}) {
     './CompanyShopBillingDetail': { CompanyShopBillingDetail: ({ shopId }) => React.createElement('p',null,`History for ${shopId}`) },
     '@/components/ui/dialog': { Dialog: ({ open, children }) => open ? React.createElement('div',null,children) : null, DialogContent: Wrapper, DialogDescription: Wrapper, DialogHeader: Wrapper, DialogTitle: Wrapper },
     '@/services/company-billing.service': { CompanyBillingService: service, companyBillingError: e => e.message },
-    '@/lib/billing': { formatPaymentAmount: (amount, currency) => `${currency} ${amount}` },
+    '@/lib/billing': { ...billingHelpers, formatPaymentAmount: (amount, currency) => `${currency} ${amount}` },
   }, { window: { setTimeout(fn) { timers.push(fn); return timers.length; }, clearTimeout() {} } });
   const render = () => { index = 0; const tree = CompanyBilling({ section: options.section || 'payment-requests' }); mounted = true; return tree; };
   return { render, html: () => renderToStaticMarkup(render()), calls, async ready() { render(); effects.forEach(fn => fn()); for (const fn of timers) await fn(); } };
@@ -156,4 +164,56 @@ test('shop history distinguishes no payments from loading failure', async () => 
   assert.match(empty.html(),/No payment requests have been submitted/); empty.cleanup();
   const failure=historyHarness(async () => { throw {message:'History unavailable'}; }); await failure.settle();
   assert.match(failure.html(),/History unavailable/); assert.doesNotMatch(failure.html(),/No payment requests/); failure.cleanup();
+});
+
+test('admins can revoke a subscription or set its end date through guarded RPCs', async () => {
+  const calls = [];
+  const { CompanyBillingService: service } = load('src/services/company-billing.service.ts', {
+    '@/lib/supabase': { supabase: { rpc: async (name, args) => { calls.push([name, plain(args || {})]); return { data: null }; } } },
+  });
+  await service.revokeSubscription('shop', ' Refund issued ');
+  assert.deepEqual(calls.at(-1), ['admin_revoke_subscription', { p_shop_id: 'shop', p_reason: 'Refund issued' }]);
+  await service.setSubscriptionExpiry('shop', '2026-11-30T18:29:59.000Z', ' Goodwill extension ');
+  assert.deepEqual(calls.at(-1), ['admin_set_subscription_expiry', { p_shop_id: 'shop', p_expires_at: '2026-11-30T18:29:59.000Z', p_reason: 'Goodwill extension' }]);
+  const error = { code: '42501' };
+  const { CompanyBillingService: denied } = load('src/services/company-billing.service.ts', { '@/lib/supabase': { supabase: { rpc: async () => ({ data: null, error }) } } });
+  await assert.rejects(denied.revokeSubscription('id', 'reason'), e => e === error);
+  await assert.rejects(denied.setSubscriptionExpiry('id', '2027-01-01T00:00:00Z', 'reason'), e => e === error);
+});
+
+test('end dates are whole days in Sri Lanka time', () => {
+  assert.equal(billingHelpers.endOfSriLankaDay('2026-11-30'), '2026-11-30T18:29:59.000Z');
+  assert.equal(billingHelpers.sriLankaDateInput('2026-11-30T18:29:59Z'), '2026-11-30');
+  assert.equal(billingHelpers.sriLankaDateInput('2026-11-30T18:30:00Z'), '2026-12-01', 'Midnight in Sri Lanka starts the next day');
+});
+
+const paidShop = { shop_id: 'paid-shop', shop_name: 'Paid Shop', owner_email: 'owner@example.test', subscription_plan: 'pro', subscription_status: 'active', subscription_expires_at: '2099-01-31T18:29:59Z', pro_active: true };
+test('revoking a subscription asks for a reason and calls revoke for that shop', async () => {
+  const page = harness({ section: 'subscriptions', shops: [paidShop] }); await page.ready();
+  assert.equal(find(page.render(), n => textOf(n) === 'Revoke' && n.props.onClick), undefined, 'Not shown in the list');
+  find(page.render(), n => textOf(n) === 'View shop' && n.props.onClick).props.onClick();
+  find(page.render(), n => textOf(n) === 'Revoke' && n.props.onClick).props.onClick();
+  assert.match(page.html(), /Revoke subscription/);
+  assert.match(page.html(), /cannot be restored/);
+  find(page.render(), n => n.type === 'textarea').props.onChange({ target: { value: 'Refund issued' } });
+  await find(page.render(), n => n.type === 'form').props.onSubmit({ preventDefault() {} });
+  assert.deepEqual(page.calls, [['revoke', 'paid-shop', 'Refund issued']]);
+});
+test('changing the end date sends the end of the chosen Sri Lanka day', async () => {
+  const page = harness({ section: 'subscriptions', shops: [paidShop] }); await page.ready();
+  find(page.render(), n => textOf(n) === 'View shop' && n.props.onClick).props.onClick();
+  find(page.render(), n => textOf(n) === 'Change end date' && n.props.onClick).props.onClick();
+  const dateInput = find(page.render(), n => n.props.type === 'date');
+  assert.equal(dateInput.props.value, '2099-01-31', 'Starts from the current end date');
+  dateInput.props.onChange({ target: { value: '2099-03-15' } });
+  find(page.render(), n => n.type === 'textarea').props.onChange({ target: { value: 'Goodwill extension' } });
+  await find(page.render(), n => n.type === 'form').props.onSubmit({ preventDefault() {} });
+  assert.deepEqual(page.calls, [['expiry', 'paid-shop', '2099-03-15T18:29:59.000Z', 'Goodwill extension']]);
+});
+test('revoke is unavailable once a subscription has ended or for Free owners', async () => {
+  for (const shop of [{ ...paidShop, subscription_expires_at: '2020-01-01T00:00:00Z', pro_active: false }, { ...paidShop, shop_id: 'free', subscription_plan: 'free', subscription_expires_at: null, pro_active: false }]) {
+    const page = harness({ section: 'subscriptions', shops: [shop] }); await page.ready();
+    find(page.render(), n => textOf(n) === 'View shop' && n.props.onClick).props.onClick();
+    assert.equal(find(page.render(), n => textOf(n) === 'Revoke' && n.props.onClick).props.disabled, true);
+  }
 });
