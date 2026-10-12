@@ -6,10 +6,11 @@ import { useApp } from '@/store';
 import { trackEvent } from '@/lib/analytics';
 import { AuthService } from '@/services';
 import { GoogleIcon } from '@/components/shared/GoogleIcon';
+import { AuthCheckingScreen } from '@/components/shared/AuthCheckingScreen';
 import { toast } from 'sonner';
 
 export function SignupPage() {
-  const { dispatch } = useApp();
+  const { state, dispatch } = useApp();
   const [loading, setLoading] = useState(false);
 
   const handleGoogleSignup = async () => {
@@ -23,6 +24,8 @@ export function SignupPage() {
       setLoading(false);
     }
   };
+
+  if (state.authChecking) return <AuthCheckingScreen />;
 
   return (
     <div className="min-h-screen bg-muted/20 flex flex-col items-center justify-center p-4">

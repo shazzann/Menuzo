@@ -9,6 +9,22 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
+export type ShopThemeRow = {
+  id: string
+  slug: string
+  name: string
+  tagline: string
+  categories: string[]
+  primary_color: string
+  secondary_color: string
+  accent_color: string
+  is_premium: boolean
+  sort_order: number
+  created_by: string | null
+  created_at: string
+  updated_at: string
+}
+
 export interface Database {
   public: {
     Tables: {
@@ -29,6 +45,13 @@ export interface Database {
         Insert: Omit<PaymentRequest, 'id' | 'created_at' | 'status' | 'requested_slug' | 'customer_note' | 'rejection_reason' | 'reviewed_at'> &
           Partial<Pick<PaymentRequest, 'id' | 'created_at' | 'status' | 'requested_slug' | 'customer_note' | 'rejection_reason' | 'reviewed_at'>>
         Update: Partial<PaymentRequest>
+        Relationships: []
+      }
+      shop_themes: {
+        Row: ShopThemeRow
+        Insert: Omit<ShopThemeRow, 'id' | 'created_by' | 'created_at' | 'updated_at' | 'tagline' | 'categories' | 'is_premium' | 'sort_order'> &
+          Partial<Pick<ShopThemeRow, 'tagline' | 'categories' | 'is_premium' | 'sort_order'>>
+        Update: Partial<Omit<ShopThemeRow, 'id' | 'created_by' | 'created_at' | 'updated_at'>>
         Relationships: []
       }
       shop_custom_urls: {
@@ -228,6 +251,7 @@ export interface Database {
       }
       is_company_billing_admin: { Args: Record<string, never>; Returns: boolean }
       ensure_my_profile: { Args: Record<string, never>; Returns: undefined }
+      admin_shop_theme_usage: { Args: Record<string, never>; Returns: { theme_id: string; shop_count: number }[] }
       admin_list_billing_requests: {
         Args: { p_status: string; p_query: string; p_offset: number }
         Returns: BillingPage<AdminPaymentRequest>

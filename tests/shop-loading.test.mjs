@@ -288,3 +288,19 @@ test('owner dashboard paths also use the purchased URL while owner lookup remain
   assert.equal(page.path,'/purchased-custom/dashboard');assert.equal(page.state.shop.username,'original-shop');
   assert.equal(page.ownerQueries[0],user.id);page.dispose();
 });
+
+test('browser back returns to the previous page and never to the sign-in pages',()=>{
+  const replace=(from,to,hash='')=>routes.shouldReplaceEntry(from,to,hash);
+  // Ordinary page changes add history entries.
+  assert.equal(replace('user-dashboard','admin-settings'),false);
+  assert.equal(replace('admin-settings','admin-shop-details'),false);
+  assert.equal(replace('customer-menu','customer-shop-detail'),false);
+  assert.equal(replace('landing','login'),false,'Back from the login page returns to the home page');
+  // Sign-in steps and redirects replace the current entry.
+  assert.equal(replace('login','user-dashboard'),true);
+  assert.equal(replace('signup','onboarding'),true);
+  assert.equal(replace('onboarding','admin-shop-details'),true);
+  assert.equal(replace('admin-settings','login'),true,'Signed-out redirect');
+  assert.equal(replace('landing','user-dashboard','#access_token=abc&refresh_token=def'),true,'Google sign-in return URL');
+  assert.equal(replace('admin-settings','admin-settings'),true,'URL clean-up for the same page');
+});

@@ -8,6 +8,8 @@ import type { Json } from '@/types/database.types';
 import { isValidThemeColor, normalizeShopTheme } from '@/lib/themeUtils';
 import { AdminThemeSettings } from '@/components/admin/AdminThemeSettings';
 import { ThemeActionBar } from '@/components/admin/theme';
+import { useCuratedThemes } from '@/components/admin/theme/useCuratedThemes';
+import { isProActive } from '@/lib/subscription';
 
 export function AdminThemePage() {
   const { state, dispatch } = useApp();
@@ -21,7 +23,22 @@ export function AdminThemePage() {
   const [draftTheme, setDraftTheme] = useState<ThemeConfig | null>(null);
   const selectedTheme = draftTheme ?? appliedTheme;
 
+  // Pro themes can be previewed by anyone but applied only with an active paid plan
+  // (also enforced by the enforce_pro_shop_themes database trigger).
+  const proActive = isProActive(state.user?.subscription);
+  const themes = useCuratedThemes();
+  const sameColors = (a: ThemeConfig, b: ThemeConfig) =>
+    a.primary.toLowerCase() === b.primary.toLowerCase() &&
+    a.secondary.toLowerCase() === b.secondary.toLowerCase() &&
+    a.accent.toLowerCase() === b.accent.toLowerCase();
+  const isLocked = !proActive && !sameColors(selectedTheme, appliedTheme)
+    && !!themes.find((t) => sameColors(t.colors, selectedTheme))?.isPro;
+
   const handleSave = async () => {
+    if (isLocked) {
+      toast.error('This is a Pro theme. Upgrade to Pro to apply it.');
+      return;
+    }
     if (![selectedTheme.primary, selectedTheme.secondary, selectedTheme.accent].every(isValidThemeColor)) {
       toast.error('Enter a valid hex colour for all three colours before saving.');
       return;
@@ -38,7 +55,7 @@ export function AdminThemePage() {
       toast.success('Theme applied successfully!');
     } catch (err: unknown) {
       console.error('Error saving theme:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Failed to save theme.';
+      const errorMessage = (err as { message?: string })?.message || 'Failed to save theme.';
       toast.error(errorMessage);
     } finally {
       setIsSaving(false);
@@ -82,6 +99,7 @@ export function AdminThemePage() {
           appliedTheme={appliedTheme}
           onChange={(t) => setDraftTheme(t)}
           shopName={shop.name}
+          proActive={proActive}
         />
       </div>
 
@@ -92,6 +110,8 @@ export function AdminThemePage() {
         isSaving={isSaving}
         onApply={handleSave}
         onReset={handleReset}
+        isLocked={isLocked}
+        onUpgrade={() => dispatch({ type: 'SET_VIEW', payload: 'admin-subscription' })}
       />
     </div>
   );

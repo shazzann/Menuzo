@@ -10,7 +10,8 @@ import { SharedThemePreview } from './SharedThemePreview';
 interface ThemeEditorModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (theme: AdminTheme) => void;
+  /** Resolves true once saved; the editor stays open with the draft if saving fails. */
+  onSave: (theme: AdminTheme) => Promise<boolean>;
   initialTheme?: AdminTheme | null;
   mode: 'create' | 'edit';
 }
@@ -18,6 +19,7 @@ interface ThemeEditorModalProps {
 const defaultTheme: AdminTheme = {
   id: '',
   name: '',
+  tagline: '',
   categories: ['Restaurant'],
   primary: '#090A0C',
   secondary: '#1C1E22',
@@ -36,6 +38,7 @@ function ThemeEditorModalContent({
   const [catInput, setCatInput] = useState('');
   const [previewMode, setPreviewMode] = useState<PreviewMode>('mobile');
   const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   // Undo / Redo history
   const [history, setHistory] = useState<AdminTheme[]>(() => [initialTheme ? { ...initialTheme } : { ...defaultTheme }]);
@@ -73,6 +76,7 @@ function ThemeEditorModalContent({
     const reference = initialTheme || defaultTheme;
     return (
       draft.name !== reference.name ||
+      (draft.tagline || '') !== (reference.tagline || '') ||
       draft.primary !== reference.primary ||
       draft.secondary !== reference.secondary ||
       draft.accent !== reference.accent ||
@@ -113,18 +117,22 @@ function ThemeEditorModalContent({
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!draft.name.trim()) return;
+    if (!draft.name.trim() || saving) return;
 
     const themeToSave: AdminTheme = {
       ...draft,
-      id: draft.id || Math.random().toString(36).substr(2, 9),
       name: draft.name.trim(),
+      tagline: (draft.tagline || '').trim(),
     };
 
-    onSave(themeToSave);
-    onClose();
+    setSaving(true);
+    try {
+      if (await onSave(themeToSave)) onClose();
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -200,6 +208,21 @@ function ThemeEditorModalContent({
                 value={draft.name}
                 onChange={(e) => pushHistory({ ...draft, name: e.target.value })}
                 required
+                maxLength={60}
+                className="bg-muted/30 border-border/60"
+              />
+            </div>
+
+            {/* Tagline shown on shop owners' theme cards */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-foreground uppercase tracking-wider">
+                Tagline
+              </label>
+              <Input
+                placeholder="e.g. Warm, bold, and energetic."
+                value={draft.tagline || ''}
+                onChange={(e) => pushHistory({ ...draft, tagline: e.target.value })}
+                maxLength={120}
                 className="bg-muted/30 border-border/60"
               />
             </div>
@@ -435,12 +458,12 @@ function ThemeEditorModalContent({
             <Button
               type="button"
               onClick={handleSubmit}
-              disabled={!draft.name.trim()}
+              disabled={!draft.name.trim() || saving}
               className="gap-1.5 font-semibold bg-primary hover:bg-primary/90 text-primary-foreground border-0"
               size="sm"
             >
               <Check className="w-4 h-4" />
-              {mode === 'create' ? 'Create Theme' : 'Save Changes'}
+              {saving ? 'Saving…' : mode === 'create' ? 'Create Theme' : 'Save Changes'}
             </Button>
           </div>
         </div>

@@ -57,7 +57,10 @@ function AppContent() {
     dispatch({ type: 'LOGIN', payload: {
       id: user.id, email: user.email || '', name, shopName: '', shopId: '', subscription: freeSubscription(),
     } });
-  }, (loading, error) => { setIsAuthLoading(loading); setAuthError(error); }), [dispatch, authAttempt]);
+  }, (loading, error) => {
+    setIsAuthLoading(loading); setAuthError(error);
+    dispatch({ type: 'SET_AUTH_CHECKING', payload: loading });
+  }), [dispatch, authAttempt]);
 
   const isPrivateView = currentView.startsWith('admin-') || currentView === 'user-dashboard' || currentView === 'onboarding';
 
@@ -67,6 +70,13 @@ function AppContent() {
       dispatch({ type: 'SET_VIEW', payload: 'login' });
     }
   }, [isAuthLoading, authError, isPrivateView, currentView, state.user, dispatch]);
+
+  // A signed-in owner who reaches the sign-in pages (browser back, bookmark) goes to their dashboard.
+  useEffect(() => {
+    if (!isAuthLoading && state.user && (currentView === 'login' || currentView === 'signup')) {
+      dispatch({ type: 'SET_VIEW', payload: 'user-dashboard' });
+    }
+  }, [isAuthLoading, state.user, currentView, dispatch]);
 
   useEffect(() => {
     if (state.user && state.shop.id && isOwnerShopView(currentView)

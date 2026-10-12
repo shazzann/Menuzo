@@ -1,7 +1,7 @@
-import { Check, RotateCcw, Sparkles, Loader2 } from 'lucide-react';
+import { Check, RotateCcw, Sparkles, Loader2, Crown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { ThemeConfig } from '@/types';
-import { CURATED_THEMES } from './curatedThemes';
+import { useCuratedThemes } from './useCuratedThemes';
 
 interface ThemeActionBarProps {
   selectedTheme: ThemeConfig;
@@ -9,6 +9,9 @@ interface ThemeActionBarProps {
   isSaving: boolean;
   onApply: () => void;
   onReset: () => void;
+  /** The selected Pro theme cannot be applied without an active paid plan. */
+  isLocked?: boolean;
+  onUpgrade?: () => void;
 }
 
 export function ThemeActionBar({
@@ -17,6 +20,8 @@ export function ThemeActionBar({
   isSaving,
   onApply,
   onReset,
+  isLocked = false,
+  onUpgrade,
 }: ThemeActionBarProps) {
   const isMatchingTheme = (a: ThemeConfig, b: ThemeConfig) => {
     return (
@@ -26,8 +31,9 @@ export function ThemeActionBar({
     );
   };
 
+  const themes = useCuratedThemes();
   const hasUnsavedChanges = !isMatchingTheme(selectedTheme, appliedTheme);
-  const activeCuratedTheme = CURATED_THEMES.find((t) => isMatchingTheme(t.colors, selectedTheme));
+  const activeCuratedTheme = themes.find((t) => isMatchingTheme(t.colors, selectedTheme));
   const selectedThemeName = activeCuratedTheme?.name || 'Custom Theme';
 
   return (
@@ -58,7 +64,12 @@ export function ThemeActionBar({
               )}
             </div>
             <div className="flex items-center gap-1.5 mt-0.2">
-              {hasUnsavedChanges ? (
+              {isLocked ? (
+                <span className="inline-flex items-center gap-1 text-[11px] font-medium text-amber-500">
+                  <Crown className="w-3 h-3" />
+                  Pro theme · preview only
+                </span>
+              ) : hasUnsavedChanges ? (
                 <span className="inline-flex items-center gap-1 text-[11px] font-medium text-amber-500">
                   <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
                   Unsaved changes
@@ -90,6 +101,17 @@ export function ThemeActionBar({
             </Button>
           )}
 
+          {isLocked ? (
+            <Button
+              type="button"
+              size="sm"
+              onClick={onUpgrade}
+              className="h-8 sm:h-9 text-xs px-3 sm:px-4 gap-1.5 bg-amber-500 hover:bg-amber-500/90 text-black font-semibold shadow-xs border-0"
+            >
+              <Crown className="w-3.5 h-3.5" />
+              <span>Upgrade to Pro</span>
+            </Button>
+          ) : (
           <Button
             type="button"
             size="sm"
@@ -114,6 +136,7 @@ export function ThemeActionBar({
               </>
             )}
           </Button>
+          )}
         </div>
       </div>
     </div>

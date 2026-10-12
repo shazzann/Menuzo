@@ -2,23 +2,27 @@ import type { ThemeConfig } from '@/types';
 import { 
   ThemeLivePreview, 
   ThemeCollection, 
-  CURATED_THEMES, 
   type CuratedTheme 
 } from './theme';
+import { useCuratedThemes } from './theme/useCuratedThemes';
 
 interface AdminThemeSettingsProps {
   theme: ThemeConfig;
   appliedTheme?: ThemeConfig;
   onChange: (theme: ThemeConfig) => void;
   shopName: string;
+  /** Without an active paid plan, Pro themes show as locked (preview only). */
+  proActive?: boolean;
 }
 
 export function AdminThemeSettings({ 
   theme, 
   appliedTheme = theme,
   onChange, 
-  shopName 
+  shopName,
+  proActive = true,
 }: AdminThemeSettingsProps) {
+  const themes = useCuratedThemes();
   const isMatchingTheme = (themeColors: ThemeConfig) => {
     return (
       themeColors.primary.toLowerCase() === theme.primary.toLowerCase() &&
@@ -27,7 +31,7 @@ export function AdminThemeSettings({
     );
   };
 
-  const activeTheme = CURATED_THEMES.find((t) => isMatchingTheme(t.colors));
+  const activeTheme = themes.find((t) => isMatchingTheme(t.colors));
 
   const handleSelectCuratedTheme = (selected: CuratedTheme) => {
     onChange(selected.colors);
@@ -47,6 +51,7 @@ export function AdminThemeSettings({
         currentTheme={theme}
         appliedTheme={appliedTheme}
         onSelectTheme={handleSelectCuratedTheme}
+        proActive={proActive}
       />
     </div>
   );

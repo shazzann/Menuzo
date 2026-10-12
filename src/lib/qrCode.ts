@@ -27,6 +27,13 @@ export function normalizeQrColorStyle(value: unknown): QrColorStyle {
   return value === 'brand' ? 'brand' : 'classic';
 }
 
+// An https page may not fetch http:// files, and qr-code-styling fetches the logo
+// before drawing, so an http:// logo (older uploads stored Cloudinary's plain url)
+// left the QR blank on the deployed site while it worked on http://localhost.
+export function secureLogoUrl(url?: string): string {
+  return url ? url.replace(/^http:\/\//i, 'https://') : '';
+}
+
 export function getQrOptions(input: {
   shopUrl: string; shopLogo?: string; size: number; imageSize?: number;
   qrStyle: string; qrPattern: string; primary: string; accent: string;
@@ -39,7 +46,7 @@ export function getQrOptions(input: {
   url.searchParams.set('source', 'qr');
   return {
     width: input.size, height: input.size, type: 'svg', data: url.href,
-    image: input.shopLogo || '',
+    image: secureLogoUrl(input.shopLogo),
     dotsOptions: { color: colors.fgColor, type: pattern.value },
     cornersSquareOptions: { color: colors.fgColor, type: pattern.eyeFrame },
     cornersDotOptions: { color: colors.fgColor, type: pattern.eyeBall },
@@ -56,6 +63,26 @@ export function createStyledQr(options: Options) {
   return new Constructor(options);
 }
 
+const LOGO_TIMEOUT_MS = 8000;
+
+// qr-code-styling never finishes drawing if the logo cannot be downloaded (blocked,
+// missing, or no CORS), so check it first and fall back to a QR without the logo.
+export async function withReachableLogo(options: Options): Promise<Options> {
+  if (!options.image) return options;
+  const controller = typeof AbortController === 'function' ? new AbortController() : undefined;
+  const timer = setTimeout(() => controller?.abort(), LOGO_TIMEOUT_MS);
+  try {
+    const response = await fetch(options.image, { mode: 'cors', signal: controller?.signal });
+    if (!response.ok) throw new Error(`Logo request failed: ${response.status}`);
+    return options;
+  } catch (err) {
+    console.warn('QR logo could not be loaded; showing the QR without it.', err);
+    return { ...options, image: '' };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 export function getQrExportOptions(options: Options): Options {
   const scale = QR_EXPORT_SIZE / (options.width || 200);
   return {
@@ -68,6 +95,6 @@ export function getQrExportOptions(options: Options): Options {
 
 export async function downloadQrPng(options: Options, filename: string): Promise<void> {
   // Render the QR's vector modules at export size; never enlarge the preview bitmap.
-  const exportedQr = createStyledQr(getQrExportOptions(options));
+  const exportedQr = createStyledQr(getQrExportOptions(await withReachableLogo(options)));
   await exportedQr.download({ name: filename, extension: 'png' });
 }

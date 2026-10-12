@@ -81,7 +81,9 @@ export function Navbar() {
           <div className="hidden md:flex items-center gap-3">
             <ThemeToggle />
 
-            {state.user ? (
+            {state.authChecking && !state.user ? (
+              <div className="h-9 w-40 rounded-[14px] bg-muted/60 animate-pulse" aria-label="Checking sign-in" />
+            ) : state.user ? (
               <>
               <SwitchAccountButton />
               <Button
@@ -151,7 +153,9 @@ export function Navbar() {
             </div>
             
             <div className="mt-auto flex flex-col gap-4 pt-6 border-t border-border/50">
-              {state.user ? (
+              {state.authChecking && !state.user ? (
+                <div className="h-11 w-full rounded-[14px] bg-muted/60 animate-pulse" aria-label="Checking sign-in" />
+              ) : state.user ? (
                 <>
                 <p className="text-sm text-muted-foreground break-all">{state.user.email}</p>
                 <SwitchAccountButton />

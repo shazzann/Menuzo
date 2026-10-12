@@ -92,3 +92,16 @@ test('new shops start on the brand theme', () => {
     assert.ok(source.includes("theme: { primary: '#090A0C', secondary: '#1C1E22', accent: '#FB8500'"), path);
   }
 });
+test('themes from the Theme Library become shop owner theme cards', () => {
+  const curated = load('src/components/admin/theme/curatedThemes.ts', { '@/lib/themeUtils': themes });
+  const card = curated.curatedThemeFromRow({ id:'uuid-1', slug:'midnight-ember-ab12c', name:'Midnight Ember', tagline:'Smoky and warm.', categories:['Grill'],
+    primary_color:'#101014', secondary_color:'#1E1E24', accent_color:'#FF6B35', is_premium:true, sort_order:0, created_by:null, created_at:'2026-10-12T00:00:00Z', updated_at:'2026-10-12T00:00:00Z' });
+  assert.equal(card.id, 'midnight-ember-ab12c'); assert.equal(card.name, 'Midnight Ember'); assert.equal(card.tagline, 'Smoky and warm.');
+  assert.equal(card.isPro, true); assert.equal(card.category, 'dark');
+  assert.equal(JSON.stringify(card.colors), JSON.stringify({ primary:'#101014', secondary:'#1E1E24', accent:'#FF6B35' }));
+  assert.equal(card.swatches.map(s => s.hex).join(), '#101014,#1E1E24,#FF6B35');
+  const service = load('src/services/theme.service.ts', { '@/lib/supabase': { supabase: {} } }, { Math });
+  const slug = service.themeSlug('  Café Noir & Gold!! ');
+  assert.match(slug, /^caf-noir-gold-[a-z0-9]{1,5}$/); assert.match(slug, /^[a-z0-9]+(-[a-z0-9]+)*$/, 'Matches the database slug rule');
+  assert.notEqual(service.themeSlug('Same'), service.themeSlug('Same'));
+});

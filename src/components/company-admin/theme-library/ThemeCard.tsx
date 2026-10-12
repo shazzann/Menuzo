@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Eye, Edit3, Trash2, Copy, MoreVertical, Sparkles, Download } from 'lucide-react';
+import { Eye, Edit3, Trash2, Copy, MoreVertical, Sparkles, Store } from 'lucide-react';
 import type { AdminTheme } from './types';
 import { SharedThemePreview } from './SharedThemePreview';
 
@@ -94,9 +94,9 @@ export function ThemeCard({
               {theme.name}
             </h3>
             {theme.downloads > 0 && (
-              <span className="text-[10px] text-muted-foreground flex items-center gap-1 flex-shrink-0">
-                <Download className="w-2.5 h-2.5" />
-                {theme.downloads.toLocaleString()}
+              <span className="text-[10px] text-muted-foreground flex items-center gap-1 flex-shrink-0" title="Shops using this theme">
+                <Store className="w-2.5 h-2.5" />
+                {theme.downloads.toLocaleString()} {theme.downloads === 1 ? 'shop' : 'shops'}
               </span>
             )}
           </div>

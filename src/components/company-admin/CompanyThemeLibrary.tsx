@@ -1,6 +1,8 @@
-import { useState, useMemo } from 'react';
-import { Plus } from 'lucide-react';
+import { useState, useMemo, useEffect } from 'react';
+import { Plus, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { ThemeService, themeSlug } from '@/services/theme.service';
+import type { ShopThemeRow } from '@/types/supabase';
 import { 
   type AdminTheme, 
   ThemeStatistics, 
@@ -10,99 +12,41 @@ import {
   ThemeFullPreviewModal 
 } from './theme-library';
 
-const initialAdminThemes: AdminTheme[] = [
-  {
-    id: 't-ocean-breeze',
-    name: 'Ocean Breeze',
-    categories: ['Seafood', 'Cafe', 'Restaurant'],
-    primary: '#0ea5e9',
-    secondary: '#f0f9ff',
-    accent: '#0284c7',
-    isPremium: true,
-    downloads: 1245,
-    createdAt: '2026-08-10',
-  },
-  {
-    id: 't-midnight-spices',
-    name: 'Midnight Spices',
-    categories: ['Fine Dining', 'Bar', 'Steakhouse'],
-    primary: '#1e1b4b',
-    secondary: '#312e81',
-    accent: '#f59e0b',
-    isPremium: true,
-    downloads: 856,
-    createdAt: '2026-08-14',
-  },
-  {
-    id: 't-fresh-greens',
-    name: 'Fresh Greens',
-    categories: ['Vegan', 'Salad Bar', 'Healthy'],
-    primary: '#22c55e',
-    secondary: '#f0fdf4',
-    accent: '#16a34a',
-    isPremium: false,
-    downloads: 3420,
-    createdAt: '2026-07-20',
-  },
-  {
-    id: 't-menuzo-signature',
-    name: 'Menuzo Signature',
-    categories: ['Burger', 'Grill', 'Modern'],
-    primary: '#090a0c',
-    secondary: '#1c1e22',
-    accent: '#fb8500',
-    isPremium: false,
-    downloads: 5120,
-    createdAt: '2026-07-01',
-  },
-  {
-    id: 't-classic-elegance',
-    name: 'Classic Elegance',
-    categories: ['Bistro', 'Restaurant', 'Fine Dining'],
-    primary: '#1f2937',
-    secondary: '#f9fafb',
-    accent: '#d4af37',
-    isPremium: false,
-    downloads: 2890,
-    createdAt: '2026-07-15',
-  },
-  {
-    id: 't-warm-terracotta',
-    name: 'Warm Terracotta',
-    categories: ['Italian', 'Bakery', 'Pizzeria'],
-    primary: '#a44a3f',
-    secondary: '#fff3e6',
-    accent: '#dda15e',
-    isPremium: true,
-    downloads: 940,
-    createdAt: '2026-08-25',
-  },
-  {
-    id: 't-golden-harvest',
-    name: 'Golden Harvest',
-    categories: ['Cafe', 'Breakfast', 'Brunch'],
-    primary: '#7c4a21',
-    secondary: '#fff8e7',
-    accent: '#d9a441',
-    isPremium: true,
-    downloads: 1180,
-    createdAt: '2026-09-02',
-  },
-  {
-    id: 't-royal-plum',
-    name: 'Royal Plum',
-    categories: ['Lounge', 'Wine Bar', 'Cocktails'],
-    primary: '#4a2545',
-    secondary: '#fcf7fa',
-    accent: '#b784a7',
-    isPremium: true,
-    downloads: 620,
-    createdAt: '2026-09-10',
-  },
-];
+const isHexColor = (value: string) => /^#[0-9A-Fa-f]{6}$/.test(value);
+
+function adminThemeFromRow(row: ShopThemeRow, usage: Map<string, number>): AdminTheme {
+  return {
+    id: row.id,
+    name: row.name,
+    tagline: row.tagline,
+    categories: row.categories,
+    primary: row.primary_color,
+    secondary: row.secondary_color,
+    accent: row.accent_color,
+    isPremium: row.is_premium,
+    downloads: usage.get(row.id) || 0,
+    createdAt: row.created_at.slice(0, 10),
+  };
+}
+
+function rowFields(theme: AdminTheme) {
+  return {
+    name: theme.name,
+    tagline: theme.tagline || '',
+    categories: theme.categories,
+    primary_color: theme.primary.toUpperCase(),
+    secondary_color: theme.secondary.toUpperCase(),
+    accent_color: theme.accent.toUpperCase(),
+    is_premium: theme.isPremium,
+  };
+}
 
 export function CompanyThemeLibrary() {
-  const [themes, setThemes] = useState<AdminTheme[]>(initialAdminThemes);
+  const [themes, setThemes] = useState<AdminTheme[]>([]);
+  const [usage, setUsage] = useState<Map<string, number>>(new Map());
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
+  const [version, setVersion] = useState(0);
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedTier, setSelectedTier] = useState<'all' | 'free' | 'premium'>('all');
@@ -187,32 +131,80 @@ export function CompanyThemeLibrary() {
     });
   };
 
-  const handleSaveTheme = (savedTheme: AdminTheme) => {
-    if (editorState.mode === 'create') {
-      setThemes([savedTheme, ...themes]);
-      toast.success(`Theme "${savedTheme.name}" created successfully!`);
-    } else {
-      setThemes(themes.map((t) => (t.id === savedTheme.id ? savedTheme : t)));
-      toast.success(`Theme "${savedTheme.name}" updated successfully!`);
+  // Themes live in the shop_themes table, so shop owners see every change here.
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all([
+      ThemeService.listThemes(),
+      // Usage counts are a nice-to-have; the library still works without them.
+      ThemeService.getThemeUsage().catch(() => new Map<string, number>()),
+    ])
+      .then(([rows, counts]) => {
+        if (cancelled) return;
+        setUsage(counts);
+        setThemes(rows.map((row) => adminThemeFromRow(row, counts)));
+      })
+      .catch((err) => {
+        if (!cancelled) setLoadError(err instanceof Error ? err.message : 'Could not load themes.');
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [version]);
+
+  const retryLoad = () => {
+    setLoading(true);
+    setLoadError('');
+    setVersion((v) => v + 1);
+  };
+
+  const handleSaveTheme = async (savedTheme: AdminTheme): Promise<boolean> => {
+    if (![savedTheme.primary, savedTheme.secondary, savedTheme.accent].every(isHexColor)) {
+      toast.error('Use full 6-digit hex colours (for example #FB8500).');
+      return false;
+    }
+    try {
+      if (editorState.mode === 'create') {
+        const row = await ThemeService.createTheme({ ...rowFields(savedTheme), slug: themeSlug(savedTheme.name) });
+        setThemes((current) => [adminThemeFromRow(row, usage), ...current]);
+        toast.success(`Theme "${row.name}" created. Shop owners can now choose it.`);
+      } else {
+        const row = await ThemeService.updateTheme(savedTheme.id, rowFields(savedTheme));
+        setThemes((current) => current.map((t) => (t.id === row.id ? adminThemeFromRow(row, usage) : t)));
+        toast.success(`Theme "${row.name}" updated`);
+      }
+      return true;
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Could not save the theme.');
+      return false;
     }
   };
 
-  const handleDeleteTheme = (id: string) => {
+  const handleDeleteTheme = async (id: string) => {
     const theme = themes.find((t) => t.id === id);
-    setThemes(themes.filter((t) => t.id !== id));
-    toast.success(`Theme "${theme?.name || id}" deleted`);
+    const inUse = theme?.downloads ? ` ${theme.downloads} shop(s) using it keep their colours.` : '';
+    if (!window.confirm(`Delete "${theme?.name || 'this theme'}"? Shop owners will no longer see it.${inUse}`)) return;
+    try {
+      await ThemeService.deleteTheme(id);
+      setThemes((current) => current.filter((t) => t.id !== id));
+      toast.success(`Theme "${theme?.name || id}" deleted`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Could not delete the theme.');
+    }
   };
 
-  const handleDuplicateTheme = (theme: AdminTheme) => {
-    const duplicated: AdminTheme = {
-      ...theme,
-      id: Math.random().toString(36).substr(2, 9),
-      name: `${theme.name} (Copy)`,
-      downloads: 0,
-      createdAt: new Date().toISOString().split('T')[0],
-    };
-    setThemes([duplicated, ...themes]);
-    toast.success(`Theme duplicated as "${duplicated.name}"`);
+  const handleDuplicateTheme = async (theme: AdminTheme) => {
+    const name = `${theme.name} (Copy)`.slice(0, 60);
+    try {
+      const row = await ThemeService.createTheme({ ...rowFields({ ...theme, name }), slug: themeSlug(name) });
+      setThemes((current) => [adminThemeFromRow(row, usage), ...current]);
+      toast.success(`Theme duplicated as "${row.name}"`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Could not duplicate the theme.');
+    }
   };
 
   return (
@@ -222,7 +214,7 @@ export function CompanyThemeLibrary() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">Theme Library</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
-            Create, preview, and manage themes available to Menuzo restaurants
+            Create, preview, and manage the themes shop owners can choose from
           </p>
         </div>
         <button
@@ -254,7 +246,18 @@ export function CompanyThemeLibrary() {
       />
 
       {/* Theme Cards Gallery */}
-      {filteredThemes.length > 0 ? (
+      {loading ? (
+        <div className="p-12 flex items-center justify-center gap-2 text-sm text-muted-foreground">
+          <Loader2 className="w-4 h-4 animate-spin" /> Loading themes…
+        </div>
+      ) : loadError ? (
+        <div role="alert" className="p-8 text-center rounded-3xl border border-destructive/30 space-y-3">
+          <p className="text-sm text-destructive">{loadError}</p>
+          <button type="button" onClick={retryLoad} className="text-xs font-semibold text-primary hover:underline">
+            Retry
+          </button>
+        </div>
+      ) : filteredThemes.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
           {filteredThemes.map((theme) => (
             <ThemeCard

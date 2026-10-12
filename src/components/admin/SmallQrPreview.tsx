@@ -1,6 +1,6 @@
 import { useRef, useEffect, useMemo, forwardRef, useImperativeHandle } from 'react';
 import type { ThemeConfig } from '@/types';
-import { createStyledQr, downloadQrPng, getQrOptions } from '@/lib/qrCode';
+import { createStyledQr, downloadQrPng, getQrOptions, withReachableLogo } from '@/lib/qrCode';
 
 interface SmallQrPreviewProps {
   shopUrl: string;
@@ -23,12 +23,15 @@ export const SmallQrPreview = forwardRef<SmallQrPreviewRef, SmallQrPreviewProps>
 
   useEffect(() => {
     if (!qrRef.current) return;
+    let cancelled = false;
     const host = document.createElement('div');
     host.style.width = '100%';
     host.style.height = '100%';
     qrRef.current.replaceChildren(host);
-    createStyledQr(options).append(host);
-    return () => host.remove();
+    void withReachableLogo(options).then(drawable => {
+      if (!cancelled) createStyledQr(drawable).append(host);
+    });
+    return () => { cancelled = true; host.remove(); };
   }, [options]);
 
   return (

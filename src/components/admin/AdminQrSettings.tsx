@@ -1,7 +1,7 @@
 import { useRef, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { createStyledQr, downloadQrPng, getQrOptions, QR_COLOR_STYLES, QR_PATTERNS,
+import { createStyledQr, downloadQrPng, getQrOptions, withReachableLogo, QR_COLOR_STYLES, QR_PATTERNS,
   type QrColorStyle, type QrPattern } from '@/lib/qrCode';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -24,10 +24,13 @@ function useStyledQr(options: ReturnType<typeof getQrOptions>) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!ref.current) return;
+    let cancelled = false;
     const host = document.createElement('div');
     ref.current.replaceChildren(host);
-    createStyledQr(options).append(host);
-    return () => host.remove();
+    void withReachableLogo(options).then(drawable => {
+      if (!cancelled) createStyledQr(drawable).append(host);
+    });
+    return () => { cancelled = true; host.remove(); };
   }, [options]);
   return ref;
 }

@@ -6,9 +6,11 @@ import ts from 'typescript';
 function load(path,deps={}) {
   const {outputText}=ts.transpileModule(readFileSync(new URL(`../${path}`,import.meta.url),'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}});
   const module={exports:{}};
-  vm.runInNewContext(outputText,{module,exports:module.exports,URL,require:name=>{assert.ok(name in deps,name);return deps[name];}});
+  vm.runInNewContext(outputText,{module,exports:module.exports,URL,setTimeout,clearTimeout,AbortController,console:{warn(){}},fetch:(...args)=>globalThis.fetchLogo(...args),require:name=>{assert.ok(name in deps,name);return deps[name];}});
   return module.exports;
 }
+// Logo requests made by the QR code; tests can swap this to simulate blocked logos.
+globalThis.fetchLogo=async()=>({ok:true,status:200});
 const themes=load('src/lib/themeUtils.ts');
 const instances=[];
 let failure;
@@ -76,4 +78,22 @@ test('the QR onboarding step is remembered on the shop, not only in one browser'
     assert.equal(progress.withQrGenerated(marked).qrGeneratedAt,marked.qrGeneratedAt,'The first date is kept');
     assert.equal(progress.hasGeneratedQr({...plain,theme:marked}),true);
   } finally { delete globalThis.localStorage; }
+});
+test('an http:// logo is loaded over https so the deployed (https) site can draw the QR',()=>{
+  const options=qr.getQrOptions({...base,shopLogo:'http://res.cloudinary.com/demo/image/upload/v1/logo.jpg'});
+  assert.equal(options.image,'https://res.cloudinary.com/demo/image/upload/v1/logo.jpg');
+});
+test('a logo that cannot be loaded never blanks the QR: it is drawn without the logo',async()=>{
+  const original=globalThis.fetchLogo;
+  try {
+    globalThis.fetchLogo=async()=>{throw new TypeError('Failed to fetch');};
+    const options=qr.getQrOptions(base);
+    assert.equal((await qr.withReachableLogo(options)).image,'');
+    await qr.downloadQrPng(options,'no-logo');
+    assert.equal(instances.at(-1).options.image,'','Download falls back too');
+    globalThis.fetchLogo=async()=>({ok:false,status:404});
+    assert.equal((await qr.withReachableLogo(options)).image,'');
+    globalThis.fetchLogo=async()=>({ok:true,status:200});
+    assert.equal((await qr.withReachableLogo(options)).image,base.shopLogo,'A working logo is kept');
+  } finally { globalThis.fetchLogo=original; }
 });

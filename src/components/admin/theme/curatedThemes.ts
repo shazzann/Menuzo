@@ -1,4 +1,6 @@
 import type { ThemeConfig } from '@/types';
+import type { ShopThemeRow } from '@/types/supabase';
+import { isDarkColor } from '@/lib/themeUtils';
 
 export interface ThemeDesignTokens {
   background: string;
@@ -278,3 +280,24 @@ export const CURATED_THEMES: CuratedTheme[] = [
     ],
   },
 ];
+
+// Themes come from the shop_themes table managed in the company Theme Library;
+// CURATED_THEMES above is the built-in fallback when it cannot be loaded.
+export function curatedThemeFromRow(row: ShopThemeRow): CuratedTheme {
+  const colors = { primary: row.primary_color, secondary: row.secondary_color, accent: row.accent_color };
+  const isDark = isDarkColor(colors.primary);
+  return {
+    id: row.slug,
+    name: row.name,
+    tagline: row.tagline,
+    category: isDark ? 'dark' : 'light',
+    isPro: row.is_premium,
+    colors,
+    tokens: createThemeTokens(colors, isDark),
+    swatches: [
+      { label: 'Background', hex: colors.primary },
+      { label: 'Cards', hex: colors.secondary },
+      { label: 'Accent', hex: colors.accent },
+    ],
+  };
+}

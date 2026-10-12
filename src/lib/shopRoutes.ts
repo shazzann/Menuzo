@@ -24,3 +24,16 @@ export function parseShopRoute(pathname: string): { view: View; slug?: string; f
     dashboard:'user-dashboard',menupreview:'admin-preview','add-food':'admin-add-food',analytics:'admin-analytics' };
   return { view: pages[page || 'menu'] || 'customer-menu', slug, foodId: page === 'food' ? detail : undefined };
 }
+
+const AUTH_FLOW_VIEWS: View[] = ['login', 'signup', 'onboarding'];
+
+// Moving between pages adds a history entry so the browser back button returns to
+// the previous page. Sign-in steps, sign-in redirects and URL clean-ups replace the
+// current entry instead, so back never lands on the sign-in page or Google's
+// /login#access_token return URL.
+export function shouldReplaceEntry(fromView: View, toView: View, hash: string): boolean {
+  if (fromView === toView) return true;
+  if (AUTH_FLOW_VIEWS.includes(fromView)) return true;
+  if (toView === 'login' && (isOwnerShopView(fromView) || fromView === 'onboarding')) return true;
+  return hash.includes('access_token');
+}

@@ -44,6 +44,7 @@ const initialState: AppState = {
   currentAdminTab: 'menu-preview',
   selectedFoodItem: null,
   user: null,
+  authChecking: true,
   shop: initialShop,
   foodItems: initialFoodItems,
   categories: initialCategories,
@@ -79,6 +80,7 @@ type Action =
   | { type: 'SET_FOOD_ITEMS'; payload: FoodItem[] }
   | { type: 'LOGIN'; payload: User }
   | { type: 'LOGOUT' }
+  | { type: 'SET_AUTH_CHECKING'; payload: boolean }
   | { type: 'SESSION_CLEARED' }
   | { type: 'SET_COMPANY_ADMIN_SECTION'; payload: CompanyAdminSection }
   | { type: 'SELECT_MANAGED_SHOP'; payload: ManagedShop | null }
@@ -195,6 +197,8 @@ function appReducer(state: AppState, action: Action): AppState {
         currentAdminTab: shouldRedirect ? 'dashboard' : state.currentAdminTab,
       };
     }
+    case 'SET_AUTH_CHECKING':
+      return state.authChecking === action.payload ? state : { ...state, authChecking: action.payload };
     case 'SESSION_CLEARED':
       return state.user ? appReducer(state, { type: 'LOGOUT' }) : state;
     case 'LOGOUT':

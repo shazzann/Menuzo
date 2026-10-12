@@ -1,4 +1,4 @@
-import { Check, Sparkles } from 'lucide-react';
+import { Check, Lock, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { CuratedTheme } from './curatedThemes';
 import { ThemeColorSwatches } from './ThemeColorSwatches';
@@ -9,6 +9,8 @@ interface ThemeCardProps {
   isApplied?: boolean;
   onSelect: (theme: CuratedTheme) => void;
   disabled?: boolean;
+  /** Pro theme on a shop without an active paid plan: can be previewed, not applied. */
+  locked?: boolean;
 }
 
 export function ThemeCard({ 
@@ -16,14 +18,15 @@ export function ThemeCard({
   isSelected, 
   isApplied = false, 
   onSelect, 
-  disabled = false 
+  disabled = false,
+  locked = false,
 }: ThemeCardProps) {
   return (
     <button
       type="button"
       role="radio"
       aria-checked={isSelected}
-      aria-label={`${theme.name} theme: ${theme.tagline}${isApplied ? ' (Currently Applied)' : ''}`}
+      aria-label={`${theme.name} theme: ${theme.tagline}${isApplied ? ' (Currently Applied)' : ''}${locked ? ' (Pro, preview only)' : ''}`}
       disabled={disabled}
       onClick={() => onSelect(theme)}
       className={cn(
@@ -45,7 +48,7 @@ export function ThemeCard({
             </h4>
             {theme.isPro ? (
               <span className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-amber-500/15 text-amber-400 border border-amber-500/30 tracking-wide uppercase">
-                <Sparkles className="w-2.5 h-2.5" /> PRO
+                {locked ? <Lock className="w-2.5 h-2.5" /> : <Sparkles className="w-2.5 h-2.5" />} PRO
               </span>
             ) : (
               <span className="inline-flex items-center px-1.5 py-0.2 rounded-full text-[9px] font-medium bg-neutral-800/90 text-neutral-400 border border-neutral-700/60">
@@ -90,7 +93,9 @@ export function ThemeCard({
 
       {/* Bottom Footer: Tier & Active status */}
       <div className="flex items-center justify-between text-[10px] sm:text-[11px] text-neutral-500 pt-2.5 border-t border-neutral-800/60 w-full mt-2">
-        <span className="capitalize">{theme.isPro ? 'Pro Edition' : 'Free Theme'}</span>
+        <span className={cn(locked && 'text-amber-400/90')}>
+          {locked ? 'Preview only · Upgrade to apply' : theme.isPro ? 'Pro Edition' : 'Free Theme'}
+        </span>
         {isApplied && isSelected && (
           <span className="text-emerald-400 font-medium text-[10px]">Applied</span>
         )}

@@ -246,6 +246,8 @@ export interface AppState {
   currentAdminTab: AdminTab;
   selectedFoodItem: FoodItem | null;
   user: User | null;
+  /** True while a saved sign-in is being confirmed on page load. */
+  authChecking: boolean;
   shop: Shop;
   foodItems: FoodItem[];
   categories: Category[];

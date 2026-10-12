@@ -7,9 +7,10 @@ import { useApp } from '@/store';
 import { cn } from '@/lib/utils';
 import { AuthService } from '@/services';
 import { GoogleIcon } from '@/components/shared/GoogleIcon';
+import { AuthCheckingScreen } from '@/components/shared/AuthCheckingScreen';
 
 export function LoginPage() {
-  const { dispatch } = useApp();
+  const { state, dispatch } = useApp();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -45,6 +46,8 @@ export function LoginPage() {
       setIsLoading(false);
     }
   };
+
+  if (state.authChecking) return <AuthCheckingScreen />;
 
   return (
     <div className="min-h-screen bg-background flex flex-col">

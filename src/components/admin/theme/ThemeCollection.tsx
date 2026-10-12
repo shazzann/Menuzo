@@ -1,7 +1,8 @@
 import { useState, useMemo } from 'react';
 import { Sparkles, Palette, Search, X } from 'lucide-react';
 import type { ThemeConfig } from '@/types';
-import { CURATED_THEMES, type CuratedTheme } from './curatedThemes';
+import type { CuratedTheme } from './curatedThemes';
+import { useCuratedThemes } from './useCuratedThemes';
 import { ThemeCard } from './ThemeCard';
 
 interface ThemeCollectionProps {
@@ -9,6 +10,7 @@ interface ThemeCollectionProps {
   appliedTheme: ThemeConfig;
   onSelectTheme: (theme: CuratedTheme) => void;
   disabled?: boolean;
+  proActive?: boolean;
 }
 
 export function ThemeCollection({
@@ -16,7 +18,9 @@ export function ThemeCollection({
   appliedTheme,
   onSelectTheme,
   disabled = false,
+  proActive = true,
 }: ThemeCollectionProps) {
+  const themes = useCuratedThemes();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<'all' | 'free' | 'pro'>('all');
 
@@ -29,12 +33,12 @@ export function ThemeCollection({
     );
   };
 
-  const activeCuratedTheme = CURATED_THEMES.find((t) => isMatchingTheme(t.colors, currentTheme));
+  const activeCuratedTheme = themes.find((t) => isMatchingTheme(t.colors, currentTheme));
   const isCustomTheme = !activeCuratedTheme;
 
   // Filtered themes based on search & plan tier (All / Free / Pro)
   const filteredThemes = useMemo(() => {
-    return CURATED_THEMES.filter((theme) => {
+    return themes.filter((theme) => {
       let matchesCategory = true;
       if (activeCategory === 'free') matchesCategory = !theme.isPro;
       else if (activeCategory === 'pro') matchesCategory = theme.isPro;
@@ -46,7 +50,7 @@ export function ThemeCollection({
         theme.tagline.toLowerCase().includes(query);
       return matchesCategory && matchesSearch;
     });
-  }, [searchQuery, activeCategory]);
+  }, [themes, searchQuery, activeCategory]);
 
   return (
     <div className="space-y-4">
@@ -138,6 +142,7 @@ export function ThemeCollection({
                 isApplied={isApplied}
                 onSelect={onSelectTheme}
                 disabled={disabled}
+                locked={theme.isPro && !proActive}
               />
             );
           })}

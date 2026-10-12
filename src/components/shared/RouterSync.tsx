@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useApp } from '@/store';
 import type { AppState, View } from '@/types';
 import { getShopMenuSlug, replaceMenuSlug } from '@/lib/shopUrls';
-import { isOwnerShopView, isPublicShopView, parseShopRoute } from '@/lib/shopRoutes';
+import { isOwnerShopView, isPublicShopView, parseShopRoute, shouldReplaceEntry } from '@/lib/shopRoutes';
 
 function getUrlForView(view: View, username: string, state: AppState, foodId?: string): string | null {
   switch (view) {
@@ -84,7 +84,7 @@ export function RouterSync() {
       lastPath.current = expected;
       const openingFood = route.view === 'customer-menu' && state.currentView === 'customer-food-detail';
       navigate(expected, {
-        replace: !openingFood,
+        replace: !openingFood && shouldReplaceEntry(route.view, state.currentView, location.hash),
         state: openingFood ? { menuReturnPath: location.pathname } : null,
       });
     }
