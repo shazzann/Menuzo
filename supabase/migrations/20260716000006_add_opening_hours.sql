@@ -1,2 +1,0 @@
--- ShopSchedule[] uses an array of regular and special schedule entries.
-ALTER TABLE public.shops ADD COLUMN IF NOT EXISTS opening_hours JSONB DEFAULT '[]'::jsonb;

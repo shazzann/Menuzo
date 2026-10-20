@@ -5,3 +5,8 @@ supabase/production/configure_billing.sql
 .tmp-production-schema.sql
 .tmp-billing-release.patch
 .tmp-release-build/
+
+# Database schema (kept local only)
+supabase/migrations/
+supabase/seed.sql
+tests/*.sql

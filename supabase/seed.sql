@@ -1,2 +1,0 @@
--- Optional local seed data. Real users, shops, payment details, and prices are
--- intentionally not seeded. The billing migration supplies disabled placeholders.
