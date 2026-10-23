@@ -24,7 +24,7 @@ import { toast } from 'sonner';
 import { SmallQrPreview, type SmallQrPreviewRef } from '@/components/admin/SmallQrPreview';
 import type { AdminTab } from '@/types';
 import { isBrandTheme } from '@/lib/themeUtils';
-import { isProActive } from '@/lib/subscription';
+import { isProActive, planNotice } from '@/lib/subscription';
 import { markQrGenerated } from '@/lib/qrProgress';
 import {
   AlertDialog,
@@ -42,6 +42,7 @@ export function UserDashboardPage() {
   const { state, dispatch } = useApp();
   const { shop, foodItems, user } = state;
   const proActive = isProActive(user?.subscription);
+  const showPlanNotice = planNotice(user?.subscription, state.planHiddenItemIds.length) !== null;
   const isLoadingData = state.shopDataStatus === 'loading';
   const qrRef = useRef<SmallQrPreviewRef>(null);
   const [isDownloadingQr, setIsDownloadingQr] = useState(false);
@@ -134,8 +135,8 @@ export function UserDashboardPage() {
 
         <PlanStatusBanner />
 
-        {/* Subscription / Plan Status */}
-        <div className="p-4 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 shadow-sm flex items-center justify-between">
+        {/* Subscription / Plan Status (the plan alert above replaces it when shown) */}
+        {!showPlanNotice && <div className="p-4 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 shadow-sm flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
               <Crown className="w-5 h-5 text-primary" />
@@ -158,7 +159,7 @@ export function UserDashboardPage() {
           >
             {proActive ? 'Manage' : 'Choose Pro'}
           </Button>
-        </div>
+        </div>}
 
         {foodItems.length === 0 ? (
           <div className="flex flex-col items-center justify-center p-8 rounded-2xl bg-card border border-dashed border-border shadow-sm text-center">

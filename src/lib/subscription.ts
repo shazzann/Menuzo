@@ -53,3 +53,13 @@ export function hasPaidMenuAccess(subscription: User['subscription'] | undefined
   const { phase } = subscriptionPhase(subscription, now);
   return phase !== 'free';
 }
+
+export type PlanNoticeKind = 'ending-soon' | 'grace' | 'hidden';
+
+// Which plan notice the owner should see, if any.
+export function planNotice(subscription: User['subscription'] | undefined, hiddenItemCount: number, now = Date.now()): PlanNoticeKind | null {
+  const { phase } = subscriptionPhase(subscription, now);
+  if (phase === 'ending-soon' || phase === 'grace') return phase;
+  if (phase === 'free' && hiddenItemCount > 0) return 'hidden';
+  return null;
+}

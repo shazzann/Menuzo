@@ -136,7 +136,7 @@ export function AdminPreviewPage() {
         </div>
       </div>
 
-      <PlanStatusBanner className="mx-4 mt-3" />
+      <PlanStatusBanner className="mx-4 mt-3" kinds={['hidden']} />
 
       {/* Banner */}
       <div className="relative h-40 overflow-hidden bg-muted flex items-center justify-center">

@@ -106,9 +106,9 @@ test('dashboard and Analytics default show identical seven-day counts and graph 
     'react/jsx-runtime': jsx, '@/lib/shopAnalytics': analytics,
     '@/lib/shopUrls': {getShopMenuUrl:()=> 'https://menuzo.test/cafe'},
     '@/components/admin/MenuViewsChart': { MenuViewsChart: report.Chart },
-    '@/lib/subscription':{isProActive:()=>false},
+    '@/lib/subscription':{isProActive:()=>false,planNotice:()=>null},
     '@/hooks/useOnboardingStatus':{useOnboardingStatus:()=>({isComplete:false})},
-    '@/store': {useApp:()=>({state:{shop:{id:'shop',name:'Cafe',username:'cafe',view_count:9999,qr_scan_count:999,daily_stats:stats},foodItems:[],user:null},dispatch(){}})},
+    '@/store': {useApp:()=>({state:{shop:{id:'shop',name:'Cafe',username:'cafe',view_count:9999,qr_scan_count:999,daily_stats:stats},planHiddenItemIds:[],foodItems:[],user:null},dispatch(){}})},
   });
   const {UserDashboardPage} = load('src/pages/UserDashboardPage.tsx', deps);
   const dashboard = nodes(UserDashboardPage());

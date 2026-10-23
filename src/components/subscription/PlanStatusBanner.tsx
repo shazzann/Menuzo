@@ -1,16 +1,19 @@
 import { AlertTriangle, Clock, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useApp } from '@/store';
-import { FREE_PLAN_LIMITS, subscriptionPhase } from '@/lib/subscription';
+import { FREE_PLAN_LIMITS, planNotice, subscriptionPhase, type PlanNoticeKind } from '@/lib/subscription';
 import { cn } from '@/lib/utils';
 
 const day = (date: Date) => date.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
 
 // In-app notice before Pro ends, during the grace period, and while items are hidden.
-export function PlanStatusBanner({ className }: { className?: string }) {
+// `kinds` limits which notices a page shows (the dashboard shows all of them).
+export function PlanStatusBanner({ className, kinds }: { className?: string; kinds?: PlanNoticeKind[] }) {
   const { state, dispatch } = useApp();
   const plan = subscriptionPhase(state.user?.subscription);
   const hidden = state.planHiddenItemIds.length;
+  const notice = planNotice(state.user?.subscription, hidden);
+  if (!notice || (kinds && !kinds.includes(notice))) return null;
   const openSubscription = () => dispatch({ type: 'SET_VIEW', payload: 'admin-subscription' });
 
   let tone: 'warning' | 'info';

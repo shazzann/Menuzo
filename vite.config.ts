@@ -7,6 +7,8 @@ import { inspectAttr } from 'kimi-plugin-inspect-react'
 export default defineConfig({
   base: '/',
   plugins: [inspectAttr(), react()],
+  // Google sign-in only returns to addresses listed on the OAuth client, so keep the dev port fixed.
+  server: { port: 5173, strictPort: true },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

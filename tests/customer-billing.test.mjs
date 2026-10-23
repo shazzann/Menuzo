@@ -732,3 +732,13 @@ test('Pro warns 7 days before it ends, keeps a 3-day grace period, then becomes 
   assert.equal(subscription.subscriptionPhase(subscription.freeSubscription(), now).phase, 'free');
   assert.equal(subscription.FREE_PLAN_LIMITS.items, 10); assert.equal(subscription.FREE_PLAN_LIMITS.categories, 2);
 });
+
+test('one plan notice at a time: ending soon, grace, or hidden items', () => {
+  const day = 86400000, now = Date.parse('2026-10-24T12:00:00Z');
+  const pro = (offsetDays, status = offsetDays > 0 ? 'active' : 'expired') => ({ plan: 'pro', status, expiresAt: new Date(now + offsetDays * day) });
+  assert.equal(subscription.planNotice(pro(30), 0, now), null, 'Active Pro far from its end date shows the plan card instead');
+  assert.equal(subscription.planNotice(pro(6), 0, now), 'ending-soon');
+  assert.equal(subscription.planNotice(pro(-1), 0, now), 'grace');
+  assert.equal(subscription.planNotice(pro(-4), 5, now), 'hidden');
+  assert.equal(subscription.planNotice(subscription.freeSubscription(), 0, now), null);
+});

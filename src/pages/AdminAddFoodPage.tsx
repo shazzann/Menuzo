@@ -502,7 +502,7 @@ export function AdminAddFoodPage() {
 
       {/* Search & Add */}
       <div className="px-4 py-4 space-y-4">
-        <PlanStatusBanner />
+        <PlanStatusBanner kinds={['hidden']} />
         <div className="flex gap-3">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
