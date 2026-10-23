@@ -88,14 +88,26 @@ export default async function getCroppedImg(
     pixelCrop.height
   )
 
-  // As a blob
+  // JPEG has no transparency (see-through pixels turn black), so logos with a
+  // transparent background are kept as PNG; photos stay JPEG for smaller files.
+  const transparent = hasTransparency(croppedCtx, croppedCanvas.width, croppedCanvas.height)
+  const type = transparent ? 'image/png' : 'image/jpeg'
   return new Promise((resolve, reject) => {
     croppedCanvas.toBlob((file) => {
       if (file) {
-        resolve(new File([file], 'cropped_image.jpeg', { type: 'image/jpeg' }))
+        resolve(new File([file], transparent ? 'cropped_image.png' : 'cropped_image.jpeg', { type }))
       } else {
         reject(new Error('Canvas is empty'))
       }
-    }, 'image/jpeg')
+    }, type, transparent ? undefined : 0.92)
   })
+}
+
+export function hasTransparency(ctx: CanvasRenderingContext2D, width: number, height: number): boolean {
+  const { data } = ctx.getImageData(0, 0, width, height)
+  // Every 4th value is a pixel's alpha (opacity); anything below 255 is see-through.
+  for (let i = 3; i < data.length; i += 4) {
+    if (data[i] < 255) return true
+  }
+  return false
 }
