@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { AuthService } from '@/services/auth.service';
 import type { User } from '@supabase/supabase-js';
 
 // Check the server before treating a cached browser session as a signed-in user.
@@ -49,6 +50,8 @@ export function watchAuthSession(onUser: (user: User | null) => void, onStatus: 
       setTimeout(() => { void verify(request); }, 0);
     }
   });
-  void verify(++revision);
+  // Finish a Google sign-in redirect first so the sign-in page is not shown in between.
+  const first = ++revision;
+  void AuthService.finishGoogleRedirect().finally(() => verify(first));
   return () => { active = false; revision++; subscription.unsubscribe(); };
 }

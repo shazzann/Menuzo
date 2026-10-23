@@ -12,6 +12,7 @@ import { useTheme } from '@/components/shared/ThemeProvider';
 import { CompanyBilling } from '@/components/company-admin/CompanyBilling';
 import { CompanyBillingService, companyBillingError } from '@/services/company-billing.service';
 import { supabase } from '@/lib/supabase';
+import { AuthService } from '@/services/auth.service';
 import { CompanyDashboard } from '@/components/company-admin/CompanyDashboard';
 import { CompanyShopList } from '@/components/company-admin/CompanyShopList';
 import { CompanyShopDetail } from '@/components/company-admin/CompanyShopDetail';
@@ -134,6 +135,7 @@ export function CompanyAdminPage() {
     let cancelled = false;
     const verifyAdmin = async () => {
       try {
+        await AuthService.finishGoogleRedirect();
         const { data: { session }, error } = await supabase.auth.getSession();
         if (error) throw error;
         if (!session) {

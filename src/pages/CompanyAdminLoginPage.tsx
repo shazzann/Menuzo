@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useApp } from '@/store';
 import { Eye, EyeOff, ShieldCheck, ArrowRight, CheckCircle2, Lock } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { AuthService } from '@/services/auth.service';
 import { CompanyBillingService, companyBillingError } from '@/services/company-billing.service';
 import { Button } from '@/components/ui/button';
 
@@ -13,6 +14,9 @@ export function CompanyAdminLoginPage() {
   const [isLoading, setIsLoading] = useState(false);
 
   const [loginError, setLoginError] = useState('');
+  useEffect(() => {
+    void AuthService.finishGoogleRedirect().then((message) => { if (message) setLoginError(message); });
+  }, []);
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isLoading) return;
@@ -33,17 +37,7 @@ export function CompanyAdminLoginPage() {
   const handleGoogleLogin = async () => {
     setIsLoading(true);
     try {
-      const { supabase } = await import('@/lib/supabase');
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: window.location.origin + '/admin-portal',
-          // Let people pick an account without re-approving access on every sign-in;
-          // forcing consent made Google email "You shared some Google Account data" each time.
-          queryParams: { prompt: 'select_account' },
-        },
-      });
-      if (error) throw error;
+      await AuthService.signInWithGoogle('/admin-portal');
     } catch (err) {
       console.error(err);
       setIsLoading(false);
