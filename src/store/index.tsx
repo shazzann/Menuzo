@@ -47,6 +47,7 @@ const initialState: AppState = {
   authChecking: true,
   shop: initialShop,
   foodItems: initialFoodItems,
+  planHiddenItemIds: [],
   categories: initialCategories,
   searchQuery: '',
   selectedCategory: 'all',
@@ -81,6 +82,7 @@ type Action =
   | { type: 'LOGIN'; payload: User }
   | { type: 'LOGOUT' }
   | { type: 'SET_AUTH_CHECKING'; payload: boolean }
+  | { type: 'SET_PLAN_HIDDEN_ITEMS'; payload: string[] }
   | { type: 'SESSION_CLEARED' }
   | { type: 'SET_COMPANY_ADMIN_SECTION'; payload: CompanyAdminSection }
   | { type: 'SELECT_MANAGED_SHOP'; payload: ManagedShop | null }
@@ -197,12 +199,14 @@ function appReducer(state: AppState, action: Action): AppState {
         currentAdminTab: shouldRedirect ? 'dashboard' : state.currentAdminTab,
       };
     }
+    case 'SET_PLAN_HIDDEN_ITEMS':
+      return state.planHiddenItemIds.join() === action.payload.join() ? state : { ...state, planHiddenItemIds: action.payload };
     case 'SET_AUTH_CHECKING':
       return state.authChecking === action.payload ? state : { ...state, authChecking: action.payload };
     case 'SESSION_CLEARED':
       return state.user ? appReducer(state, { type: 'LOGOUT' }) : state;
     case 'LOGOUT':
-      return { ...state, menuPosition: null, user: null, shop: initialShop, foodItems: [], categories: initialCategories, shopDataContext: '', shopDataStatus: 'idle', shopNotFound: false,
+      return { ...state, menuPosition: null, user: null, shop: initialShop, foodItems: [], planHiddenItemIds: [], categories: initialCategories, shopDataContext: '', shopDataStatus: 'idle', shopNotFound: false,
         currentView: state.currentView === 'landing' ? 'landing'
           : state.currentView.startsWith('company-admin') ? 'company-admin-login' : 'login' };
     case 'SET_COMPANY_ADMIN_SECTION':

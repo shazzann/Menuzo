@@ -1,7 +1,7 @@
 import { getShopMenuUrl } from '@/lib/shopUrls';
 import { useEffect, useLayoutEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { ArrowLeft, ChefHat, Sparkles, Share2 } from 'lucide-react';
+import { ArrowLeft, ChefHat, EyeOff, Lock, Sparkles, Share2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useSEO } from '@/hooks/useSEO';
 import { useApp } from '@/store';
@@ -21,12 +21,18 @@ export function FoodDetailPage() {
   if (state.currentView === 'admin-food-detail') backView = 'admin-preview';
   if (state.currentView === 'admin-add-food-detail') backView = 'admin-add-food';
 
+  // Customers who open a link or QR code for an item that is not listed (removed, or
+  // hidden by the Free plan) see a placeholder; owner views return to their list.
+  const isCustomerView = state.currentView === 'customer-food-detail';
+  const menuLoaded = state.shopDataStatus === 'ready';
+  const showUnavailable = isCustomerView && menuLoaded && !selectedFoodItem;
+
   // Redirect back if no food item is selected and we have finished loading food items
   useEffect(() => {
-    if (!selectedFoodItem && state.foodItems.length > 0) {
+    if (!isCustomerView && !selectedFoodItem && state.foodItems.length > 0) {
       dispatch({ type: 'SET_VIEW', payload: backView });
     }
-  }, [selectedFoodItem, state.foodItems.length, backView, dispatch]);
+  }, [isCustomerView, selectedFoodItem, state.foodItems.length, backView, dispatch]);
 
   useSEO({
     url: getShopMenuUrl(shop, window.location.origin, selectedFoodItem?.id),
@@ -34,6 +40,27 @@ export function FoodDetailPage() {
     description: selectedFoodItem?.description || selectedFoodItem?.tagline || shop.description,
     image: selectedFoodItem?.image || shop.logo,
   });
+
+  if (showUnavailable) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4 px-6 text-center">
+        <div className="w-14 h-14 rounded-2xl bg-muted flex items-center justify-center">
+          <EyeOff className="w-6 h-6 text-muted-foreground" />
+        </div>
+        <div>
+          <h1 className="text-lg font-semibold">This item isn't available right now</h1>
+          <p className="text-sm text-muted-foreground mt-1">Take a look at the rest of {shop.name ? `${shop.name}'s` : 'the'} menu.</p>
+        </div>
+        <button
+          type="button"
+          onClick={() => dispatch({ type: 'SET_VIEW', payload: 'customer-menu' })}
+          className="px-5 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold"
+        >
+          View menu
+        </button>
+      </div>
+    );
+  }
 
   if (!selectedFoodItem) {
     if (state.foodItems.length === 0) {
@@ -73,6 +100,13 @@ export function FoodDetailPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      {!isCustomerView && state.planHiddenItemIds.includes(item.id) && (
+        <div className="sticky top-0 z-50 flex items-center gap-2 px-4 py-2.5 bg-amber-500/15 border-b border-amber-500/30 text-xs font-medium text-amber-600 dark:text-amber-400" role="status">
+          <Lock className="w-3.5 h-3.5 shrink-0" />
+          Hidden from customers on the Free plan. Upgrade to Pro or reorder categories to show it.
+        </div>
+      )}
+
       {/* Image Header */}
       <div className="relative h-72">
         {item.image ? (

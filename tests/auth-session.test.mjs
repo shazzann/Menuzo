@@ -10,7 +10,7 @@ const deferred = () => { let resolve; const promise = new Promise(yes => { resol
 const success = id => ({ data: { user: { id, email: `${id}@example.test` } }, error: null });
 const failure = error => ({ data: { user: null }, error });
 const flush = async () => { for (let i = 0; i < 4; i++) await new Promise(resolve => setTimeout(resolve, 5)); };
-function watch(getUser) {
+function watch(getUser, finishGoogleRedirect = async () => null) {
   let listener; let unsubscribeCount = 0; const users = [], statuses = [], signouts = [];
   const auth = {
     getUser,
@@ -18,7 +18,12 @@ function watch(getUser) {
     async signOut(options) { signouts.push(options.scope); listener('SIGNED_OUT', null); return { error: null }; },
   };
   const module = { exports: {} };
-  vm.runInNewContext(outputText, { module, exports: module.exports, setTimeout, require: () => ({ supabase: { auth } }) });
+  const dependencies = {
+    '@/lib/supabase': { supabase: { auth } },
+    // A Google sign-in redirect is finished before the saved session is verified.
+    '@/services/auth.service': { AuthService: { finishGoogleRedirect } },
+  };
+  vm.runInNewContext(outputText, { module, exports: module.exports, setTimeout, require(name) { assert.ok(name in dependencies, name); return dependencies[name]; } });
   const stop = module.exports.watchAuthSession(user => users.push(user), (loading, error) => statuses.push({ loading, error }));
   return { users, statuses, signouts, stop, emit: (event, id) => listener(event, id ? { user: { id } } : null), get unsubscribed() { return unsubscribeCount; } };
 }
@@ -47,6 +52,7 @@ test('late restoration cannot sign an account back in after logout', async () =>
 test('account switching ignores the previous verification response', async () => {
   const first = deferred(), second = deferred(); let count = 0;
   const app = watch(() => ++count === 1 ? first.promise : second.promise);
+  await flush(); // the first check starts once any Google redirect has finished
   app.emit('SIGNED_IN', 'new-owner'); await flush();
   second.resolve(success('new-owner')); await flush(); first.resolve(success('old-owner')); await flush();
   assert.deepEqual(app.users.map(user => user.id), ['new-owner']); app.stop();
@@ -59,4 +65,20 @@ test('focus and token refresh for an already verified user do not reload the pag
 test('unmount cancels pending checks and unsubscribes the auth listener', async () => {
   const request = deferred(); const app = watch(() => request.promise); app.stop();
   request.resolve(success('owner')); await flush(); assert.equal(app.users.length, 0); assert.equal(app.unsubscribed, 1);
+});
+
+test('verification waits for a Google sign-in redirect to finish', async () => {
+  const redirect = deferred(); let checks = 0;
+  const app = watch(async () => { checks++; return success('owner'); }, () => redirect.promise);
+  await flush();
+  assert.equal(checks, 0, 'The session is not checked while the redirect is being completed');
+  assert.equal(app.statuses.at(-1).loading, true, 'The sign-in check is still shown');
+  redirect.resolve(null); await flush();
+  assert.equal(checks, 1); assert.equal(app.users[0].id, 'owner'); assert.equal(app.statuses.at(-1).loading, false); app.stop();
+});
+test('a failed Google redirect still verifies the saved session', async () => {
+  // finishGoogleRedirect reports failures as a message instead of throwing.
+  const app = watch(async () => success('owner'), async () => 'Could not sign in with Google. Please try again.');
+  await flush();
+  assert.equal(app.users[0].id, 'owner'); assert.equal(app.statuses.at(-1).loading, false); app.stop();
 });

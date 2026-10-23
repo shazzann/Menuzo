@@ -716,3 +716,19 @@ test('a newly assigned URL takes precedence over a stale URL typed earlier in ch
   await formOnPage(page).props.onSubmit({preventDefault(){}});
   assert.equal(page.submittedInputs[0].requestedSlug,null);cleanup();
 });
+
+test('Pro warns 7 days before it ends, keeps a 3-day grace period, then becomes Free', () => {
+  const day = 86400000, now = Date.parse('2026-10-24T12:00:00Z');
+  const pro = (offsetDays, status = offsetDays > 0 ? 'active' : 'expired') => ({ plan: 'pro', status, expiresAt: new Date(now + offsetDays * day) });
+  assert.equal(subscription.subscriptionPhase(pro(30), now).phase, 'active');
+  assert.equal(subscription.subscriptionPhase(pro(6), now).phase, 'ending-soon');
+  const grace = subscription.subscriptionPhase(pro(-1), now);
+  assert.equal(grace.phase, 'grace');
+  assert.equal(grace.graceEndsAt.getTime(), now + 2 * day, 'Grace ends 3 days after the plan');
+  assert.equal(subscription.hasPaidMenuAccess(pro(-1), now), true, 'All items stay visible during grace');
+  assert.equal(subscription.subscriptionPhase(pro(-4), now).phase, 'free');
+  assert.equal(subscription.hasPaidMenuAccess(pro(-4), now), false);
+  assert.equal(subscription.subscriptionPhase(pro(-1, 'cancelled'), now).phase, 'free', 'Suspended or revoked plans get no grace');
+  assert.equal(subscription.subscriptionPhase(subscription.freeSubscription(), now).phase, 'free');
+  assert.equal(subscription.FREE_PLAN_LIMITS.items, 10); assert.equal(subscription.FREE_PLAN_LIMITS.categories, 2);
+});

@@ -250,6 +250,8 @@ export interface AppState {
   authChecking: boolean;
   shop: Shop;
   foodItems: FoodItem[];
+  /** Owner's items hidden from customers by the Free plan limits (from the database). */
+  planHiddenItemIds: string[];
   categories: Category[];
   searchQuery: string;
   selectedCategory: string;

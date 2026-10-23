@@ -16,6 +16,13 @@ export const MenuService = {
     return data;
   },
 
+  // Items customers cannot see because the shop is over the Free plan limits.
+  async getPlanHiddenItemIds(shopId: string): Promise<string[]> {
+    const { data, error } = await supabase.rpc('plan_hidden_food_item_ids', { p_shop_id: shopId });
+    if (error) throw error;
+    return (data || []) as string[];
+  },
+
   async addMenuItem(item: FoodItemInsert) {
     const { data, error } = await supabase
       .from('food_items')

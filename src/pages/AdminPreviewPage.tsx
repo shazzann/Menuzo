@@ -8,11 +8,17 @@ import { SpecialOffersCarousel } from '@/components/shared/SpecialOffersCarousel
 import { FoodCard } from '@/components/shared/FoodCard';
 import { BottomNav } from '@/components/shared/BottomNav';
 import type { AdminTab, FoodItem } from '@/types';
+import { PlanStatusBanner } from '@/components/subscription/PlanStatusBanner';
 import { ArrowLeft as ArrowLeftDetail, ChefHat, Sparkles } from 'lucide-react';
 
 export function AdminPreviewPage() {
   const { state, dispatch } = useApp();
-  const { shop, foodItems, categories, searchQuery, selectedCategory } = state;
+  const { shop, categories, searchQuery, selectedCategory, planHiddenItemIds } = state;
+  // The preview shows what customers see, so items hidden by the Free plan are left out.
+  const foodItems = useMemo(
+    () => state.foodItems.filter((item) => !planHiddenItemIds.includes(item.id)),
+    [state.foodItems, planHiddenItemIds]
+  );
   const [viewMode, setViewMode] = useState<'rows' | 'list'>('rows');
   const [activeTabId, setActiveTabId] = useState('all');
   const [selectedItem, setSelectedItem] = useState<FoodItem | null>(null);
@@ -130,7 +136,7 @@ export function AdminPreviewPage() {
         </div>
       </div>
 
-
+      <PlanStatusBanner className="mx-4 mt-3" />
 
       {/* Banner */}
       <div className="relative h-40 overflow-hidden bg-muted flex items-center justify-center">

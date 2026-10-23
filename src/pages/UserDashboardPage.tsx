@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/button';
 import { useApp } from '@/store';
 import { BottomNav } from '@/components/shared/BottomNav';
 import { OnboardingChecklist } from '@/components/dashboard/OnboardingChecklist';
+import { PlanStatusBanner } from '@/components/subscription/PlanStatusBanner';
 import { useOnboardingStatus } from '@/hooks/useOnboardingStatus';
 import { useState, useRef } from 'react';
 import { toast } from 'sonner';
@@ -130,6 +131,8 @@ export function UserDashboardPage() {
         </div>
 
         <OnboardingChecklist />
+
+        <PlanStatusBanner />
 
         {/* Subscription / Plan Status */}
         <div className="p-4 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 shadow-sm flex items-center justify-between">

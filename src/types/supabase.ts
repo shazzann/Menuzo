@@ -251,6 +251,7 @@ export interface Database {
       }
       is_company_billing_admin: { Args: Record<string, never>; Returns: boolean }
       ensure_my_profile: { Args: Record<string, never>; Returns: undefined }
+      plan_hidden_food_item_ids: { Args: { p_shop_id: string }; Returns: string[] }
       admin_shop_theme_usage: { Args: Record<string, never>; Returns: { theme_id: string; shop_count: number }[] }
       admin_list_billing_requests: {
         Args: { p_status: string; p_query: string; p_offset: number }

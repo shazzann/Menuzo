@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Settings, Plus, Search, MoreVertical, Edit2, Trash2, Star, Check, X, Camera, ArrowLeft, Image as ImageIcon } from 'lucide-react';
+import { Settings, Plus, Search, MoreVertical, Edit2, Trash2, Star, Check, X, Camera, ArrowLeft, Lock, Image as ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -21,6 +21,8 @@ import { ImageCropperModal } from '@/components/shared/ImageCropperModal';
 import { CategoryTabs } from '@/components/shared/CategoryTabs';
 import { CategoryReorderModal } from '@/components/shared/CategoryReorderModal';
 import { trackEvent } from '@/lib/analytics';
+import { FREE_PLAN_LIMITS, hasPaidMenuAccess } from '@/lib/subscription';
+import { PlanStatusBanner } from '@/components/subscription/PlanStatusBanner';
 import { toast } from 'sonner';
 import { MenuService, CategoryService, StorageService } from '@/services';
 import {
@@ -34,6 +36,9 @@ import {
 export function AdminAddFoodPage() {
   const { state, dispatch } = useApp();
   const { foodItems, categories } = state;
+  // Items over the Free plan limits stay editable here but are hidden from customers.
+  const hiddenIds = new Set(state.planHiddenItemIds);
+  const atFreeItemLimit = !hasPaidMenuAccess(state.user?.subscription) && foodItems.length >= FREE_PLAN_LIMITS.items;
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [showForm, setShowForm] = useState(false);
@@ -65,6 +70,12 @@ export function AdminAddFoodPage() {
   });
 
   const handleOpenForm = (item?: FoodItem) => {
+    if (!item && atFreeItemLimit) {
+      toast.error(`The Free plan allows up to ${FREE_PLAN_LIMITS.items} menu items. Upgrade to Pro to add more.`, {
+        action: { label: 'Upgrade', onClick: () => dispatch({ type: 'SET_VIEW', payload: 'admin-subscription' }) },
+      });
+      return;
+    }
     setIsCreatingCategory(false);
     setNewCategoryName('');
     if (item) {
@@ -152,7 +163,9 @@ export function AdminAddFoodPage() {
       setEditingItem(null);
     } catch (err) {
       console.error('Error saving food item:', err);
-      toast.error('Failed to save food item.');
+      // Plan limit messages come from the database (enforce_free_plan_menu_limits).
+      const planMessage = (err as { code?: string; message?: string })?.code === 'P0001' ? (err as { message?: string }).message : '';
+      toast.error(planMessage || 'Failed to save food item.');
     }
   };
 
@@ -489,6 +502,7 @@ export function AdminAddFoodPage() {
 
       {/* Search & Add */}
       <div className="px-4 py-4 space-y-4">
+        <PlanStatusBanner />
         <div className="flex gap-3">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -549,15 +563,20 @@ export function AdminAddFoodPage() {
             }}
             className={cn(
               'flex items-center gap-4 p-3 rounded-2xl bg-card card-border card-shadow cursor-pointer hover:border-primary/30 transition-all',
-              !item.isAvailable && 'opacity-60'
+              (!item.isAvailable || hiddenIds.has(item.id)) && 'opacity-60'
             )}
           >
             <div className="relative w-16 h-16 flex-shrink-0">
               <img
                 src={item.image}
                 alt={item.name}
-                className="w-full h-full object-cover rounded-xl"
+                className={cn('w-full h-full object-cover rounded-xl', hiddenIds.has(item.id) && 'grayscale')}
               />
+              {hiddenIds.has(item.id) && (
+                <span className="absolute inset-0 flex items-center justify-center rounded-xl bg-black/40" aria-hidden="true">
+                  <Lock className="w-5 h-5 text-white" />
+                </span>
+              )}
               {item.isSpecialOffer && (
                 <span className="absolute -top-1 -left-1 p-1 rounded-full bg-primary">
                   <Star className="w-2.5 h-2.5 text-primary-foreground" />
@@ -566,6 +585,11 @@ export function AdminAddFoodPage() {
             </div>
             <div className="flex-1 min-w-0">
               <h4 className="font-semibold text-sm truncate">{item.name}</h4>
+              {hiddenIds.has(item.id) && (
+                <p className="inline-flex items-center gap-1 text-[11px] font-medium text-amber-500">
+                  <Lock className="w-3 h-3" /> Hidden on Free plan
+                </p>
+              )}
               <p className="text-xs text-muted-foreground line-clamp-1">
                 {item.category}
               </p>

@@ -21,3 +21,35 @@ export function subscriptionFromProfile(profile: {
     : profile.subscription_status === 'active' && expiresAt && expiresAt.getTime() > Date.now() ? 'active' : 'expired';
   return { plan: profile.subscription_plan as 'pro' | 'enterprise', status, expiresAt };
 }
+
+// After Pro ends, the shop keeps every item visible for this many days before the
+// Free plan limits apply. Mirrors shop_has_paid_access() in the database.
+export const PRO_GRACE_DAYS = 3;
+export const PRO_ENDING_SOON_DAYS = 7;
+export const FREE_PLAN_LIMITS = { items: 10, categories: 2 } as const;
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+export type PlanPhase =
+  | { phase: 'free' }
+  | { phase: 'active'; endsAt: Date }
+  | { phase: 'ending-soon'; endsAt: Date }
+  | { phase: 'grace'; endedAt: Date; graceEndsAt: Date };
+
+export function subscriptionPhase(subscription: User['subscription'] | undefined, now = Date.now()): PlanPhase {
+  if (!subscription || !['pro', 'enterprise'].includes(subscription.plan) || !subscription.expiresAt) return { phase: 'free' };
+  const endsAt = new Date(subscription.expiresAt);
+  if (isProActive(subscription, now)) {
+    return endsAt.getTime() - now <= PRO_ENDING_SOON_DAYS * DAY_MS ? { phase: 'ending-soon', endsAt } : { phase: 'active', endsAt };
+  }
+  // Suspended or revoked plans are 'cancelled' and get no grace period.
+  const graceEndsAt = new Date(endsAt.getTime() + PRO_GRACE_DAYS * DAY_MS);
+  if (subscription.status === 'expired' && graceEndsAt.getTime() > now) return { phase: 'grace', endedAt: endsAt, graceEndsAt };
+  return { phase: 'free' };
+}
+
+// Pro features, including the grace period: every menu item stays visible.
+export function hasPaidMenuAccess(subscription: User['subscription'] | undefined, now = Date.now()): boolean {
+  const { phase } = subscriptionPhase(subscription, now);
+  return phase !== 'free';
+}
