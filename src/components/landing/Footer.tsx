@@ -76,24 +76,6 @@ export function Footer() {
                 </button>
               </li>
               <li><a href="/brand-book" className="hover:text-primary transition-colors">Brand Book</a></li>
-              <li>
-                <button 
-                  type="button" 
-                  onClick={() => handleNavigate('terms')}
-                  className="hover:text-primary transition-colors text-left"
-                >
-                  Terms & Conditions
-                </button>
-              </li>
-              <li>
-                <button 
-                  type="button" 
-                  onClick={() => handleNavigate('privacy')}
-                  className="hover:text-primary transition-colors text-left"
-                >
-                  Privacy Policy
-                </button>
-              </li>
             </ul>
           </div>
         </div>
@@ -104,32 +86,18 @@ export function Footer() {
           </p>
           <div className="flex flex-wrap items-center gap-6">
             <button 
-              type="button"
-              onClick={() => handleNavigate('about')}
-              className="hover:text-primary transition-colors"
-            >
-              About Us
-            </button>
-            <button 
-              type="button"
+              type="button" 
               onClick={() => handleNavigate('terms')}
               className="hover:text-primary transition-colors"
             >
               Terms & Conditions
             </button>
             <button 
-              type="button"
+              type="button" 
               onClick={() => handleNavigate('privacy')}
               className="hover:text-primary transition-colors"
             >
               Privacy Policy
-            </button>
-            <button 
-              type="button"
-              onClick={() => handleNavigate('contact')}
-              className="hover:text-primary transition-colors"
-            >
-              Contact
             </button>
             <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
               <Globe className="w-3.5 h-3.5" />

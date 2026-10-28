@@ -59,8 +59,8 @@ export function Navbar() {
   return (
     <>
       <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-background/80 backdrop-blur-lg border-b border-border py-2' : 'bg-transparent py-4'}`}>
-        <div className="flex items-center justify-between px-4 max-w-7xl mx-auto w-full">
-          <div className="flex items-center">
+        <div className="relative flex items-center justify-between px-4 max-w-7xl mx-auto w-full">
+          <div className="flex items-center z-10">
             {/* Light Mode Logo */}
             <img 
               src="/logo/Logo main4tight.png" 
@@ -77,15 +77,15 @@ export function Navbar() {
             />
           </div>
           
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-8">
-            <div className="flex items-center gap-6 text-sm font-medium text-muted-foreground">
+          {/* Desktop Navigation - Truly Centered */}
+          <div className="hidden md:flex items-center absolute left-1/2 -translate-x-1/2">
+            <div className="flex items-center gap-6 lg:gap-8 text-sm font-medium text-muted-foreground">
               {navLinks.map((link) => (
                 <a 
                   key={link.name}
                   href={link.href}
                   onClick={(e) => handleNavClick(e, link.href)}
-                  className="hover:text-primary transition-colors"
+                  className="hover:text-primary transition-colors whitespace-nowrap"
                 >
                   {link.name}
                 </a>
@@ -93,7 +93,7 @@ export function Navbar() {
             </div>
           </div>
 
-          <div className="hidden md:flex items-center gap-3">
+          <div className="hidden md:flex items-center gap-3 z-10">
             <ThemeToggle />
 
             {state.authChecking && !state.user ? (
