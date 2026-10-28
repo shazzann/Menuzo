@@ -100,6 +100,7 @@ export type View =
   | 'contact'
   | 'privacy'
   | 'terms'
+  | 'about'
   | 'customer-menu' 
   | 'customer-food-detail' 
   | 'admin-food-detail'

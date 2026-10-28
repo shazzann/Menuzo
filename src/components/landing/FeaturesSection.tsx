@@ -1,6 +1,23 @@
 import { motion } from 'framer-motion';
 import { useEffect, useRef, useState } from 'react';
 
+const mobilePreviews = [
+  "/Landing/mobile1.png",
+  "/Landing/mobile2.png",
+  "/Landing/mobile3.png",
+  "/Landing/mobile4.png",
+  "/Landing/mobile5.png",
+  "/Landing/mobile6.png",
+  "/Landing/mobile7.png",
+  "/Landing/mobile8.png",
+  "/Landing/mobile9.png",
+  "/Landing/mobile10.png",
+  "/Landing/mobile11.png",
+  "/Landing/mobile12.png",
+  "/Landing/mobile13.png",
+  "/Landing/mobile14.png",
+];
+
 export function FeaturesSection() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isPaused, setIsPaused] = useState(false);
@@ -21,9 +38,9 @@ export function FeaturesSection() {
         // Scroll horizontally
         el.scrollLeft += speed;
 
-        // Seamless loop using the exact offset of the 7th element (start of the duplicate set)
+        // Seamless loop using the exact offset of the duplicate start node
         const firstNode = el.children[0] as HTMLElement;
-        const duplicateStartNode = el.children[7] as HTMLElement;
+        const duplicateStartNode = el.children[mobilePreviews.length] as HTMLElement;
 
         if (firstNode && duplicateStartNode) {
           const loopPoint = duplicateStartNode.offsetLeft - firstNode.offsetLeft;
@@ -75,7 +92,7 @@ export function FeaturesSection() {
           <div className="absolute inset-0 bg-gradient-to-b from-primary/10 to-transparent rounded-[3rem] blur-3xl opacity-50 pointer-events-none" />
 
           {/* Cleaner solution: CSS Mask Image for edge fading instead of solid color overlays */}
-          <div className="[mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)] md:[mask-image:linear-gradient(to_right,transparent,black_5%,black_95%,transparent)] w-full overflow-hidden">
+          <div className="[mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)] md:[mask-image:linear-gradient(to_right,transparent,black_5%,black_95%,transparent)] w-full overflow-hidden py-2">
             <div
               ref={scrollRef}
               onPointerDown={(e) => {
@@ -103,51 +120,35 @@ export function FeaturesSection() {
                 setIsPaused(false);
                 isDragging.current = false;
               }}
-              className="flex gap-6 md:gap-10 w-full px-4 md:px-10 relative z-10 overflow-x-auto hide-scrollbar select-none cursor-grab active:cursor-grabbing"
+              className="flex items-center gap-6 md:gap-10 w-full px-4 md:px-10 py-6 md:py-8 relative z-10 overflow-x-auto hide-scrollbar select-none cursor-grab active:cursor-grabbing"
               style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }} // hide scrollbar for Firefox/IE
             >
-            {[
-              "/Landing/mobile1.jpeg",
-              "/Landing/mobile2.jpeg",
-              "/Landing/mobile3.jpeg",
-              "/Landing/mobile4.jpeg",
-              "/Landing/mobile5.jpeg",
-              "/Landing/mobile10.jpeg",
-              "/Landing/mobile11.jpeg",
-              // Duplicated set for seamless loop
-              "/Landing/mobile1.jpeg",
-              "/Landing/mobile2.jpeg",
-              "/Landing/mobile3.jpeg",
-              "/Landing/mobile4.jpeg",
-              "/Landing/mobile5.jpeg",
-              "/Landing/mobile10.jpeg",
-              "/Landing/mobile11.jpeg",
-            ].map((src, idx) => (
-              <div
-                key={idx}
-                className="w-[230px] md:w-[250px] h-[480px] md:h-[520px] rounded-[2rem] md:rounded-[2.5rem] border-[6px] border-zinc-800 dark:border-zinc-900 bg-zinc-950 overflow-hidden shadow-2xl relative flex-shrink-0 group transform transition-transform duration-500 hover:scale-[1.02]"
-              >
-                <div className="absolute top-0 inset-x-0 h-5 md:h-6 bg-zinc-800 dark:bg-zinc-900 rounded-b-2xl w-28 md:w-32 mx-auto z-10" />
+              {[...mobilePreviews, ...mobilePreviews].map((src, idx) => (
+                <div
+                  key={idx}
+                  className="p-2 md:p-2.5 rounded-[2rem] md:rounded-[2.25rem] border border-neutral-800/80 bg-[#121316] shadow-2xl relative flex-shrink-0 group transform transition-all duration-300 hover:scale-[1.02] hover:border-neutral-700/80 hover:shadow-primary/10"
+                >
+                  <div className="w-[220px] md:w-[240px] aspect-[1179/2556] rounded-[1.4rem] md:rounded-[1.6rem] overflow-hidden bg-black relative">
+                    {/* Fallback gradient if image is missing */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-zinc-800 to-zinc-900 flex items-center justify-center text-zinc-700 text-sm font-medium -z-10">
+                      Mobile Preview {(idx % mobilePreviews.length) + 1}
+                    </div>
 
-                {/* Fallback gradient if image is missing */}
-                <div className="absolute inset-0 bg-gradient-to-br from-zinc-800 to-zinc-900 flex items-center justify-center text-zinc-700 text-sm font-medium -z-10">
-                  Mobile Preview {(idx % 9) + 1}
+                    <img
+                      src={src}
+                      alt={`Mobile Preview ${(idx % mobilePreviews.length) + 1}`}
+                      className="w-full h-full object-cover block relative z-0 select-none pointer-events-none"
+                      onError={(e) => {
+                        // Hide broken image icon if placeholder image doesn't exist yet
+                        (e.target as HTMLImageElement).style.opacity = '0';
+                      }}
+                      onLoad={(e) => {
+                        (e.target as HTMLImageElement).style.opacity = '1';
+                      }}
+                    />
+                  </div>
                 </div>
-
-                <img
-                  src={src}
-                  alt={`Mobile Preview ${(idx % 9) + 1}`}
-                  className="w-full h-full object-cover relative z-0 pointer-events-none"
-                  onError={(e) => {
-                    // Hide broken image icon if placeholder image doesn't exist yet
-                    (e.target as HTMLImageElement).style.opacity = '0';
-                  }}
-                  onLoad={(e) => {
-                    (e.target as HTMLImageElement).style.opacity = '1';
-                  }}
-                />
-              </div>
-            ))}
+              ))}
             </div>
           </div>
         </motion.div>

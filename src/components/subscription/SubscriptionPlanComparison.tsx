@@ -14,13 +14,16 @@ type Props = {
 };
 
 const features = [
-  { label: 'Menu items', free: 'Up to 10', pro: 'Up to 100', detail: 'Room for your full menu, specials, and seasonal dishes.' },
-  { label: 'Menu categories', free: 'Up to 2', pro: 'Up to 20', detail: 'Keep a growing menu easy for guests to explore.' },
-  { label: 'QR menu & restaurant profile', free: true, pro: true },
-  { label: 'Custom themes & QR branding', free: true, pro: true },
-  { label: 'Analytics', free: 'Dashboard', pro: 'Advanced dashboard' },
-  { label: 'Custom menu URL', free: false, pro: true, detail: 'Give guests a memorable link that matches your restaurant.' },
-  { label: 'Priority support', free: false, pro: true },
+  { label: 'Food items', free: '10', pro: '100', detail: 'Room for your full menu, specials, and seasonal dishes.' },
+  { label: 'Categories', free: '2', pro: '20', detail: 'Keep a growing menu easy for guests to explore.' },
+  { label: 'QR menu', free: true, pro: true, detail: 'Contactless digital menu accessible via QR scan.' },
+  { label: 'Custom theme', free: 'Limited (3–5 preset themes)', pro: 'Full customization', detail: 'Choose from preset themes or fully customize brand colors.' },
+  { label: 'Custom QR branding', free: 'Basic', pro: 'Advanced', detail: 'Generate standard QR or customize with brand colors, shapes & logo.' },
+  { label: 'Analytics dashboard', free: false, pro: true, detail: 'Track daily views, scans, and guest trends.' },
+  { label: 'Restaurant profile', free: true, pro: true, detail: 'Showcase your restaurant bio, opening hours, and location.' },
+  { label: 'Shareable menu link', free: true, pro: true, detail: 'Direct link to share on social media or messaging apps.' },
+  { label: 'Custom menu URL', free: false, pro: true, detail: 'Give guests a memorable short link that matches your restaurant.' },
+  { label: 'Support', free: 'Standard', pro: 'Priority', detail: 'Get dedicated assistance whenever you need help.' },
 ];
 
 export function SubscriptionPlanComparison({ periods, selectedId, loading, ready, onSelect, onUpgrade, onKeepFree }: Props) {

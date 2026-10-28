@@ -30,7 +30,7 @@ export function ThemeCard({
       disabled={disabled}
       onClick={() => onSelect(theme)}
       className={cn(
-        'group relative flex flex-col justify-between w-full min-h-[225px] sm:min-h-[245px] text-left rounded-[18px] border p-3.5 sm:p-4 transition-all duration-200 cursor-pointer outline-hidden',
+        'group relative flex flex-col justify-between w-full min-h-[175px] sm:min-h-[190px] text-left rounded-[18px] border p-3.5 sm:p-4 transition-all duration-200 cursor-pointer outline-hidden',
         'bg-[#121316] text-card-foreground shadow-xs',
         'focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background',
         isSelected

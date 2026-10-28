@@ -6,7 +6,7 @@ export const isOwnerShopView = (view: View) => view === 'user-dashboard' || view
 const exactRoutes: Record<string, View> = {
   '/': 'landing', '/login': 'login', '/signup': 'signup', '/onboarding': 'onboarding',
   '/subscription': 'admin-subscription', '/demo': 'demo', '/contact': 'contact',
-  '/privacy': 'privacy', '/terms': 'terms', '/brand-book': 'brand-book',
+  '/privacy': 'privacy', '/terms': 'terms', '/about': 'about', '/about-us': 'about', '/brand-book': 'brand-book',
   '/qr-menu': 'seo-qr-menu', '/digital-menu': 'seo-digital-menu', '/restaurant-menu': 'seo-restaurant-menu',
   '/admin': 'company-admin-login', '/admin-login': 'company-admin-login', '/admin-portal': 'company-admin',
 };

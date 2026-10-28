@@ -21,7 +21,7 @@ import { ImageCropperModal } from '@/components/shared/ImageCropperModal';
 import { CategoryTabs } from '@/components/shared/CategoryTabs';
 import { CategoryReorderModal } from '@/components/shared/CategoryReorderModal';
 import { trackEvent } from '@/lib/analytics';
-import { FREE_PLAN_LIMITS, hasPaidMenuAccess } from '@/lib/subscription';
+import { FREE_PLAN_LIMITS, PRO_PLAN_LIMITS, hasPaidMenuAccess } from '@/lib/subscription';
 import { PlanStatusBanner } from '@/components/subscription/PlanStatusBanner';
 import { toast } from 'sonner';
 import { MenuService, CategoryService, StorageService } from '@/services';
@@ -38,7 +38,11 @@ export function AdminAddFoodPage() {
   const { foodItems, categories } = state;
   // Items over the Free plan limits stay editable here but are hidden from customers.
   const hiddenIds = new Set(state.planHiddenItemIds);
-  const atFreeItemLimit = !hasPaidMenuAccess(state.user?.subscription) && foodItems.length >= FREE_PLAN_LIMITS.items;
+  const isPaid = hasPaidMenuAccess(state.user?.subscription);
+  const planLimits = isPaid ? PRO_PLAN_LIMITS : FREE_PLAN_LIMITS;
+  const atItemLimit = foodItems.length >= planLimits.items;
+  const currentCategories = categories.filter((c) => c.id !== 'all');
+  const atCategoryLimit = currentCategories.length >= planLimits.categories;
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [showForm, setShowForm] = useState(false);
@@ -70,10 +74,14 @@ export function AdminAddFoodPage() {
   });
 
   const handleOpenForm = (item?: FoodItem) => {
-    if (!item && atFreeItemLimit) {
-      toast.error(`The Free plan allows up to ${FREE_PLAN_LIMITS.items} menu items. Upgrade to Pro to add more.`, {
-        action: { label: 'Upgrade', onClick: () => dispatch({ type: 'SET_VIEW', payload: 'admin-subscription' }) },
-      });
+    if (!item && atItemLimit) {
+      if (!isPaid) {
+        toast.error(`The Free plan allows up to ${FREE_PLAN_LIMITS.items} food items. Upgrade to Pro to add more.`, {
+          action: { label: 'Upgrade', onClick: () => dispatch({ type: 'SET_VIEW', payload: 'admin-subscription' }) },
+        });
+      } else {
+        toast.error(`The Pro plan allows up to ${PRO_PLAN_LIMITS.items} food items. Plan limit reached.`);
+      }
       return;
     }
     setIsCreatingCategory(false);
@@ -102,12 +110,35 @@ export function AdminAddFoodPage() {
   const handleSave = async () => {
     if (!formData.name || formData.originalPrice === undefined) return;
 
+    if (!editingItem && atItemLimit) {
+      if (!isPaid) {
+        toast.error(`The Free plan allows up to ${FREE_PLAN_LIMITS.items} food items. Upgrade to Pro to add more.`, {
+          action: { label: 'Upgrade', onClick: () => dispatch({ type: 'SET_VIEW', payload: 'admin-subscription' }) },
+        });
+      } else {
+        toast.error(`The Pro plan allows up to ${PRO_PLAN_LIMITS.items} food items. Plan limit reached.`);
+      }
+      return;
+    }
+
     const finalPrice = formData.discountedPrice ? formData.discountedPrice : formData.originalPrice;
     const discount = formData.discountedPrice ? Math.round(((formData.originalPrice - formData.discountedPrice) / formData.originalPrice) * 100) : 0;
 
     let finalCategoryName = formData.category || '';
     if (isCreatingCategory && newCategoryName.trim()) {
       finalCategoryName = newCategoryName.trim();
+    }
+
+    const isNewCat = !!finalCategoryName && !currentCategories.some(c => c.name.toLowerCase() === finalCategoryName.toLowerCase());
+    if (isNewCat && atCategoryLimit) {
+      if (!isPaid) {
+        toast.error(`The Free plan allows up to ${FREE_PLAN_LIMITS.categories} categories. Upgrade to Pro to add more.`, {
+          action: { label: 'Upgrade', onClick: () => dispatch({ type: 'SET_VIEW', payload: 'admin-subscription' }) },
+        });
+      } else {
+        toast.error(`The Pro plan allows up to ${PRO_PLAN_LIMITS.categories} categories. Plan limit reached.`);
+      }
+      return;
     }
     
     let newItemId = `item-${Date.now()}`;
@@ -393,7 +424,23 @@ export function AdminAddFoodPage() {
                         ))}
                     </SelectContent>
                   </Select>
-                  <Button type="button" variant="outline" onClick={() => setIsCreatingCategory(true)}>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => {
+                      if (atCategoryLimit) {
+                        if (!isPaid) {
+                          toast.error(`The Free plan allows up to ${FREE_PLAN_LIMITS.categories} categories. Upgrade to Pro to add more.`, {
+                            action: { label: 'Upgrade', onClick: () => dispatch({ type: 'SET_VIEW', payload: 'admin-subscription' }) },
+                          });
+                        } else {
+                          toast.error(`The Pro plan allows up to ${PRO_PLAN_LIMITS.categories} categories. Plan limit reached.`);
+                        }
+                        return;
+                      }
+                      setIsCreatingCategory(true);
+                    }}
+                  >
                     <Plus className="w-4 h-4 mr-2" />
                     New
                   </Button>

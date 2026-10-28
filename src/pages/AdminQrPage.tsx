@@ -7,6 +7,7 @@ import { useApp } from '@/store';
 import { AdminQrSettings } from '@/components/admin/AdminQrSettings';
 import { normalizeQrColorStyle, normalizeQrPattern } from '@/lib/qrCode';
 import { markQrGenerated, withQrGenerated } from '@/lib/qrProgress';
+import { isProActive } from '@/lib/subscription';
 
 export function AdminQrPage() {
   const { state, dispatch } = useApp();
@@ -20,7 +21,14 @@ export function AdminQrPage() {
     setQrPattern(normalizeQrPattern((shop.theme as any)?.qrPattern));
   }, [shop.theme]);
 
+  const proActive = isProActive(state.user?.subscription);
+
   const handleSave = async () => {
+    const isAdvanced = qrStyle === 'brand' || qrPattern === 'rounded';
+    if (!proActive && isAdvanced) {
+      toast.error('Advanced QR branding is a Pro feature. Upgrade to Pro to customize with brand styling.');
+      return;
+    }
     setIsSaving(true);
     try {
       // Saving a QR design also completes the onboarding QR step.
@@ -76,6 +84,7 @@ export function AdminQrPage() {
       {/* Content */}
       <div className="px-4 py-4">
         <AdminQrSettings
+          proActive={proActive}
           shopUrl={getShopMenuUrl(shop, window.location.origin)}
           themePrimary={shop.theme?.primary || '#090A0C'}
           themeAccent={shop.theme?.accent || '#FB8500'}

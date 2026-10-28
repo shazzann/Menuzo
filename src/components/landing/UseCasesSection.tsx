@@ -133,10 +133,8 @@ export function UseCasesSection() {
           <div className="bg-white dark:bg-zinc-900 rounded-[2rem] border border-border/50 shadow-sm overflow-hidden p-6 md:p-10 transition-colors duration-300">
             <div className="flex flex-col lg:flex-row gap-10 lg:gap-16 items-center">
               
-              {/* Screenshot Area (Mobile Frame) */}
-              <div className="w-[280px] lg:w-[320px] h-[580px] lg:h-[675px] shrink-0 mx-auto lg:mx-0 rounded-[2.5rem] lg:rounded-[3rem] border-[8px] border-zinc-900 dark:border-black bg-zinc-950 overflow-hidden shadow-2xl relative">
-                {/* iPhone Notch */}
-                <div className="absolute top-0 inset-x-0 h-6 lg:h-7 bg-zinc-900 dark:bg-black rounded-b-3xl w-32 lg:w-40 mx-auto z-20" />
+              {/* Screenshot Area (Curved Rectangle) */}
+              <div className="w-[280px] lg:w-[320px] h-[580px] lg:h-[675px] shrink-0 mx-auto lg:mx-0 rounded-2xl lg:rounded-3xl border border-border/60 bg-card overflow-hidden shadow-2xl relative">
 
                 <AnimatePresence mode="wait">
                   <motion.div

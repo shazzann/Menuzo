@@ -6,14 +6,36 @@ interface ThemeColorSwatchesProps {
   colors: ThemeConfig;
   swatches?: [SwatchInfo, SwatchInfo, SwatchInfo];
   className?: string;
+  showLabels?: boolean;
 }
 
-export function ThemeColorSwatches({ colors, swatches, className }: ThemeColorSwatchesProps) {
+export function ThemeColorSwatches({
+  colors,
+  swatches,
+  className,
+  showLabels = false,
+}: ThemeColorSwatchesProps) {
   const displaySwatches: [SwatchInfo, SwatchInfo, SwatchInfo] = swatches ?? [
     { label: 'Primary', hex: colors.primary },
     { label: 'Surface', hex: colors.secondary },
     { label: 'Accent', hex: colors.accent },
   ];
+
+  if (!showLabels) {
+    return (
+      <div className={cn('grid grid-cols-3 gap-2 sm:gap-2.5 w-full', className)}>
+        {displaySwatches.map((swatch, idx) => (
+          <div
+            key={idx}
+            className="h-8 sm:h-9 w-full rounded-lg border border-neutral-700/70 shadow-xs relative overflow-hidden transition-transform duration-200 group-hover:scale-[1.02]"
+            style={{ backgroundColor: swatch.hex }}
+            title={`${swatch.label}: ${swatch.hex}`}
+            aria-label={`${swatch.label}: ${swatch.hex}`}
+          />
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div className={cn('grid grid-cols-3 gap-1.5 sm:gap-2.5 w-full', className)}>

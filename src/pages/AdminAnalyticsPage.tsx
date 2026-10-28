@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Settings, CreditCard, Calendar, QrCode, Utensils, LayoutGrid } from 'lucide-react';
+import { Settings, CreditCard, Calendar, QrCode, Utensils, LayoutGrid, Crown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useApp } from '@/store';
 import { BottomNav } from '@/components/shared/BottomNav';
@@ -118,6 +118,27 @@ export function AdminAnalyticsPage() {
             {proActive ? 'Manage Subscription' : 'Choose Pro'}
           </Button>
         </div>
+
+        {!proActive && (
+          <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-start gap-3">
+              <Crown className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+              <div>
+                <p className="font-semibold text-sm">Analytics Dashboard is a Pro Feature</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Upgrade to Menuzo Pro for full access to live menu view tracking, QR scan analytics, and customer engagement trends.
+                </p>
+              </div>
+            </div>
+            <Button
+              size="sm"
+              className="bg-primary text-primary-foreground hover:bg-primary/90 shrink-0"
+              onClick={() => dispatch({ type: 'SET_VIEW', payload: 'admin-subscription' })}
+            >
+              Upgrade to Pro
+            </Button>
+          </div>
+        )}
 
         {/* Shop Content Stats */}
         <div>

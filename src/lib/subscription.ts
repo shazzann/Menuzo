@@ -27,6 +27,11 @@ export function subscriptionFromProfile(profile: {
 export const PRO_GRACE_DAYS = 3;
 export const PRO_ENDING_SOON_DAYS = 7;
 export const FREE_PLAN_LIMITS = { items: 10, categories: 2 } as const;
+export const PRO_PLAN_LIMITS = { items: 100, categories: 20 } as const;
+
+export function getPlanLimits(subscription: User['subscription'] | undefined, now = Date.now()) {
+  return hasPaidMenuAccess(subscription, now) ? PRO_PLAN_LIMITS : FREE_PLAN_LIMITS;
+}
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 

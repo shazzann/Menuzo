@@ -30,6 +30,21 @@ export function Navbar() {
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
     e.preventDefault();
     setMobileMenuOpen(false);
+    if (state.currentView !== 'landing' && href.startsWith('#')) {
+      dispatch({ type: 'SET_VIEW', payload: 'landing' });
+      setTimeout(() => {
+        const element = document.querySelector(href);
+        if (element) {
+          const offset = 80;
+          const elementPosition = element.getBoundingClientRect().top + window.scrollY;
+          window.scrollTo({
+            top: elementPosition - offset,
+            behavior: 'smooth'
+          });
+        }
+      }, 50);
+      return;
+    }
     const element = document.querySelector(href);
     if (element) {
       const offset = 80;

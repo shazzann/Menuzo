@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowRight, ChevronRight, Star, QrCode, BarChart3, CheckCircle2, Play } from 'lucide-react';
+import { ArrowRight, ChevronRight, QrCode, BarChart3, CheckCircle2, Play } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useApp } from '@/store';
 import { motion } from 'framer-motion';
@@ -52,10 +52,6 @@ export function HeroSection() {
 
       <div className="max-w-7xl mx-auto text-center relative z-10">
         <motion.div variants={containerVariants} initial="hidden" animate="show" className="max-w-3xl mx-auto flex flex-col items-center">
-          <motion.div variants={itemVariants} className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-semibold uppercase tracking-widest mb-8 backdrop-blur-sm shadow-[0_0_20px_rgba(255,100,50,0.2)]">
-            <Star className="w-3 h-3 fill-primary" />
-            Join 1,000+ modern restaurants
-          </motion.div>
           <motion.h1 variants={itemVariants} className="text-5xl sm:text-7xl md:text-8xl font-bold leading-[1.1] mb-8 tracking-tighter">
             Your menu.<br />
             <span className="text-transparent bg-clip-text bg-gradient-to-br from-primary via-orange-400 to-red-500">Live in minutes.</span>
@@ -86,9 +82,7 @@ export function HeroSection() {
 
             {/* Trust Elements */}
             <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs font-semibold text-muted-foreground uppercase tracking-widest">
-              <span className="flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-green-500" /> No credit card required</span>
               <span className="flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-green-500" /> Setup in under 5 minutes</span>
-              <span className="flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-green-500" /> Free forever plan</span>
             </div>
           </motion.div>
         </motion.div>

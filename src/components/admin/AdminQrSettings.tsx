@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
 interface AdminQrSettingsProps {
+  proActive?: boolean;
   shopUrl: string;
   themePrimary: string;
   themeAccent: string;

@@ -102,6 +102,10 @@ export function CompanyPlans() {
               {plan.period && <span className="text-sm text-muted-foreground font-medium">{plan.period}</span>}
             </div>
 
+            {plan.billingNote && (
+              <p className="text-xs text-muted-foreground -mt-2 mb-3">{plan.billingNote}</p>
+            )}
+
             <p className="text-sm text-muted-foreground mb-4 flex-grow">
               {plan.description}
             </p>
