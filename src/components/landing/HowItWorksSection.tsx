@@ -9,7 +9,7 @@ export function HowItWorksSection() {
       title: 'Pick your vibe.',
       description: 'Start with a beautifully designed modern layout. Customize colors, fonts, and branding to perfectly match your restaurant\'s aesthetic.',
       icon: <Palette className="w-6 h-6 text-orange-500" />,
-      image: '/Landing/how-1.jpeg',
+      image: '/Landing/mobile13.png',
       color: 'bg-orange-500/10'
     },
     {
@@ -17,7 +17,7 @@ export function HowItWorksSection() {
       title: 'Add your menu.',
       description: 'Upload mouth-watering photos, set up categories, and add customization options like sizes or dietary tags in just a few clicks.',
       icon: <ListPlus className="w-6 h-6 text-blue-500" />,
-      image: '/Landing/mobile10.jpeg',
+      image: '/Landing/mobile7.png',
       color: 'bg-blue-500/10'
     },
     {
@@ -25,7 +25,7 @@ export function HowItWorksSection() {
       title: 'Go live instantly.',
       description: 'Generate high-quality QR codes for your tables. Customers scan, view your stunning digital menu, and order instantly—no app required.',
       icon: <QrCode className="w-6 h-6 text-emerald-500" />,
-      image: '/Landing/mobile12.jpeg',
+      image: '/Landing/mobile14.png',
       color: 'bg-emerald-500/10'
     },
   ];
@@ -111,12 +111,9 @@ export function HowItWorksSection() {
                   transition={{ duration: 0.7, ease: "easeOut", delay: 0.2 }}
                   className="w-full lg:w-1/2 flex justify-center mt-8 lg:mt-0"
                 >
-                  <div className="relative w-[280px] lg:w-[320px] h-[595px] lg:h-[678px] rounded-[2.5rem] lg:rounded-[3rem] border-[8px] border-zinc-900 dark:border-black bg-zinc-950 overflow-hidden shadow-2xl shrink-0">
-                    {/* iPhone Notch */}
-                    <div className="absolute top-0 inset-x-0 h-6 lg:h-7 bg-zinc-900 dark:bg-black rounded-b-3xl w-32 lg:w-40 mx-auto z-20" />
-
-                    {/* Screen content */}
-                    <div className="w-full h-full relative z-0 bg-muted">
+                  <div className="relative p-2.5 sm:p-3 rounded-[2.25rem] sm:rounded-[2.5rem] border border-neutral-800/80 bg-[#121316] shadow-2xl shrink-0">
+                    {/* Screen content with exact aspect ratio */}
+                    <div className="w-[240px] sm:w-[260px] lg:w-[280px] aspect-[1179/2556] rounded-[1.5rem] sm:rounded-[1.8rem] overflow-hidden relative z-0 bg-black">
                       {/* Fallback pattern */}
                       <div className="absolute inset-0 flex flex-col items-center justify-center text-zinc-400 bg-zinc-100 dark:bg-zinc-900 -z-10 text-center px-4">
                         {item.icon}
@@ -126,7 +123,7 @@ export function HowItWorksSection() {
                       <img
                         src={item.image}
                         alt={item.title}
-                        className="w-full h-full object-cover object-top relative z-0 transition-transform duration-700"
+                        className="w-full h-full object-cover block relative z-0 select-none pointer-events-none"
                         onError={(e) => {
                           (e.target as HTMLImageElement).style.opacity = '0';
                         }}

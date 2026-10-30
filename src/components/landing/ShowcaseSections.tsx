@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { BarChart3, Layout, Smartphone, QrCode, Palette, Store, Settings, MousePointerClick } from 'lucide-react';
+import { BarChart3, Layout, Smartphone, QrCode, Palette, Store, MousePointerClick, Image, Frame } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export function InteractiveProductPreviewSection() {
@@ -122,20 +122,23 @@ export function QRShowcaseSection() {
 
             <div className="space-y-6">
               {[
-                { title: 'Brand Colors', desc: 'Match your QR to your exact hex codes.' },
-                { title: 'Logo Integration', desc: 'Place your restaurant logo right in the center.' },
-                { title: 'Frame Styles', desc: 'Add "Scan to View Menu" frames automatically.' }
-              ].map((item, i) => (
-                <div key={i} className="flex gap-4 p-4 rounded-2xl bg-card border border-border/50 hover:border-primary/50 transition-colors">
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                    <Settings className="w-5 h-5 text-primary" />
+                { title: 'Brand Colors', desc: 'Match your QR to your exact hex codes.', icon: Palette },
+                { title: 'Logo Integration', desc: 'Place your restaurant logo right in the center.', icon: Image },
+                { title: 'Frame Styles', desc: 'Add "Scan to View Menu" frames automatically.', icon: Frame }
+              ].map((item, i) => {
+                const Icon = item.icon;
+                return (
+                  <div key={i} className="flex gap-4 p-4 rounded-2xl bg-card border border-border/50 hover:border-primary/50 transition-colors">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                      <Icon className="w-5 h-5 text-primary" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-lg">{item.title}</h4>
+                      <p className="text-muted-foreground text-sm">{item.desc}</p>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="font-semibold text-lg">{item.title}</h4>
-                    <p className="text-muted-foreground text-sm">{item.desc}</p>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>

@@ -26,7 +26,7 @@ export function FAQSection() {
     },
     {
       q: 'Can I use my own domain name?',
-      a: 'Custom domains are available on our Business plan. Otherwise, you get a clean menuzo.app/your-restaurant link.'
+      a: 'Custom menu links are available on our Pro plan. Otherwise, you get a clean standard menuzo link.'
     }
   ];
 

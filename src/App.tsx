@@ -8,6 +8,7 @@ import { DemoPage } from '@/pages/DemoPage';
 import { SeoLandingPage } from '@/pages/SeoLandingPage';
 import { ContactPage } from '@/pages/ContactPage';
 import { LegalPage } from '@/pages/LegalPage';
+import { AboutPage } from '@/pages/AboutPage';
 import { CustomerMenuPage } from '@/pages/CustomerMenuPage';
 import { FoodDetailPage } from '@/pages/FoodDetailPage';
 import { ShopDetailPage } from '@/pages/ShopDetailPage';
@@ -143,6 +144,8 @@ function AppContent() {
       return <LegalPage type="privacy" />;
     case 'terms':
       return <LegalPage type="terms" />;
+    case 'about':
+      return <AboutPage />;
     case 'seo-qr-menu':
     case 'seo-digital-menu':
     case 'seo-restaurant-menu':

@@ -16,6 +16,7 @@ function getUrlForView(view: View, username: string, state: AppState, foodId?: s
     case 'contact': return '/contact';
     case 'privacy': return '/privacy';
     case 'terms': return '/terms';
+    case 'about': return '/about';
     case 'seo-qr-menu': return '/qr-menu';
     case 'seo-digital-menu': return '/digital-menu';
     case 'seo-restaurant-menu': return '/restaurant-menu';

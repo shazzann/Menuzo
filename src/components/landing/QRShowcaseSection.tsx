@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Settings, Download, Share2 } from 'lucide-react';
+import { Download, Share2, Palette, Image, Frame } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 
@@ -56,20 +56,23 @@ export function QRShowcaseSection() {
 
             <div className="space-y-6">
               {[
-                { title: 'Brand Colors', desc: 'Match your QR to your exact hex codes.' },
-                { title: 'Logo Integration', desc: 'Place your restaurant logo right in the center.' },
-                { title: 'Frame Styles', desc: 'Add "Scan to View Menu" frames automatically.' }
-              ].map((item, i) => (
-                <div key={i} className="flex gap-4 p-5 rounded-2xl bg-card border border-border/50 hover:border-primary/50 transition-colors shadow-sm group">
-                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary group-hover:text-white transition-colors duration-300 text-primary">
-                    <Settings className="w-5 h-5" />
+                { title: 'Brand Colors', desc: 'Match your QR to your exact hex codes.', icon: Palette },
+                { title: 'Logo Integration', desc: 'Place your restaurant logo right in the center.', icon: Image },
+                { title: 'Frame Styles', desc: 'Add "Scan to View Menu" frames automatically.', icon: Frame }
+              ].map((item, i) => {
+                const Icon = item.icon;
+                return (
+                  <div key={i} className="flex gap-4 p-5 rounded-2xl bg-card border border-border/50 hover:border-primary/50 transition-colors shadow-sm group">
+                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary group-hover:text-white transition-colors duration-300 text-primary">
+                      <Icon className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-lg mb-1">{item.title}</h4>
+                      <p className="text-muted-foreground">{item.desc}</p>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="font-bold text-lg mb-1">{item.title}</h4>
-                    <p className="text-muted-foreground">{item.desc}</p>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </motion.div>
         </div>

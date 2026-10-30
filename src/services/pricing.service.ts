@@ -3,6 +3,7 @@ export interface PricingPlan {
   name: string;
   price: string;
   period?: string;
+  billingNote?: string;
   description: string;
   features: string[];
   notIncluded?: string[];
@@ -15,22 +16,24 @@ const defaultPlans: PricingPlan[] = [
   {
     id: 'free',
     name: 'Free',
-    price: 'Free',
-    period: 'Forever',
+    price: 'LKR 0',
+    period: 'Forever free',
     description: 'Perfect for cafés and small restaurants getting started with digital menus.',
     features: [
-      'Up to 10 Menu Items',
-      'Up to 2 Categories',
-      'QR Code Menu',
-      'Custom Theme Designer',
-      'Custom QR Code Branding',
-      'Analytics Dashboard',
+      '10 Food Items',
+      '2 Categories',
+      'QR Menu',
+      'Limited Themes (3–5 preset themes)',
+      'Basic QR Branding',
       'Restaurant Profile',
-      'Shareable Menu Link'
+      'Shareable Menu Link',
+      'Standard Support'
     ],
     notIncluded: [
+      'Analytics Dashboard',
       'Custom Menu URL',
-      'Priority Support'
+      'Full Theme Customization',
+      'Advanced QR Branding'
     ],
     cta: 'Get Started Free',
     popular: false,
@@ -38,20 +41,21 @@ const defaultPlans: PricingPlan[] = [
   {
     id: 'pro',
     name: 'Pro',
-    price: '$19',
-    period: '/mo',
+    price: 'LKR 1,500',
+    period: '/month',
+    billingNote: 'Monthly plan: LKR 1,500 per month.',
     description: 'Everything you need to run a professional digital menu with your own branding, advanced analytics, and higher limits.',
     features: [
-      'Up to 100 Menu Items',
-      'Up to 20 Categories',
-      'QR Code Menu',
-      'Custom Theme Designer',
-      'Custom QR Code Branding',
-      'Custom Menu URL',
-      'Advanced Analytics Dashboard',
-      'Priority Support',
+      '100 Food Items',
+      '20 Categories',
+      'QR Menu',
+      'Full Theme Customization',
+      'Advanced QR Branding',
+      'Analytics Dashboard',
       'Restaurant Profile',
-      'Shareable Menu Link'
+      'Shareable Menu Link',
+      'Custom Menu URL',
+      'Priority Support'
     ],
     cta: 'Upgrade to Pro',
     popular: true,
@@ -64,7 +68,12 @@ export const PricingService = {
     const stored = localStorage.getItem('menuzo_pricing_plans');
     if (stored) {
       try {
-        return JSON.parse(stored);
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.some(p => p.id === 'pro' && (p.price === '$19' || p.price === '3500' || p.price === 'LKR 3,500' || p.price === 'LKR 3,500.00' || p.price === '1500'))) {
+          localStorage.removeItem('menuzo_pricing_plans');
+          return defaultPlans;
+        }
+        return parsed;
       } catch (e) {
         return defaultPlans;
       }

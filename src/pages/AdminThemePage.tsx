@@ -36,7 +36,7 @@ export function AdminThemePage() {
 
   const handleSave = async () => {
     if (isLocked) {
-      toast.error('This is a Pro theme. Upgrade to Pro to apply it.');
+      toast.error('Free users can select preset themes. Upgrade to Pro for full theme customization.');
       return;
     }
     if (![selectedTheme.primary, selectedTheme.secondary, selectedTheme.accent].every(isValidThemeColor)) {

@@ -113,3 +113,27 @@ test('applying a theme changes only the colours and keeps QR settings and onboar
   assert.equal(saved.primary, '#090A0C', 'The current theme object is not changed');
   assert.equal(JSON.stringify(themes.withThemeColors(undefined, { primary:'#000000', secondary:'#111111', accent:'#222222' })), JSON.stringify({ primary:'#000000', secondary:'#111111', accent:'#222222' }));
 });
+
+test('active theme sorts to the top of curated themes list', () => {
+  const curated = load('src/components/admin/theme/curatedThemes.ts', { '@/lib/themeUtils': themes });
+  const allCurated = curated.CURATED_THEMES;
+  const oceanBreeze = allCurated.find(t => t.name === 'Ocean Breeze');
+  assert.ok(oceanBreeze);
+  assert.notEqual(allCurated[0].name, 'Ocean Breeze');
+
+  const isMatching = (a, b) => (
+    a.primary.toLowerCase() === b.primary.toLowerCase() &&
+    a.secondary.toLowerCase() === b.secondary.toLowerCase() &&
+    a.accent.toLowerCase() === b.accent.toLowerCase()
+  );
+
+  const sorted = [...allCurated].sort((a, b) => {
+    const aIsApplied = isMatching(a.colors, oceanBreeze.colors);
+    const bIsApplied = isMatching(b.colors, oceanBreeze.colors);
+    if (aIsApplied && !bIsApplied) return -1;
+    if (!aIsApplied && bIsApplied) return 1;
+    return 0;
+  });
+
+  assert.equal(sorted[0].name, 'Ocean Breeze', 'Active theme must be at the top of the list');
+});

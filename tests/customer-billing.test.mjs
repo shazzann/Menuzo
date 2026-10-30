@@ -472,8 +472,8 @@ test('Free plan comparison shows benefits and blocks checkout when pricing is un
   assert.match(rendered.html, /Monthly/);
   assert.match(rendered.html, /Yearly/);
   assert.match(rendered.html, /Coming soon/);
-  assert.match(rendered.html, /Menu items: Up to 10/);
-  assert.match(rendered.html, /Menu items: Up to 100/);
+  assert.match(rendered.html, /Food items: 10/);
+  assert.match(rendered.html, /Food items: 100/);
   const upgrade = findElement(rendered.tree, element => typeof element.props.onClick === 'function' && textOf(element) === 'Upgrade to Pro');
   assert.equal(upgrade.props.disabled,true);
   upgrade.props.onClick();
@@ -731,6 +731,7 @@ test('Pro warns 7 days before it ends, keeps a 3-day grace period, then becomes 
   assert.equal(subscription.subscriptionPhase(pro(-1, 'cancelled'), now).phase, 'free', 'Suspended or revoked plans get no grace');
   assert.equal(subscription.subscriptionPhase(subscription.freeSubscription(), now).phase, 'free');
   assert.equal(subscription.FREE_PLAN_LIMITS.items, 10); assert.equal(subscription.FREE_PLAN_LIMITS.categories, 2);
+  assert.equal(subscription.PRO_PLAN_LIMITS.items, 100); assert.equal(subscription.PRO_PLAN_LIMITS.categories, 20);
 });
 
 test('one plan notice at a time: ending soon, grace, or hidden items', () => {
@@ -741,4 +742,63 @@ test('one plan notice at a time: ending soon, grace, or hidden items', () => {
   assert.equal(subscription.planNotice(pro(-1), 0, now), 'grace');
   assert.equal(subscription.planNotice(pro(-4), 5, now), 'hidden');
   assert.equal(subscription.planNotice(subscription.freeSubscription(), 0, now), null);
+});
+
+test('plan comparison features match the configured 10-feature matrix', () => {
+  const rendered = renderToStaticMarkup(React.createElement(comparison.SubscriptionPlanComparison, {
+    periods: [
+      { id: 'monthly', label: 'Monthly', months: 1, amount: 3500, currency: 'LKR', active: true },
+      { id: 'yearly', label: 'Yearly', months: 12, amount: 33600, currency: 'LKR', active: true },
+    ],
+    selectedId: 'monthly',
+    loading: false,
+    ready: true,
+    onSelect: () => {},
+    onUpgrade: () => {},
+    onKeepFree: () => {},
+  }));
+
+  // 1. Food items: 10 vs 100
+  assert.match(rendered, /Food items: 10/);
+  assert.match(rendered, /Food items: 100/);
+  // 2. Categories: 2 vs 20
+  assert.match(rendered, /Categories: 2/);
+  assert.match(rendered, /Categories: 20/);
+  // 3. QR menu
+  assert.match(rendered, /QR menu/);
+  // 4. Custom theme: Limited (3–5 preset themes) vs Full customization
+  assert.match(rendered, /Custom theme: Limited \(3[\u2013-]5 preset themes\)/);
+  assert.match(rendered, /Custom theme: Full customization/);
+  // 5. Custom QR branding: Basic vs Advanced
+  assert.match(rendered, /Custom QR branding: Basic/);
+  assert.match(rendered, /Custom QR branding: Advanced/);
+  // 6. Analytics dashboard: Pro only
+  assert.match(rendered, /Analytics dashboard.*Pro only/);
+  // 7. Restaurant profile
+  assert.match(rendered, /Restaurant profile/);
+  // 8. Shareable menu link
+  assert.match(rendered, /Shareable menu link/);
+  // 9. Custom menu URL: Pro only
+  assert.match(rendered, /Custom menu URL.*Pro only/);
+  // 10. Support: Standard vs Priority
+  assert.match(rendered, /Support: Standard/);
+  assert.match(rendered, /Support: Priority/);
+});
+
+test('getPlanLimits returns 10/2 for Free and 100/20 for Pro', () => {
+  const now = Date.parse('2026-10-24T12:00:00Z');
+  const freeLimits = subscription.getPlanLimits(subscription.freeSubscription(), now);
+  assert.equal(freeLimits.items, 10);
+  assert.equal(freeLimits.categories, 2);
+
+  const activePro = { plan: 'pro', status: 'active', expiresAt: new Date(now + 86400000 * 10) };
+  const proLimits = subscription.getPlanLimits(activePro, now);
+  assert.equal(proLimits.items, 100);
+  assert.equal(proLimits.categories, 20);
+
+  const gracePro = { plan: 'pro', status: 'expired', expiresAt: new Date(now - 86400000) };
+  assert.equal(subscription.getPlanLimits(gracePro, now).items, 100);
+
+  const expiredPro = { plan: 'pro', status: 'expired', expiresAt: new Date(now - 86400000 * 5) };
+  assert.equal(subscription.getPlanLimits(expiredPro, now).items, 10);
 });

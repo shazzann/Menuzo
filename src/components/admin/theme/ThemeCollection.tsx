@@ -52,6 +52,17 @@ export function ThemeCollection({
     });
   }, [themes, searchQuery, activeCategory]);
 
+  // Sort themes so that the active (applied) theme is always at the top of the list
+  const sortedThemes = useMemo(() => {
+    return [...filteredThemes].sort((a, b) => {
+      const aIsApplied = isMatchingTheme(a.colors, appliedTheme);
+      const bIsApplied = isMatchingTheme(b.colors, appliedTheme);
+      if (aIsApplied && !bIsApplied) return -1;
+      if (!aIsApplied && bIsApplied) return 1;
+      return 0;
+    });
+  }, [filteredThemes, appliedTheme]);
+
   return (
     <div className="space-y-4">
       {/* Section Header */}
@@ -124,13 +135,13 @@ export function ThemeCollection({
       </div>
 
       {/* Theme Cards Grid: 2 columns on mobile, 3 on tablet, 4 on desktop */}
-      {filteredThemes.length > 0 ? (
+      {sortedThemes.length > 0 ? (
         <div 
           role="radiogroup" 
           aria-label="Curated color themes"
           className="grid grid-cols-1 min-[420px]:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4"
         >
-          {filteredThemes.map((theme) => {
+          {sortedThemes.map((theme) => {
             const isSelected = isMatchingTheme(theme.colors, currentTheme);
             const isApplied = isMatchingTheme(theme.colors, appliedTheme);
 

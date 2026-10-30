@@ -19,7 +19,7 @@ their history and rejection reasons and submit a corrected request after rejecti
 
 ## Database setup
 
-The production-only bank details and LKR 1,500 monthly / LKR 15,000 yearly prices
+The production-only bank details and regular LKR 3,500 monthly / LKR 33,600 yearly prices
 provided by the owner are configured in production. The private deployment SQL is kept locally in `supabase/production/configure_billing.sql` and excluded from Git.
 Run it only against the production project after the billing schema migration.
 It is deliberately outside the automatic migrations so local databases keep

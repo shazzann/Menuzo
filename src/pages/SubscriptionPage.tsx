@@ -24,7 +24,15 @@ export function SubscriptionPage() {
   const [bank, setBank] = useState<BankTransferSettings | null>(null);
   const [requests, setRequests] = useState<PaymentRequest[]>([]);
   const [customUrl, setCustomUrl] = useState<ShopCustomUrl | null>(null);
-  const [selectedId, setSelectedId] = useState('monthly');
+  const [selectedId, setSelectedId] = useState(() => {
+    try {
+      if (typeof sessionStorage !== 'undefined') {
+        const saved = sessionStorage.getItem('menuzo_upgrade_period');
+        if (saved === 'yearly' || saved === 'monthly') return saved;
+      }
+    } catch {}
+    return 'monthly';
+  });
   const [step, setStep] = useState(0);
   const [checkoutPeriod, setCheckoutPeriod] = useState<BillingPeriod | null>(null);
   const [loading, setLoading] = useState(true);

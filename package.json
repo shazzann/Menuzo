@@ -15,6 +15,9 @@
     "test:shop-loading": "node --test tests/shop-loading.test.mjs",
     "test:urls": "node --test tests/shop-urls.test.mjs tests/shop-loading.test.mjs",
     "test:auth": "node --test tests/auth-session.test.mjs tests/shop-loading.test.mjs",
+    "test:plan-limits": "node --test tests/subscription-limits-access.test.mjs",
+    "test:legal": "node --test tests/legal-terms-routes.test.mjs",
+    "test:about": "node --test tests/about-page.test.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

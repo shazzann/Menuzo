@@ -52,14 +52,6 @@ export function FinalCTASection() {
         <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-4 mt-12 text-base text-muted-foreground font-semibold uppercase tracking-widest">
           <span className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-primary" />
-            Free forever plan
-          </span>
-          <span className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-primary" />
-            Cancel anytime
-          </span>
-          <span className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-primary" />
             24/7 Support
           </span>
         </div>
