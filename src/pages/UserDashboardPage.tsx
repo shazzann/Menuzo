@@ -42,6 +42,10 @@ export function UserDashboardPage() {
   const { state, dispatch } = useApp();
   const { shop, foodItems, user } = state;
   const proActive = isProActive(user?.subscription);
+  const userPlan = user?.subscription?.plan || 'free';
+  const isEnterprise = userPlan === 'enterprise' && proActive;
+  const isPlus = (userPlan === 'plus' || userPlan === 'pro') && proActive;
+  const planDisplayName = isEnterprise ? 'Enterprise' : isPlus ? 'Plus' : 'Free';
   const showPlanNotice = planNotice(user?.subscription, state.planHiddenItemIds.length) !== null;
   const isLoadingData = state.shopDataStatus === 'loading';
   const qrRef = useRef<SmallQrPreviewRef>(null);
@@ -136,30 +140,65 @@ export function UserDashboardPage() {
         <PlanStatusBanner />
 
         {/* Subscription / Plan Status (the plan alert above replaces it when shown) */}
-        {!showPlanNotice && <div className="p-4 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 shadow-sm flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-              <Crown className="w-5 h-5 text-primary" />
-            </div>
-            <div>
-              <p className="font-semibold text-sm">{proActive ? 'Pro Active' : 'Free Plan'}</p>
-              <p className="text-xs text-muted-foreground flex items-center gap-1">
-                <Calendar className="w-3 h-3" />
-                {proActive && user?.subscription.expiresAt
-                  ? `Expires ${new Date(user.subscription.expiresAt).toLocaleDateString()}`
-                  : 'Upgrade with a bank transfer'}
-              </p>
+        {!showPlanNotice && (
+          <div
+            className={`p-5 rounded-2xl border shadow-sm transition-all ${
+              isEnterprise
+                ? 'bg-gradient-to-br from-purple-500/15 via-purple-500/5 to-transparent border-purple-500/30'
+                : proActive
+                ? 'bg-gradient-to-br from-primary/15 via-primary/5 to-transparent border-primary/25'
+                : 'bg-card border-border'
+            }`}
+          >
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <div
+                  className={`w-10 h-10 sm:w-11 sm:h-11 rounded-2xl flex items-center justify-center shadow-md shrink-0 ${
+                    isEnterprise
+                      ? 'bg-purple-600 text-white'
+                      : proActive
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted text-muted-foreground'
+                  }`}
+                >
+                  <Crown className="w-5 h-5" />
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p className="font-bold text-sm sm:text-base">{planDisplayName} Plan</p>
+                    <span
+                      className={`text-[10px] sm:text-[11px] font-semibold px-2 py-0.5 rounded-full ${
+                        proActive
+                          ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                          : 'bg-muted text-muted-foreground'
+                      }`}
+                    >
+                      {proActive ? 'Active' : 'Starter'}
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground flex items-center gap-1.5 mt-0.5 truncate">
+                    <Calendar className="w-3.5 h-3.5 shrink-0" />
+                    <span>
+                      {proActive && user?.subscription.expiresAt
+                        ? `Renews / expires ${new Date(user.subscription.expiresAt).toLocaleDateString()}`
+                        : 'Upgrade anytime with bank transfer'}
+                    </span>
+                  </p>
+                </div>
+              </div>
+              <Button
+                variant={isEnterprise ? 'outline' : 'default'}
+                size="sm"
+                className={`rounded-xl shrink-0 font-medium ${
+                  isEnterprise ? 'border-purple-500/30 text-purple-400 hover:bg-purple-500/10' : ''
+                }`}
+                onClick={() => dispatch({ type: 'SET_VIEW', payload: 'admin-subscription' })}
+              >
+                {proActive ? 'Manage' : 'Upgrade to Plus'}
+              </Button>
             </div>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            className="border-primary/30 text-primary hover:bg-primary/10"
-            onClick={() => dispatch({ type: 'SET_VIEW', payload: 'admin-subscription' })}
-          >
-            {proActive ? 'Manage' : 'Choose Pro'}
-          </Button>
-        </div>}
+        )}
 
         {foodItems.length === 0 ? (
           <div className="flex flex-col items-center justify-center p-8 rounded-2xl bg-card border border-dashed border-border shadow-sm text-center">

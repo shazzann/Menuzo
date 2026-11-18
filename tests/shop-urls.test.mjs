@@ -22,10 +22,16 @@ function page(name,share) {
     deps[match[2]]=Object.fromEntries(match[1].split(',').map(value=>{const key=value.trim();return[key,key];}));
   }
   Object.assign(deps,{
-    react:{useState:initial=>[typeof initial==='function'?initial():initial,()=>{}],useEffect(){},useLayoutEffect(){},useRef:()=>({current:null}),useMemo:fn=>fn()},
+    react:{useState:initial=>[typeof initial==='function'?initial():initial,()=>{}],useEffect(){},useLayoutEffect(){},useRef:()=>({current:null}),useMemo:fn=>fn(),useCallback:fn=>fn},
     'react/jsx-runtime':jsx,'react-router-dom':{useLocation:()=>({}),useNavigate:()=>()=>{}},
+    'framer-motion':{
+      motion:new Proxy({},{get:(_,prop)=>prop}),
+      AnimatePresence:({children})=>children,
+      useMotionValue:()=>({get:()=>0}),
+      useTransform:()=>1
+    },
     '@/store':{useApp:()=>({state:{shop,planHiddenItemIds:[],foodItems:[food],categories:[{id:'all',name:'All'}],selectedFoodItem:food,user:{subscription:{plan:'free'}},currentView:name==='FoodDetailPage'?'customer-food-detail':'customer-menu',searchQuery:'',selectedCategory:'all'},dispatch(){}})},
-    '@/lib/shopUrls':urls,'@/lib/shopAnalytics':load('src/lib/shopAnalytics.ts'),'@/lib/subscription':{isProActive:()=>false,planNotice:()=>null},'@/lib/themeUtils':{isBrandTheme:()=>true},
+    '@/lib/shopUrls':urls,'@/lib/shopAnalytics':load('src/lib/shopAnalytics.ts'),'@/lib/subscription':{isProActive:()=>false,planNotice:()=>null,getPlanLimits:()=>({items:10,categories:2}),isPaidActive:()=>false},'@/lib/themeUtils':{isBrandTheme:()=>true},
     '@/lib/timeUtils':{checkShopStatus:()=>({isOpen:true})},
     '@/lib/qrCode':{normalizeQrColorStyle:()=>'classic',normalizeQrPattern:()=>'square',QR_PATTERNS:[],QR_COLOR_STYLES:[]},
     '@/hooks/useOnboardingStatus':{useOnboardingStatus:()=>({isComplete:false})},'@/hooks/useSEO':{useSEO(){}},

@@ -1,19 +1,23 @@
 import { useState } from 'react';
-import { Settings, CreditCard, Calendar, QrCode, Utensils, LayoutGrid, Crown } from 'lucide-react';
+import { Settings, Calendar, QrCode, Utensils, LayoutGrid, Crown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useApp } from '@/store';
 import { BottomNav } from '@/components/shared/BottomNav';
 import type { AdminTab } from '@/types';
 import { cn } from '@/lib/utils';
-import { isProActive } from '@/lib/subscription';
+import { isProActive, isPaidActive, getPlanLimits } from '@/lib/subscription';
 import { ANALYTICS_RANGE_LABELS, summarizeShopViews, viewsTrend, type AnalyticsRange } from '@/lib/shopAnalytics';
 import { MenuViewsChart, TrendBadge } from '@/components/admin/MenuViewsChart';
 
 export function AdminAnalyticsPage() {
   const { state, dispatch } = useApp();
   const { user, foodItems, categories, shop } = state;
-  const proActive = isProActive(user?.subscription);
-  const currentPlan = proActive ? 'pro' : 'free';
+  const proActive = typeof isPaidActive === 'function' ? isPaidActive(user?.subscription) : isProActive(user?.subscription);
+  const activePlanTier = user?.subscription?.plan ?? (proActive ? 'plus' : 'free');
+  const isEnterprise = proActive && activePlanTier === 'enterprise';
+  const planDisplayName = isEnterprise ? 'Enterprise' : proActive ? 'Plus' : 'Free';
+  const planLimits = typeof getPlanLimits === 'function' ? getPlanLimits(user?.subscription) : { items: 10, categories: 2 };
+  const currentCategories = (categories || []).filter((c) => c.id !== 'all');
   const [timeRange, setTimeRange] = useState<AnalyticsRange>('week');
 
   const handleTabChange = (tab: AdminTab) => {
@@ -34,22 +38,6 @@ export function AdminAnalyticsPage() {
       case 'analytics':
         // Already here
         break;
-    }
-  };
-
-  const getPlanColor = (plan: string) => {
-    switch (plan) {
-      case 'pro': return 'text-primary';
-      case 'enterprise': return 'text-purple-400';
-      default: return 'text-muted-foreground';
-    }
-  };
-
-  const getPlanBadge = (plan: string) => {
-    switch (plan) {
-      case 'pro': return 'bg-primary/20 text-primary';
-      case 'enterprise': return 'bg-purple-500/20 text-purple-400';
-      default: return 'bg-muted text-muted-foreground';
     }
   };
 
@@ -82,41 +70,63 @@ export function AdminAnalyticsPage() {
       </div>
 
       <div className="px-4 py-4 space-y-6">
-        {/* Subscription Card */}
-        <div className="p-5 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 card-border">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
-                <CreditCard className="w-5 h-5 text-primary" />
+        {/* Subscription & Usage Limits Card */}
+        <div
+          className={`p-5 rounded-2xl border shadow-sm transition-all ${
+            isEnterprise
+              ? 'bg-gradient-to-br from-purple-500/15 via-purple-500/5 to-transparent border-purple-500/30'
+              : proActive
+              ? 'bg-gradient-to-br from-primary/15 via-primary/5 to-transparent border-primary/25'
+              : 'bg-card border-border'
+          }`}
+        >
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <div
+                className={`w-10 h-10 sm:w-11 sm:h-11 rounded-2xl flex items-center justify-center shadow-md shrink-0 ${
+                  isEnterprise
+                    ? 'bg-purple-600 text-white'
+                    : proActive
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-muted text-muted-foreground'
+                }`}
+              >
+                <Crown className="w-5 h-5" />
               </div>
-              <div>
-                <p className="text-xs text-muted-foreground uppercase tracking-wider">Current Plan</p>
-                <p className={cn('font-bold text-lg capitalize', getPlanColor(currentPlan))}>
-                  {currentPlan}
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <p className="font-bold text-sm sm:text-base">{planDisplayName} Plan</p>
+                  <span
+                    className={`text-[10px] sm:text-[11px] font-semibold px-2 py-0.5 rounded-full ${
+                      proActive
+                        ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                        : 'bg-muted text-muted-foreground'
+                    }`}
+                  >
+                    {proActive ? 'Active' : 'Starter'}
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground flex items-center gap-1.5 mt-0.5 truncate">
+                  <Calendar className="w-3.5 h-3.5 shrink-0" />
+                  <span>
+                    {proActive && user?.subscription.expiresAt
+                      ? `Renews / expires ${new Date(user.subscription.expiresAt).toLocaleDateString()}`
+                      : 'Upgrade anytime with bank transfer'}
+                  </span>
                 </p>
               </div>
             </div>
-            <span className={cn('px-3 py-1 text-xs font-mono uppercase rounded-full', getPlanBadge(currentPlan))}>
-              {proActive ? 'Pro Active' : 'Free Plan'}
-            </span>
+            <Button
+              variant={isEnterprise ? 'outline' : 'default'}
+              size="sm"
+              className={`rounded-xl shrink-0 font-medium ${
+                isEnterprise ? 'border-purple-500/30 text-purple-400 hover:bg-purple-500/10' : ''
+              }`}
+              onClick={() => dispatch({ type: 'SET_VIEW', payload: 'admin-subscription' })}
+            >
+              {proActive ? 'Manage' : 'Upgrade to Plus'}
+            </Button>
           </div>
-          
-          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
-            <Calendar className="w-4 h-4" />
-            <span>
-              {proActive && user?.subscription.expiresAt
-                ? `Expires ${new Date(user.subscription.expiresAt).toLocaleDateString()}`
-                : 'Upgrade with a bank transfer'}
-            </span>
-          </div>
-
-          <Button
-            variant="outline"
-            className="w-full border-primary/30 text-primary hover:bg-primary/10"
-            onClick={() => dispatch({ type: 'SET_VIEW', payload: 'admin-subscription' })}
-          >
-            {proActive ? 'Manage Subscription' : 'Choose Pro'}
-          </Button>
         </div>
 
         {!proActive && (
@@ -124,9 +134,9 @@ export function AdminAnalyticsPage() {
             <div className="flex items-start gap-3">
               <Crown className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
               <div>
-                <p className="font-semibold text-sm">Analytics Dashboard is a Pro Feature</p>
+                <p className="font-semibold text-sm">Analytics Dashboard is a Plus Feature</p>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Upgrade to Menuzo Pro for full access to live menu view tracking, QR scan analytics, and customer engagement trends.
+                  Upgrade to Menuzo Plus for full access to live menu view tracking, QR scan analytics, and customer engagement trends.
                 </p>
               </div>
             </div>
@@ -135,7 +145,7 @@ export function AdminAnalyticsPage() {
               className="bg-primary text-primary-foreground hover:bg-primary/90 shrink-0"
               onClick={() => dispatch({ type: 'SET_VIEW', payload: 'admin-subscription' })}
             >
-              Upgrade to Pro
+              Upgrade to Plus
             </Button>
           </div>
         )}
@@ -144,22 +154,59 @@ export function AdminAnalyticsPage() {
         <div>
           <h3 className="font-semibold text-sm mb-3">Menu Stats</h3>
           <div className="grid grid-cols-2 gap-3">
-            <div className="p-4 rounded-xl bg-muted flex items-center gap-3">
-              <div className="p-2 bg-background rounded-lg">
-                <Utensils className="w-5 h-5 text-primary" />
+            <div className="p-4 rounded-xl bg-muted flex flex-col justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-background rounded-lg shrink-0">
+                  <Utensils className="w-5 h-5 text-primary" />
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-2xl font-bold tabular-nums">{foodItems.length}</span>
+                    <span className="text-xs text-muted-foreground font-normal">/ {planLimits.items}</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground truncate">Food Items</p>
+                </div>
               </div>
-              <div>
-                <p className="text-2xl font-bold">{foodItems.length}</p>
-                <p className="text-xs text-muted-foreground">Food Items</p>
+              <div className="w-full h-1.5 rounded-full bg-background overflow-hidden mt-3">
+                <div
+                  className={`h-full rounded-full transition-all ${
+                    foodItems.length >= planLimits.items
+                      ? 'bg-destructive'
+                      : isEnterprise
+                      ? 'bg-purple-500'
+                      : 'bg-primary'
+                  }`}
+                  style={{ width: `${Math.min(100, Math.round((foodItems.length / planLimits.items) * 100))}%` }}
+                />
               </div>
             </div>
-            <div className="p-4 rounded-xl bg-muted flex items-center gap-3">
-              <div className="p-2 bg-background rounded-lg">
-                <LayoutGrid className="w-5 h-5 text-primary" />
+
+            <div className="p-4 rounded-xl bg-muted flex flex-col justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-background rounded-lg shrink-0">
+                  <LayoutGrid className="w-5 h-5 text-primary" />
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-2xl font-bold tabular-nums">{currentCategories.length}</span>
+                    <span className="text-xs text-muted-foreground font-normal">/ {planLimits.categories}</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground truncate">Categories</p>
+                </div>
               </div>
-              <div>
-                <p className="text-2xl font-bold">{categories.filter(c => c.id !== 'all').length}</p>
-                <p className="text-xs text-muted-foreground">Categories</p>
+              <div className="w-full h-1.5 rounded-full bg-background overflow-hidden mt-3">
+                <div
+                  className={`h-full rounded-full transition-all ${
+                    currentCategories.length >= planLimits.categories
+                      ? 'bg-destructive'
+                      : isEnterprise
+                      ? 'bg-purple-500'
+                      : 'bg-primary'
+                  }`}
+                  style={{
+                    width: `${Math.min(100, Math.round((currentCategories.length / planLimits.categories) * 100))}%`,
+                  }}
+                />
               </div>
             </div>
           </div>

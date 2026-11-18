@@ -135,6 +135,7 @@ test('payment submission sends normalized input and the expected quote without c
       p_transfer_reference: 'BANK-123', p_transferred_on: '2026-09-28',
       p_requested_slug: 'my-cafe', p_customer_note: 'Receipt shared on WhatsApp.',
       p_expected_amount: 19, p_expected_currency: 'USD', p_expected_months: 1,
+      p_plan_slug: 'plus',
     },
   });
 });
@@ -474,7 +475,7 @@ test('Free plan comparison shows benefits and blocks checkout when pricing is un
   assert.match(rendered.html, /Coming soon/);
   assert.match(rendered.html, /Food items: 10/);
   assert.match(rendered.html, /Food items: 100/);
-  const upgrade = findElement(rendered.tree, element => typeof element.props.onClick === 'function' && textOf(element) === 'Upgrade to Pro');
+  const upgrade = findElement(rendered.tree, element => typeof element.props.onClick === 'function' && (textOf(element) === 'Upgrade to Plus' || textOf(element) === 'Upgrade to Pro'));
   assert.equal(upgrade.props.disabled,true);
   upgrade.props.onClick();
   assert.doesNotMatch(page.render().html, /Make a bank transfer/);
@@ -491,7 +492,10 @@ const savedPayment = {
 };
 
 function buttonByText(page, label) {
-  const element = findElement(page.render().tree, (node) => typeof node.props.onClick === 'function' && textOf(node) === label);
+  const element = findElement(page.render().tree, (node) => typeof node.props.onClick === 'function' && (
+    textOf(node) === label ||
+    (label === 'Upgrade to Pro' && textOf(node) === 'Upgrade to Plus')
+  ));
   assert.ok(element, `Expected button: ${label}`);
   return element;
 }
@@ -560,7 +564,7 @@ test('configured checkout creates one pending request and keeps the customer on 
   assert.deepEqual(page.submittedInputs, [{
     shopId: 'owned-shop', periodId: 'yearly', expectedAmount: 190, expectedCurrency: 'USD', expectedMonths: 12,
     payerName: 'Jane Smith', transferReference: 'BANK-123', transferredOn: '2026-09-28',
-    requestedSlug: 'my-cafe', customerNote: 'Receipt sent.',
+    requestedSlug: 'my-cafe', customerNote: 'Receipt sent.', planSlug: 'plus',
   }]);
   assert.match(page.render().html, /Payment verification pending/);
   assert.match(page.render().html, /Your account stays on Free/);
@@ -622,7 +626,7 @@ test('Free comparison uses live LKR prices and preserves the yearly choice into 
   assert.match(page.render().html, /LKR.*15,000/);
   assert.match(page.render().html, /One payment for 12 months/);
   buttonByText(page,'Upgrade to Pro').props.onClick();
-  assert.match(page.render().html, /Yearly Pro/);
+  assert.match(page.render().html, /Yearly (Plus|Pro)/);
   assert.match(page.render().html, /LKR.*15,000/);
   buttonByText(page,'Back').props.onClick();
   assert.match(page.render().html, /Compare Free and Pro plans/);
@@ -636,7 +640,7 @@ test('active Pro and pending payments retain their existing management screens',
   const pro = subscriptionPageHarness({ periods: [configuredPeriod,yearlyPeriod],bank:configuredBank,
     subscription: {plan:'pro',status:'active',expiresAt:new Date(Date.now()+86400000)} });
   const disposePro = await mountPage(pro);
-  assert.match(pro.render().html,/Renew Pro/);
+  assert.match(pro.render().html,/Renew (Plus|Pro)/);
   assert.doesNotMatch(pro.render().html,/Compare Free and Pro plans/);
   disposePro();
   const pending = subscriptionPageHarness({ requests:[savedPayment] });
@@ -651,7 +655,7 @@ function enterRenewalTransfer(page, periodId = 'monthly') {
   assert.ok(period);
   period.props.onChange();
   const start = findElement(page.render().tree, node => typeof node.props.onClick === 'function'
-    && ['Upgrade to Pro', 'Proceed to pay'].includes(textOf(node)));
+    && ['Upgrade to Pro', 'Upgrade to Plus', 'Proceed to pay'].includes(textOf(node)));
   assert.ok(start); start.props.onClick();
   assert.equal(findElement(page.render().tree, node => node.props.id === 'preferred-url'), undefined);
   for (const [id, value] of [['payer-name','Jane Smith'],['transfer-reference','RENEWAL-123'],['transfer-date','2026-09-28']]) {

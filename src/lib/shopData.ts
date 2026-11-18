@@ -1,4 +1,4 @@
-import type { Shop, FoodItem } from '@/types';
+import type { Shop, FoodItem, FoodItemOption } from '@/types';
 import type { Database } from '@/types/supabase';
 import { filterExpiredSpecialDates } from './timeUtils';
 
@@ -15,8 +15,42 @@ export function formatShop(row: Database['public']['Tables']['shops']['Row'], sl
     categoryOrder:details.category_order,view_count:row.view_count || 0,qr_scan_count:row.qr_scan_count || 0,
   };
 }
-export function formatFood(rows: Database['public']['Tables']['food_items']['Row'][]): FoodItem[] {
-  return rows.map(item => ({id:item.id,name:item.name,description:item.description || '',tagline:item.tagline || '',
-    category:item.category || 'unassigned',image:item.image || '/food-burger.jpg',originalPrice:Number(item.original_price),
-    discount:Number(item.discount),finalPrice:Number(item.final_price),isSpecialOffer:!!item.is_special_offer,isAvailable:!!item.is_available}));
+export function formatFood(
+  rows: (Database['public']['Tables']['food_items']['Row'] & {
+    food_item_options?: Database['public']['Tables']['food_item_options']['Row'][] | null;
+  })[]
+): FoodItem[] {
+  return rows.map(item => {
+    const rawOptions = item.food_item_options || (item as unknown as { options?: Database['public']['Tables']['food_item_options']['Row'][] }).options;
+    const options: FoodItemOption[] | undefined = Array.isArray(rawOptions)
+      ? rawOptions
+          .slice()
+          .sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))
+          .map(opt => ({
+            id: opt.id,
+            foodItemId: opt.food_item_id,
+            name: opt.name,
+            description: opt.description || undefined,
+            price: Number(opt.price),
+            isAvailable: !!opt.is_available,
+            displayOrder: opt.display_order,
+          }))
+      : undefined;
+
+    return {
+      id: item.id,
+      name: item.name,
+      description: item.description || '',
+      tagline: item.tagline || '',
+      category: item.category || 'unassigned',
+      image: item.image || '/food-burger.jpg',
+      originalPrice: Number(item.original_price),
+      discount: Number(item.discount),
+      finalPrice: Number(item.final_price),
+      isSpecialOffer: !!item.is_special_offer,
+      isAvailable: !!item.is_available,
+      pricingType: (item.pricing_type as 'fixed' | 'variants') || 'fixed',
+      options: options && options.length > 0 ? options : undefined,
+    };
+  });
 }

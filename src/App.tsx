@@ -68,7 +68,7 @@ function AppContent() {
 
   useEffect(() => {
     if (!isAuthLoading && !authError && isPrivateView && !state.user) {
-      if (currentView === 'admin-subscription') sessionStorage.setItem('menuzo_upgrade_intent', 'pro');
+      if (currentView === 'admin-subscription') sessionStorage.setItem('menuzo_upgrade_intent', 'plus');
       dispatch({ type: 'SET_VIEW', payload: 'login' });
     }
   }, [isAuthLoading, authError, isPrivateView, currentView, state.user, dispatch]);
@@ -83,7 +83,7 @@ function AppContent() {
   useEffect(() => {
     if (state.user && state.shop.id && isOwnerShopView(currentView)
       && state.shopDataContext === `owner:${state.user.id}` && state.shopDataStatus === 'ready'
-      && sessionStorage.getItem('menuzo_upgrade_intent') === 'pro') {
+      && ['plus', 'pro', 'enterprise'].includes(sessionStorage.getItem('menuzo_upgrade_intent') || '')) {
       sessionStorage.removeItem('menuzo_upgrade_intent');
       dispatch({ type: 'SET_VIEW', payload: 'admin-subscription' });
     }

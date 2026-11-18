@@ -18,48 +18,80 @@ const defaultPlans: PricingPlan[] = [
     name: 'Free',
     price: 'LKR 0',
     period: 'Forever free',
-    description: 'Perfect for cafés and small restaurants getting started with digital menus.',
+    description: 'For small restaurants and cafés getting started with digital menus.',
     features: [
       '10 Food Items',
       '2 Categories',
-      'QR Menu',
+      'Digital Menu',
+      'QR Code Generation',
       'Limited Themes (3–5 preset themes)',
       'Basic QR Branding',
       'Restaurant Profile',
       'Shareable Menu Link',
-      'Standard Support'
+      'Standard Support',
     ],
     notIncluded: [
-      'Analytics Dashboard',
+      'Custom Themes',
+      'QR Branding',
       'Custom Menu URL',
-      'Full Theme Customization',
-      'Advanced QR Branding'
+      'Analytics Dashboard',
+      'Advanced Customization',
+      'Priority Support',
     ],
     cta: 'Get Started Free',
     popular: false,
   },
   {
-    id: 'pro',
-    name: 'Pro',
+    id: 'plus',
+    name: 'Plus',
     price: 'LKR 1,500',
     period: '/month',
     billingNote: 'Monthly plan: LKR 1,500 per month.',
-    description: 'Everything you need to run a professional digital menu with your own branding, advanced analytics, and higher limits.',
+    description: 'Everything you need to run a professional digital menu with custom themes, QR branding, analytics, and higher limits.',
     features: [
       '100 Food Items',
       '20 Categories',
-      'QR Menu',
-      'Full Theme Customization',
-      'Advanced QR Branding',
+      'Digital Menu & QR Code',
+      'Custom Themes',
+      'QR Branding',
+      'Custom Menu URL',
       'Analytics Dashboard',
       'Restaurant Profile',
       'Shareable Menu Link',
-      'Custom Menu URL',
-      'Priority Support'
+      'Priority Support',
     ],
-    cta: 'Upgrade to Pro',
+    notIncluded: [
+      'Advanced Customization',
+      '500 Food Items & 50 Categories',
+      'All Enterprise Features',
+    ],
+    cta: 'Upgrade to Plus',
     popular: true,
-  }
+    badge: 'Popular',
+  },
+  {
+    id: 'enterprise',
+    name: 'Enterprise',
+    price: 'LKR 6,000',
+    period: '/month',
+    billingNote: 'Monthly plan: LKR 6,000 per month.',
+    description: 'For established restaurants and growing businesses wanting full feature access, advanced customization, and priority support.',
+    features: [
+      '500 Food Items',
+      '50 Categories',
+      'All Plus Features',
+      'Digital Menu & QR Code',
+      'Custom Themes & QR Branding',
+      'Custom Menu URL',
+      'Advanced Analytics',
+      'Advanced Customization',
+      'Priority Support',
+      'All Available Menuzo Features',
+    ],
+    cta: 'Choose Enterprise',
+    popular: false,
+    badge: 'Advanced',
+  },
 ];
 
 export const PricingService = {
@@ -69,12 +101,23 @@ export const PricingService = {
     if (stored) {
       try {
         const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed) && parsed.some(p => p.id === 'pro' && (p.price === '$19' || p.price === '3500' || p.price === 'LKR 3,500' || p.price === 'LKR 3,500.00' || p.price === '1500'))) {
+        if (
+          Array.isArray(parsed) &&
+          (parsed.length < 3 ||
+            parsed.some(
+              p =>
+                p.id === 'pro' ||
+                p.price === '$19' ||
+                p.price === '3500' ||
+                p.price === 'LKR 3,500' ||
+                p.price === 'LKR 3,500.00'
+            ))
+        ) {
           localStorage.removeItem('menuzo_pricing_plans');
           return defaultPlans;
         }
         return parsed;
-      } catch (e) {
+      } catch {
         return defaultPlans;
       }
     }
@@ -83,10 +126,12 @@ export const PricingService = {
 
   updatePlanPrice: (id: string, newPrice: string): void => {
     if (typeof window === 'undefined') return;
+    const targetId = id === 'pro' ? 'plus' : id;
     const plans = PricingService.getPlans();
-    const updated = plans.map(p => p.id === id ? { ...p, price: newPrice } : p);
+    const updated = plans.map(p =>
+      p.id === targetId || (id === 'pro' && p.id === 'plus') ? { ...p, price: newPrice } : p
+    );
     localStorage.setItem('menuzo_pricing_plans', JSON.stringify(updated));
-    // Dispatch a custom event so other components can react
     window.dispatchEvent(new Event('pricing_updated'));
-  }
+  },
 };

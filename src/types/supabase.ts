@@ -28,6 +28,48 @@ export type ShopThemeRow = {
 export interface Database {
   public: {
     Tables: {
+      subscription_plans: {
+        Row: {
+          id: string
+          name: string
+          slug: string
+          monthly_price: number
+          annual_price: number
+          max_items: number
+          max_categories: number
+          features: Json
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          slug: string
+          monthly_price?: number
+          annual_price?: number
+          max_items?: number
+          max_categories?: number
+          features?: Json
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          slug?: string
+          monthly_price?: number
+          annual_price?: number
+          max_items?: number
+          max_categories?: number
+          features?: Json
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       billing_periods: {
         Row: BillingPeriod
         Insert: Omit<BillingPeriod, 'active'> & { active?: boolean }
@@ -73,6 +115,7 @@ export interface Database {
           is_special_offer: boolean | null
           name: string
           original_price: number
+          pricing_type: 'fixed' | 'variants' | null
           shop_id: string
           tagline: string | null
         }
@@ -88,6 +131,7 @@ export interface Database {
           is_special_offer?: boolean | null
           name: string
           original_price: number
+          pricing_type?: 'fixed' | 'variants' | null
           shop_id: string
           tagline?: string | null
         }
@@ -103,8 +147,48 @@ export interface Database {
           is_special_offer?: boolean | null
           name?: string
           original_price?: number
+          pricing_type?: 'fixed' | 'variants' | null
           shop_id?: string
           tagline?: string | null
+        }
+        Relationships: []
+      }
+      food_item_options: {
+        Row: {
+          id: string
+          food_item_id: string
+          shop_id: string
+          name: string
+          description: string | null
+          price: number
+          is_available: boolean
+          display_order: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          food_item_id: string
+          shop_id: string
+          name: string
+          description?: string | null
+          price: number
+          is_available?: boolean
+          display_order?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          food_item_id?: string
+          shop_id?: string
+          name?: string
+          description?: string | null
+          price?: number
+          is_available?: boolean
+          display_order?: number
+          created_at?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -293,6 +377,7 @@ export interface Database {
           p_expected_months: number
           p_requested_slug?: string | null
           p_customer_note?: string | null
+          p_plan_slug?: string | null
         }
         Returns: PaymentRequest
       }
