@@ -7,9 +7,10 @@ import {
   Calendar,
   Plus,
   Copy,
-  ExternalLink,
   ChevronRight,
-  Download
+  Download,
+  Eye,
+  Share2
 } from 'lucide-react';
 import { MenuViewsChart, TrendBadge } from '@/components/admin/MenuViewsChart';
 import { summarizeShopViews, viewsTrend } from '@/lib/shopAnalytics';
@@ -23,7 +24,6 @@ import { useState, useRef } from 'react';
 import { toast } from 'sonner';
 import { SmallQrPreview, type SmallQrPreviewRef } from '@/components/admin/SmallQrPreview';
 import type { AdminTab } from '@/types';
-import { isBrandTheme } from '@/lib/themeUtils';
 import { isProActive, planNotice } from '@/lib/subscription';
 import { markQrGenerated } from '@/lib/qrProgress';
 import {
@@ -54,6 +54,8 @@ export function UserDashboardPage() {
   const viewStats = summarizeShopViews(shop?.daily_stats, 'week');
   const statsAvailable = shop.daily_stats !== undefined;
   const { isComplete: onboardingComplete } = useOnboardingStatus();
+  const origin = typeof window !== 'undefined' ? window.location.origin : '';
+  const shopMenuUrl = getShopMenuUrl(shop, origin);
 
   const handleTabChange = (tab: AdminTab) => {
     dispatch({ type: 'SET_ADMIN_TAB', payload: tab });
@@ -73,6 +75,25 @@ export function UserDashboardPage() {
       case 'analytics':
         dispatch({ type: 'SET_VIEW', payload: 'admin-analytics' });
         break;
+    }
+  };
+
+  const handleShare = async () => {
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      try {
+        await navigator.share({
+          title: shop.name || 'Menuzo Menu',
+          text: `Check out our digital menu at ${shop.name}!`,
+          url: shopMenuUrl,
+        });
+      } catch (err) {
+        if ((err as Error).name !== 'AbortError') {
+          console.error('Error sharing:', err);
+        }
+      }
+    } else if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(shopMenuUrl);
+      toast.success('Menu link copied to clipboard!');
     }
   };
 
@@ -104,12 +125,20 @@ export function UserDashboardPage() {
       <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-lg border-b border-border">
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-transparent flex items-center justify-center">
-              <img src="/logo/Logo favicon.png" alt="Logo" className="w-8 h-8 object-contain" />
-            </div>
+            {shop.logo ? (
+              <img
+                src={shop.logo}
+                alt={shop.name}
+                className="w-10 h-10 rounded-xl object-cover border border-border/50 shrink-0"
+              />
+            ) : (
+              <div className="w-10 h-10 rounded-xl bg-primary/15 text-primary border border-primary/20 flex items-center justify-center font-bold text-base shrink-0">
+                {shop.name ? shop.name.charAt(0).toUpperCase() : 'S'}
+              </div>
+            )}
             <div>
-              <h1 className="font-semibold text-sm">Dashboard</h1>
-              <p className="text-xs text-muted-foreground">
+              <h1 className="font-bold text-base sm:text-lg text-foreground leading-tight">Dashboard</h1>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
                 {isLoadingData ? 'Loading...' : shop.name}
               </p>
             </div>
@@ -130,75 +159,71 @@ export function UserDashboardPage() {
         {/* Welcome Section */}
         <div>
           <h2 className="text-2xl font-bold mb-1">
-            Welcome back{user?.name ? `, ${user.name}` : ''}!
+            Hi{user?.name ? `, ${user.name}` : ''}!
           </h2>
-          <p className="text-muted-foreground">Here is what is happening with your menu today.</p>
+          <p className="text-muted-foreground text-sm">Here is what is happening with your menu today.</p>
+        </div>
+
+        {/* Quick Action Buttons (Preview, Add Food, Share) */}
+        <div className="grid grid-cols-3 gap-2.5 sm:gap-3">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => handleTabChange('menu-preview')}
+            className="h-auto py-3 px-2 flex flex-col items-center justify-center gap-1.5 rounded-2xl border-border bg-card hover:bg-muted/70 transition-all shadow-sm active:scale-[0.98]"
+          >
+            <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+              <Eye className="w-4 h-4" />
+            </div>
+            <span className="text-xs font-semibold text-foreground">Preview</span>
+          </Button>
+
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => handleTabChange('add-food')}
+            className="h-auto py-3 px-2 flex flex-col items-center justify-center gap-1.5 rounded-2xl border-border bg-card hover:bg-muted/70 transition-all shadow-sm active:scale-[0.98]"
+          >
+            <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+              <Plus className="w-4 h-4" />
+            </div>
+            <span className="text-xs font-semibold text-foreground">Add Food</span>
+          </Button>
+
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleShare}
+            className="h-auto py-3 px-2 flex flex-col items-center justify-center gap-1.5 rounded-2xl border-border bg-card hover:bg-muted/70 transition-all shadow-sm active:scale-[0.98]"
+          >
+            <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+              <Share2 className="w-4 h-4" />
+            </div>
+            <span className="text-xs font-semibold text-foreground">Share</span>
+          </Button>
         </div>
 
         <OnboardingChecklist />
 
         <PlanStatusBanner />
 
-        {/* Subscription / Plan Status (the plan alert above replaces it when shown) */}
-        {!showPlanNotice && (
-          <div
-            className={`p-5 rounded-2xl border shadow-sm transition-all ${
-              isEnterprise
-                ? 'bg-gradient-to-br from-purple-500/15 via-purple-500/5 to-transparent border-purple-500/30'
-                : proActive
-                ? 'bg-gradient-to-br from-primary/15 via-primary/5 to-transparent border-primary/25'
-                : 'bg-card border-border'
-            }`}
-          >
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3 min-w-0">
-                <div
-                  className={`w-10 h-10 sm:w-11 sm:h-11 rounded-2xl flex items-center justify-center shadow-md shrink-0 ${
-                    isEnterprise
-                      ? 'bg-purple-600 text-white'
-                      : proActive
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-muted text-muted-foreground'
-                  }`}
-                >
-                  <Crown className="w-5 h-5" />
-                </div>
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <p className="font-bold text-sm sm:text-base">{planDisplayName} Plan</p>
-                    <span
-                      className={`text-[10px] sm:text-[11px] font-semibold px-2 py-0.5 rounded-full ${
-                        proActive
-                          ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-                          : 'bg-muted text-muted-foreground'
-                      }`}
-                    >
-                      {proActive ? 'Active' : 'Starter'}
-                    </span>
-                  </div>
-                  <p className="text-xs text-muted-foreground flex items-center gap-1.5 mt-0.5 truncate">
-                    <Calendar className="w-3.5 h-3.5 shrink-0" />
-                    <span>
-                      {proActive && user?.subscription.expiresAt
-                        ? `Renews / expires ${new Date(user.subscription.expiresAt).toLocaleDateString()}`
-                        : 'Upgrade anytime with bank transfer'}
-                    </span>
-                  </p>
-                </div>
-              </div>
-              <Button
-                variant={isEnterprise ? 'outline' : 'default'}
-                size="sm"
-                className={`rounded-xl shrink-0 font-medium ${
-                  isEnterprise ? 'border-purple-500/30 text-purple-400 hover:bg-purple-500/10' : ''
-                }`}
-                onClick={() => dispatch({ type: 'SET_VIEW', payload: 'admin-subscription' })}
-              >
-                {proActive ? 'Manage' : 'Upgrade to Plus'}
-              </Button>
+        {/* Quick Stats Grid (Moved above the graph) */}
+        <div className="grid grid-cols-2 gap-4">
+          <div className="p-4 rounded-2xl bg-card border border-border shadow-sm flex flex-col items-center text-center">
+            <div className="w-10 h-10 rounded-full bg-blue-500/10 text-blue-500 flex items-center justify-center mb-2">
+              <Utensils className="w-5 h-5" />
             </div>
+            <p className="text-2xl font-bold">{foodItems.length}</p>
+            <p className="text-xs text-muted-foreground">Active Items</p>
           </div>
-        )}
+          <div className="p-4 rounded-2xl bg-card border border-border shadow-sm flex flex-col items-center text-center">
+            <div className="w-10 h-10 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center mb-2">
+              <QrCode className="w-5 h-5" />
+            </div>
+            <p className="text-2xl font-bold">{statsAvailable ? viewStats.qrScans.toLocaleString() : '—'}</p>
+            <p className="text-xs text-muted-foreground">QR scans · Last 7 days</p>
+          </div>
+        </div>
 
         {foodItems.length === 0 ? (
           <div className="flex flex-col items-center justify-center p-8 rounded-2xl bg-card border border-dashed border-border shadow-sm text-center">
@@ -250,26 +275,6 @@ export function UserDashboardPage() {
           )}
         </div>
 
-        {foodItems.length > 0 && (
-          <>
-        {/* Quick Stats Grid */}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="p-4 rounded-2xl bg-card border border-border shadow-sm flex flex-col items-center text-center">
-            <div className="w-10 h-10 rounded-full bg-blue-500/10 text-blue-500 flex items-center justify-center mb-2">
-              <Utensils className="w-5 h-5" />
-            </div>
-            <p className="text-2xl font-bold">{foodItems.length}</p>
-            <p className="text-xs text-muted-foreground">Active Items</p>
-          </div>
-          <div className="p-4 rounded-2xl bg-card border border-border shadow-sm flex flex-col items-center text-center">
-            <div className="w-10 h-10 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center mb-2">
-              <QrCode className="w-5 h-5" />
-            </div>
-            <p className="text-2xl font-bold">{statsAvailable ? viewStats.qrScans.toLocaleString() : '—'}</p>
-            <p className="text-xs text-muted-foreground">QR scans · Last 7 days</p>
-          </div>
-        </div>
-
         {/* QR Menu Section */}
         <div>
           <h2 className="text-lg font-bold mb-1">QR Menu</h2>
@@ -282,7 +287,7 @@ export function UserDashboardPage() {
               <div className="bg-muted/30 p-5 rounded-xl border border-border/50 flex flex-col items-center justify-center w-full max-w-[260px]">
                 <SmallQrPreview 
                    ref={qrRef}
-                   shopUrl={getShopMenuUrl(shop, window.location.origin)}
+                   shopUrl={shopMenuUrl}
                    theme={shop.theme || { primary: '#090A0C', secondary: '#1C1E22', accent: '#FB8500' }}
                    shopLogo={shop.logo}
                    size={200}
@@ -294,7 +299,7 @@ export function UserDashboardPage() {
                 <p className="text-xs text-muted-foreground mb-1.5 font-medium">Your Menu Link</p>
                 <div className="flex items-center gap-2 bg-muted/70 p-2 rounded-xl border border-border/50">
                   <span className="text-sm text-foreground truncate flex-1 ml-2 font-medium select-all">
-                    {getShopMenuUrl(shop, window.location.origin).replace(/^https?:\/\//, '')}
+                    {shopMenuUrl.replace(/^https?:\/\//, '')}
                   </span>
                   <div className="flex items-center gap-1">
                     <Button size="icon" variant="ghost" disabled={isDownloadingQr} aria-label="Download high-resolution QR code" className="h-8 w-8 hover:bg-background rounded-lg flex-shrink-0 text-muted-foreground hover:text-foreground shadow-sm" onClick={async () => {
@@ -315,41 +320,17 @@ export function UserDashboardPage() {
                       <Download className="w-4 h-4" />
                     </Button>
                     <Button size="icon" variant="ghost" className="h-8 w-8 hover:bg-background rounded-lg flex-shrink-0 text-muted-foreground hover:text-foreground shadow-sm" onClick={() => {
-                      const url = getShopMenuUrl(shop, window.location.origin);
-                      navigator.clipboard.writeText(url);
-                      toast.success('Menu link copied!');
+                      if (typeof navigator !== 'undefined' && navigator.clipboard) {
+                        navigator.clipboard.writeText(shopMenuUrl);
+                        toast.success('Menu link copied!');
+                      }
                     }}>
                       <Copy className="w-4 h-4" />
-                    </Button>
-                    <Button 
-                      size="icon"
-                      variant="default" 
-                      className={`h-8 w-8 rounded-lg flex-shrink-0 shadow-sm ${isBrandTheme(shop.theme) ? 'bg-[#FB8500] hover:bg-[#FB8500]/90 text-black' : 'bg-primary hover:bg-primary/90 text-primary-foreground'}`}
-                      onClick={() => window.open(getShopMenuUrl(shop, window.location.origin), '_blank', 'noopener,noreferrer')}
-                    >
-                      <ExternalLink className="w-4 h-4" />
                     </Button>
                   </div>
                 </div>
               </div>
             </div>
-
-            {/* QR Information */}
-            {/* <div className="p-4 border-b border-border/50 bg-muted/10 grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-xs text-muted-foreground mb-1">Current Style</p>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full border border-border" style={{ backgroundColor: qrColorStyle === 'brand' ? shop.theme?.accent || '#FB8500' : '#000' }} />
-                  <span className="text-sm font-medium">
-                    {QR_PATTERNS.find(p => p.value === qrPattern)?.label} · {QR_COLOR_STYLES.find(c => c.value === qrColorStyle)?.label}
-                  </span>
-                </div>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground mb-1">Logo</p>
-                <span className="text-sm font-medium">{shop.logo ? 'Enabled' : 'Disabled'}</span>
-              </div>
-            </div> */}
 
             {/* Actions */}
             <div className="p-2 flex flex-col sm:flex-row gap-2 bg-muted/5">
@@ -418,7 +399,66 @@ export function UserDashboardPage() {
           </div>
         </div>
         )}
-        </>
+
+        {/* Subscription / Plan Status (Moved to last) */}
+        {!showPlanNotice && (
+          <div
+            className={`p-5 rounded-2xl border shadow-sm transition-all ${
+              isEnterprise
+                ? 'bg-gradient-to-br from-purple-500/15 via-purple-500/5 to-transparent border-purple-500/30'
+                : proActive
+                ? 'bg-gradient-to-br from-primary/15 via-primary/5 to-transparent border-primary/25'
+                : 'bg-card border-border'
+            }`}
+          >
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <div
+                  className={`w-10 h-10 sm:w-11 sm:h-11 rounded-2xl flex items-center justify-center shadow-md shrink-0 ${
+                    isEnterprise
+                      ? 'bg-purple-600 text-white'
+                      : proActive
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted text-muted-foreground'
+                  }`}
+                >
+                  <Crown className="w-5 h-5" />
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p className="font-bold text-sm sm:text-base">{planDisplayName} Plan</p>
+                    <span
+                      className={`text-[10px] sm:text-[11px] font-semibold px-2 py-0.5 rounded-full ${
+                        proActive
+                          ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                          : 'bg-muted text-muted-foreground'
+                      }`}
+                    >
+                      {proActive ? 'Active' : 'Starter'}
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground flex items-center gap-1.5 mt-0.5 truncate">
+                    <Calendar className="w-3.5 h-3.5 shrink-0" />
+                    <span>
+                      {proActive && user?.subscription.expiresAt
+                        ? `Renews / expires ${new Date(user.subscription.expiresAt).toLocaleDateString()}`
+                        : 'Upgrade anytime with bank transfer'}
+                    </span>
+                  </p>
+                </div>
+              </div>
+              <Button
+                variant={isEnterprise ? 'outline' : 'default'}
+                size="sm"
+                className={`rounded-xl shrink-0 font-medium ${
+                  isEnterprise ? 'border-purple-500/30 text-purple-400 hover:bg-purple-500/10' : ''
+                }`}
+                onClick={() => dispatch({ type: 'SET_VIEW', payload: 'admin-subscription' })}
+              >
+                {proActive ? 'Manage' : 'Upgrade to Plus'}
+              </Button>
+            </div>
+          </div>
         )}
       </main>
 
