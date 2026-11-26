@@ -41,3 +41,7 @@ export function sriLankaDateInput(value: string | number | Date): string {
 export function endOfSriLankaDay(date: string): string {
   return new Date(`${date}T23:59:59+05:30`).toISOString();
 }
+
+export function startOfSriLankaDay(date: string): string {
+  return new Date(`${date}T00:00:00+05:30`).toISOString();
+}

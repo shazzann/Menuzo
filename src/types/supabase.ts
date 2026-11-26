@@ -1,5 +1,6 @@
 import type { BankTransferSettings, BillingPeriod, PaymentRequest, ShopCustomUrl } from './billing';
 import type { AdminPaymentRequest, AdminShopSubscription, BillingPage, ShopBillingDetails } from './company-billing';
+import type { AdminPromoCode, PromoCode, PromoCodeUsage, PromoPlan, PromoRedemption } from './promo-codes';
 
 export type Json =
   | string
@@ -294,6 +295,30 @@ export interface Database {
         }
         Relationships: []
       }
+      promo_codes: {
+        Row: PromoCode
+        Insert: Omit<PromoCode, 'id' | 'created_by' | 'created_by_email' | 'created_at' | 'updated_at' | 'description' | 'is_active'> & {
+          id?: string
+          description?: string
+          is_active?: boolean
+        }
+        Update: Partial<Omit<PromoCode, 'id' | 'created_by' | 'created_by_email' | 'created_at' | 'updated_at'>>
+        Relationships: []
+      }
+      promo_code_redemptions: {
+        Row: {
+          id: string
+          promo_code_id: string
+          shop_id: string
+          user_id: string
+          plan: PromoPlan
+          discount_percent: number
+          redeemed_at: string
+        }
+        Insert: Record<string, never>
+        Update: Record<string, never>
+        Relationships: []
+      }
       shop_daily_stats: {
         Row: {
           id: string
@@ -329,6 +354,12 @@ export interface Database {
     }
     Views: Record<string, never>
     Functions: {
+      admin_list_promo_codes: { Args: Record<string, never>; Returns: AdminPromoCode[] }
+      admin_list_promo_code_usage: { Args: { p_promo_code_id: string }; Returns: PromoCodeUsage[] }
+      redeem_promo_code: {
+        Args: { p_code: string; p_shop_id: string; p_plan: PromoPlan }
+        Returns: PromoRedemption
+      }
       admin_get_shop_billing: {
         Args: { p_shop_id: string; p_status: string; p_offset: number }
         Returns: ShopBillingDetails
