@@ -14,14 +14,14 @@ import {
 
 import { useApp } from '@/store';
 import { BottomNav } from '@/components/shared/BottomNav';
-import type { AdminTab, FoodItem } from '@/types';
+import type { AdminTab, FoodItem, FoodItemOption } from '@/types';
 import type { Database } from '@/types/supabase';
 import { cn } from '@/lib/utils';
 import { ImageCropperModal } from '@/components/shared/ImageCropperModal';
 import { CategoryTabs } from '@/components/shared/CategoryTabs';
 import { CategoryReorderModal } from '@/components/shared/CategoryReorderModal';
 import { trackEvent } from '@/lib/analytics';
-import { FREE_PLAN_LIMITS, PRO_PLAN_LIMITS, hasPaidMenuAccess } from '@/lib/subscription';
+import { hasPaidMenuAccess, getPlanLimits } from '@/lib/subscription';
 import { PlanStatusBanner } from '@/components/subscription/PlanStatusBanner';
 import { toast } from 'sonner';
 import { MenuService, CategoryService, StorageService } from '@/services';
@@ -39,7 +39,9 @@ export function AdminAddFoodPage() {
   // Items over the Free plan limits stay editable here but are hidden from customers.
   const hiddenIds = new Set(state.planHiddenItemIds);
   const isPaid = hasPaidMenuAccess(state.user?.subscription);
-  const planLimits = isPaid ? PRO_PLAN_LIMITS : FREE_PLAN_LIMITS;
+  const planLimits = getPlanLimits(state.user?.subscription);
+  const userPlan = state.user?.subscription?.plan || 'free';
+  const isEnterprise = userPlan === 'enterprise' && isPaid;
   const atItemLimit = foodItems.length >= planLimits.items;
   const currentCategories = categories.filter((c) => c.id !== 'all');
   const atCategoryLimit = currentCategories.length >= planLimits.categories;
@@ -50,6 +52,8 @@ export function AdminAddFoodPage() {
   const [cropImageSrc, setCropImageSrc] = useState<string>('');
   const [editingItem, setEditingItem] = useState<FoodItem | null>(null);
   const [isReorderModalOpen, setIsReorderModalOpen] = useState(false);
+  const [pricingType, setPricingType] = useState<'fixed' | 'variants'>('fixed');
+  const [options, setOptions] = useState<FoodItemOption[]>([]);
 
   const [formData, setFormData] = useState<Partial<FoodItem>>({
     name: '',
@@ -76,11 +80,15 @@ export function AdminAddFoodPage() {
   const handleOpenForm = (item?: FoodItem) => {
     if (!item && atItemLimit) {
       if (!isPaid) {
-        toast.error(`The Free plan allows up to ${FREE_PLAN_LIMITS.items} food items. Upgrade to Pro to add more.`, {
+        toast.error(`The Free plan allows up to ${planLimits.items} food items. Upgrade to Plus to add more.`, {
+          action: { label: 'Upgrade', onClick: () => dispatch({ type: 'SET_VIEW', payload: 'admin-subscription' }) },
+        });
+      } else if (!isEnterprise) {
+        toast.error(`The Plus plan allows up to ${planLimits.items} food items. Upgrade to Enterprise to add up to 500 items.`, {
           action: { label: 'Upgrade', onClick: () => dispatch({ type: 'SET_VIEW', payload: 'admin-subscription' }) },
         });
       } else {
-        toast.error(`The Pro plan allows up to ${PRO_PLAN_LIMITS.items} food items. Plan limit reached.`);
+        toast.error(`The Enterprise plan allows up to ${planLimits.items} food items. Plan limit reached.`);
       }
       return;
     }
@@ -89,8 +97,44 @@ export function AdminAddFoodPage() {
     if (item) {
       setEditingItem(item);
       setFormData({ ...item });
+      const pType = item.pricingType || (item.options && item.options.length > 0 ? 'variants' : 'fixed');
+      setPricingType(pType);
+      if (item.options && item.options.length > 0) {
+        setOptions(item.options.map((o) => ({ ...o })));
+      } else if (pType === 'variants' && !item.id.startsWith('item-')) {
+        MenuService.getItemOptions(item.id).then((fetched) => {
+          if (fetched && fetched.length > 0) {
+            setOptions(
+              fetched.map((o) => ({
+                id: o.id,
+                foodItemId: o.food_item_id,
+                name: o.name,
+                description: o.description || '',
+                price: Number(o.price),
+                isAvailable: o.is_available,
+                displayOrder: o.display_order,
+              }))
+            );
+          } else {
+            setOptions([
+              {
+                id: `opt-${Date.now()}-1`,
+                name: 'Regular',
+                description: '',
+                price: item.finalPrice || item.originalPrice || 0,
+                isAvailable: true,
+                displayOrder: 0,
+              },
+            ]);
+          }
+        });
+      } else {
+        setOptions([]);
+      }
     } else {
       setEditingItem(null);
+      setPricingType('fixed');
+      setOptions([]);
       setFormData({
         name: '',
         description: '',
@@ -107,80 +151,218 @@ export function AdminAddFoodPage() {
     setShowForm(true);
   };
 
+  const handleTogglePricingType = (checked: boolean) => {
+    if (!checked && options.length > 0 && options.some((o) => o.name.trim() || o.price > 0)) {
+      const confirmDisable = window.confirm(
+        'Switching to single-price mode will use the standard price. Your multiple options will be replaced when you save. Do you want to continue?'
+      );
+      if (!confirmDisable) return;
+    }
+    const nextType = checked ? 'variants' : 'fixed';
+    setPricingType(nextType);
+    if (nextType === 'variants' && options.length === 0) {
+      const basePrice = formData.originalPrice || 0;
+      setOptions([
+        {
+          id: `opt-${Date.now()}-1`,
+          name: 'Regular',
+          description: '',
+          price: basePrice > 0 ? basePrice : 0,
+          isAvailable: true,
+          displayOrder: 0,
+        },
+        {
+          id: `opt-${Date.now()}-2`,
+          name: 'Large',
+          description: '',
+          price: basePrice > 0 ? Math.round(basePrice * 1.5) : 0,
+          isAvailable: true,
+          displayOrder: 1,
+        },
+      ]);
+    }
+  };
+
+  const handleAddOption = () => {
+    setOptions((prev) => [
+      ...prev,
+      {
+        id: `opt-${Date.now()}-${prev.length + 1}`,
+        name: '',
+        description: '',
+        price: 0,
+        isAvailable: true,
+        displayOrder: prev.length,
+      },
+    ]);
+  };
+
+  const handleRemoveOption = (index: number) => {
+    setOptions((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleUpdateOption = <K extends keyof FoodItemOption>(
+    index: number,
+    field: K,
+    value: FoodItemOption[K]
+  ) => {
+    setOptions((prev) => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], [field]: value };
+      return updated;
+    });
+  };
+
   const handleSave = async () => {
-    if (!formData.name || formData.originalPrice === undefined) return;
+    if (!formData.name?.trim()) {
+      toast.error('Item name is required.');
+      return;
+    }
+
+    const isVariants = pricingType === 'variants';
+
+    if (isVariants) {
+      if (options.length === 0) {
+        toast.error('Please add at least one pricing option.');
+        return;
+      }
+      for (let i = 0; i < options.length; i++) {
+        if (!options[i].name?.trim()) {
+          toast.error(`Option #${i + 1} must have a name.`);
+          return;
+        }
+        if (options[i].price === undefined || options[i].price <= 0 || isNaN(options[i].price)) {
+          toast.error(`Option "${options[i].name}" must have a valid positive price.`);
+          return;
+        }
+      }
+      const names = options.map((o) => o.name.trim().toLowerCase());
+      if (new Set(names).size !== names.length) {
+        toast.error('Option names must be unique for this product.');
+        return;
+      }
+    } else {
+      if (formData.originalPrice === undefined || formData.originalPrice <= 0 || isNaN(formData.originalPrice)) {
+        toast.error('Please enter a valid original price.');
+        return;
+      }
+    }
 
     if (!editingItem && atItemLimit) {
       if (!isPaid) {
-        toast.error(`The Free plan allows up to ${FREE_PLAN_LIMITS.items} food items. Upgrade to Pro to add more.`, {
+        toast.error(`The Free plan allows up to ${planLimits.items} food items. Upgrade to Plus to add more.`, {
+          action: { label: 'Upgrade', onClick: () => dispatch({ type: 'SET_VIEW', payload: 'admin-subscription' }) },
+        });
+      } else if (!isEnterprise) {
+        toast.error(`The Plus plan allows up to ${planLimits.items} food items. Upgrade to Enterprise to add up to 500 items.`, {
           action: { label: 'Upgrade', onClick: () => dispatch({ type: 'SET_VIEW', payload: 'admin-subscription' }) },
         });
       } else {
-        toast.error(`The Pro plan allows up to ${PRO_PLAN_LIMITS.items} food items. Plan limit reached.`);
+        toast.error(`The Enterprise plan allows up to ${planLimits.items} food items. Plan limit reached.`);
       }
       return;
     }
 
-    const finalPrice = formData.discountedPrice ? formData.discountedPrice : formData.originalPrice;
-    const discount = formData.discountedPrice ? Math.round(((formData.originalPrice - formData.discountedPrice) / formData.originalPrice) * 100) : 0;
+    let originalPrice = formData.originalPrice || 0;
+    let finalPrice = formData.discountedPrice ? formData.discountedPrice : originalPrice;
+    let discount = 0;
+
+    if (isVariants) {
+      const availableOptions = options.filter((o) => o.isAvailable);
+      const pool = availableOptions.length > 0 ? availableOptions : options;
+      const minPrice = Math.min(...pool.map((o) => o.price));
+      originalPrice = minPrice;
+      finalPrice = minPrice;
+      discount = 0;
+    } else {
+      discount = formData.discountedPrice
+        ? Math.round(((formData.originalPrice! - formData.discountedPrice) / formData.originalPrice!) * 100)
+        : 0;
+    }
 
     let finalCategoryName = formData.category || '';
     if (isCreatingCategory && newCategoryName.trim()) {
       finalCategoryName = newCategoryName.trim();
     }
 
-    const isNewCat = !!finalCategoryName && !currentCategories.some(c => c.name.toLowerCase() === finalCategoryName.toLowerCase());
+    const isNewCat = !!finalCategoryName && !currentCategories.some((c) => c.name.toLowerCase() === finalCategoryName.toLowerCase());
     if (isNewCat && atCategoryLimit) {
       if (!isPaid) {
-        toast.error(`The Free plan allows up to ${FREE_PLAN_LIMITS.categories} categories. Upgrade to Pro to add more.`, {
+        toast.error(`The Free plan allows up to ${planLimits.categories} categories. Upgrade to Plus to add more.`, {
+          action: { label: 'Upgrade', onClick: () => dispatch({ type: 'SET_VIEW', payload: 'admin-subscription' }) },
+        });
+      } else if (!isEnterprise) {
+        toast.error(`The Plus plan allows up to ${planLimits.categories} categories. Upgrade to Enterprise to add up to 50 categories.`, {
           action: { label: 'Upgrade', onClick: () => dispatch({ type: 'SET_VIEW', payload: 'admin-subscription' }) },
         });
       } else {
-        toast.error(`The Pro plan allows up to ${PRO_PLAN_LIMITS.categories} categories. Plan limit reached.`);
+        toast.error(`The Enterprise plan allows up to ${planLimits.categories} categories. Plan limit reached.`);
       }
       return;
     }
     
-    let newItemId = `item-${Date.now()}`;
+    let newItemId = editingItem?.id || `item-${Date.now()}`;
 
     try {
       if (state.shop.id && state.shop.id !== 'shop-1') {
         type FoodItemInsert = Database['public']['Tables']['food_items']['Insert'];
         const dbPayload: FoodItemInsert = {
           shop_id: state.shop.id,
-          name: formData.name,
+          name: formData.name.trim(),
           description: formData.description || null,
           tagline: formData.tagline || null,
           image: formData.image || null,
-          original_price: formData.originalPrice,
+          original_price: originalPrice,
           discount: discount,
           final_price: Number(finalPrice.toFixed(2)),
           is_special_offer: formData.isSpecialOffer,
           is_available: formData.isAvailable ?? true,
-          category: finalCategoryName || null
+          category: finalCategoryName || null,
+          pricing_type: pricingType,
         };
 
         if (editingItem && !editingItem.id.startsWith('item-')) {
           await MenuService.updateMenuItem(editingItem.id, dbPayload);
+          newItemId = editingItem.id;
         } else {
           const data = await MenuService.addMenuItem(dbPayload);
           if (data) newItemId = data.id;
         }
+
+        if (isVariants) {
+          await MenuService.saveItemOptions(newItemId, state.shop.id, options);
+        } else if (editingItem && !editingItem.id.startsWith('item-')) {
+          await MenuService.saveItemOptions(newItemId, state.shop.id, []);
+        }
       }
 
-      let itemData: FoodItem = {
-        id: editingItem?.id || newItemId,
-        name: formData.name || '',
+      const cleanOptions: FoodItemOption[] | undefined = isVariants
+        ? options.map((opt, idx) => ({
+            id: opt.id || `opt-${newItemId}-${idx}`,
+            foodItemId: newItemId,
+            name: opt.name.trim(),
+            description: opt.description?.trim() || undefined,
+            price: Number(opt.price),
+            isAvailable: opt.isAvailable ?? true,
+            displayOrder: idx,
+          }))
+        : undefined;
+
+      const itemData: FoodItem = {
+        id: newItemId,
+        name: formData.name.trim(),
         description: formData.description || '',
         tagline: formData.tagline || '',
         category: finalCategoryName,
         image: formData.image || '/food-burger.jpg',
-        originalPrice: formData.originalPrice || 0,
-        discountedPrice: formData.discountedPrice || 0,
+        originalPrice: originalPrice,
+        discountedPrice: isVariants ? 0 : (formData.discountedPrice || 0),
         discount: discount,
         finalPrice: Number(finalPrice.toFixed(2)),
         isSpecialOffer: formData.isSpecialOffer || false,
         isAvailable: formData.isAvailable ?? true,
+        pricingType: pricingType,
+        options: cleanOptions,
       };
 
       if (editingItem) {
@@ -430,11 +612,15 @@ export function AdminAddFoodPage() {
                     onClick={() => {
                       if (atCategoryLimit) {
                         if (!isPaid) {
-                          toast.error(`The Free plan allows up to ${FREE_PLAN_LIMITS.categories} categories. Upgrade to Pro to add more.`, {
+                          toast.error(`The Free plan allows up to ${planLimits.categories} categories. Upgrade to Plus to add more.`, {
+                            action: { label: 'Upgrade', onClick: () => dispatch({ type: 'SET_VIEW', payload: 'admin-subscription' }) },
+                          });
+                        } else if (!isEnterprise) {
+                          toast.error(`The Plus plan allows up to ${planLimits.categories} categories. Upgrade to Enterprise to add up to 50 categories.`, {
                             action: { label: 'Upgrade', onClick: () => dispatch({ type: 'SET_VIEW', payload: 'admin-subscription' }) },
                           });
                         } else {
-                          toast.error(`The Pro plan allows up to ${PRO_PLAN_LIMITS.categories} categories. Plan limit reached.`);
+                          toast.error(`The Enterprise plan allows up to ${planLimits.categories} categories. Plan limit reached.`);
                         }
                         return;
                       }
@@ -448,33 +634,153 @@ export function AdminAddFoodPage() {
               )}
             </div>
 
-            {/* Pricing */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Original Price (Rs.)</Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  value={formData.originalPrice || ''}
-                  onChange={(e) =>
-                    setFormData({ ...formData, originalPrice: parseFloat(e.target.value) || 0 })
-                  }
-                  placeholder="0.00"
-                />
+            {/* Pricing Mode Toggle */}
+            <div className="flex items-center justify-between p-3 rounded-xl bg-muted">
+              <div className="pr-3">
+                <p className="font-medium text-sm">Multiple options</p>
+                <p className="text-xs text-muted-foreground">
+                  Offer different sizes, portions, or pricing options for this product
+                </p>
               </div>
-              <div className="space-y-2">
-                <Label>Discounted Price (Rs.)</Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  value={formData.discountedPrice || ''}
-                  onChange={(e) =>
-                    setFormData({ ...formData, discountedPrice: parseFloat(e.target.value) || 0 })
-                  }
-                  placeholder="0.00 (Optional)"
-                />
-              </div>
+              <Switch
+                checked={pricingType === 'variants'}
+                onCheckedChange={handleTogglePricingType}
+              />
             </div>
+
+            {/* Standard Single Pricing Mode */}
+            {pricingType === 'fixed' ? (
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Original Price (Rs.) *</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={formData.originalPrice || ''}
+                    onChange={(e) =>
+                      setFormData({ ...formData, originalPrice: parseFloat(e.target.value) || 0 })
+                    }
+                    placeholder="0.00"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Discounted Price (Rs.)</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={formData.discountedPrice || ''}
+                    onChange={(e) =>
+                      setFormData({ ...formData, discountedPrice: parseFloat(e.target.value) || 0 })
+                    }
+                    placeholder="0.00 (Optional)"
+                  />
+                </div>
+              </div>
+            ) : (
+              /* Multiple Options Configuration Table */
+              <div className="space-y-3 pt-1">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label className="text-sm font-semibold">Portions & Options</Label>
+                    <p className="text-xs text-muted-foreground">Configure options with individual pricing.</p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleAddOption}
+                    className="text-xs h-8 border-primary/40 text-primary hover:bg-primary/10"
+                  >
+                    <Plus className="w-3.5 h-3.5 mr-1" />
+                    Add Option
+                  </Button>
+                </div>
+
+                {options.length === 0 ? (
+                  <div className="p-4 border border-dashed border-border rounded-xl text-center space-y-2 bg-muted/20">
+                    <p className="text-xs text-muted-foreground">No options added yet.</p>
+                    <Button type="button" size="sm" variant="secondary" onClick={handleAddOption} className="text-xs">
+                      <Plus className="w-3.5 h-3.5 mr-1" /> Add First Option
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-2.5">
+                    {options.map((option, index) => (
+                      <div
+                        key={option.id || index}
+                        className={cn(
+                          'p-3 rounded-xl border transition-all space-y-2.5',
+                          option.isAvailable ? 'bg-card/70 border-border' : 'bg-card/30 border-border/40 opacity-75'
+                        )}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-xs font-semibold text-foreground/80">
+                            Option {index + 1}
+                          </span>
+                          <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-[11px] text-muted-foreground">{option.isAvailable ? 'Available' : 'Unavailable'}</span>
+                              <Switch
+                                checked={option.isAvailable}
+                                onCheckedChange={(checked) => handleUpdateOption(index, 'isAvailable', checked)}
+                                className="scale-75"
+                              />
+                            </div>
+                            {options.length > 1 && (
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleRemoveOption(index)}
+                                className="h-7 w-7 text-destructive hover:bg-destructive/10 rounded-lg"
+                                title="Delete option"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                          <div className="space-y-1">
+                            <Label className="text-[11px] text-muted-foreground">Option Name *</Label>
+                            <Input
+                              placeholder="e.g. S, Regular, 250ml"
+                              value={option.name}
+                              onChange={(e) => handleUpdateOption(index, 'name', e.target.value)}
+                              className="h-9 text-sm"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-[11px] text-muted-foreground">Serving / Quantity</Label>
+                            <Input
+                              placeholder="e.g. 1 Person, 250 ml"
+                              value={option.description || ''}
+                              onChange={(e) => handleUpdateOption(index, 'description', e.target.value)}
+                              className="h-9 text-sm"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-[11px] text-muted-foreground">Price (Rs.) *</Label>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              placeholder="0.00"
+                              value={option.price || ''}
+                              onChange={(e) => handleUpdateOption(index, 'price', parseFloat(e.target.value) || 0)}
+                              className="h-9 text-sm"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Toggles */}
             <div className="flex items-center justify-between p-3 rounded-xl bg-muted">
@@ -640,9 +946,18 @@ export function AdminAddFoodPage() {
               <p className="text-xs text-muted-foreground line-clamp-1">
                 {item.category}
               </p>
-              <div className="flex items-center gap-2 mt-1">
-                <span className="text-sm font-bold">Rs. {item.finalPrice.toFixed(2)}</span>
-                {(item.discountedPrice ?? 0) > 0 && (
+              <div className="flex items-center gap-2 mt-1 flex-wrap">
+                <span className="text-sm font-bold">
+                  {item.pricingType === 'variants' && item.options && item.options.length > 0
+                    ? `From Rs. ${item.finalPrice.toFixed(2)}`
+                    : `Rs. ${item.finalPrice.toFixed(2)}`}
+                </span>
+                {item.pricingType === 'variants' && item.options && item.options.length > 0 && (
+                  <span className="text-[10px] px-1.5 py-0.5 bg-primary/20 text-primary rounded-full font-medium">
+                    {item.options.length} options
+                  </span>
+                )}
+                {(item.discountedPrice ?? 0) > 0 && item.pricingType !== 'variants' && (
                   <span className="text-[10px] px-1.5 py-0.5 bg-destructive/20 text-destructive rounded-full">
                     Offer
                   </span>

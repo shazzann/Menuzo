@@ -8,6 +8,13 @@ interface FoodCardProps {
 }
 
 export function FoodCard({ item, onClick, variant = 'grid' }: FoodCardProps) {
+  const isVariants = item.pricingType === 'variants' && Array.isArray(item.options) && item.options.length > 0;
+  const availableOptions = isVariants ? item.options!.filter((o) => o.isAvailable) : [];
+  const optionsPool = availableOptions.length > 0 ? availableOptions : (item.options || []);
+  const minPrice = isVariants && optionsPool.length > 0
+    ? Math.min(...optionsPool.map((o) => o.price))
+    : item.finalPrice;
+
   const discountPercent = item.discount 
     ? Math.round(((item.originalPrice - item.finalPrice) / item.originalPrice) * 100)
     : 0;
@@ -39,8 +46,17 @@ export function FoodCard({ item, onClick, variant = 'grid' }: FoodCardProps) {
           <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">
             {item.description}
           </p>
-          <div className="shop-price-row flex items-center gap-2 mt-1.5">
-            {item.discount ? (
+          <div className="shop-price-row flex items-center gap-2 mt-1.5 flex-wrap">
+            {isVariants ? (
+              <>
+                <span className="text-sm font-bold text-primary">
+                  From Rs. {minPrice.toFixed(2)}
+                </span>
+                <span className="text-[10px] px-2 py-0.5 bg-primary/10 text-primary border border-primary/20 rounded-full font-medium">
+                  {item.options!.length} options
+                </span>
+              </>
+            ) : item.discount ? (
               <>
                 <span className="text-xs text-muted-foreground line-through">
                   Rs. {item.originalPrice.toFixed(2)}
@@ -102,7 +118,16 @@ export function FoodCard({ item, onClick, variant = 'grid' }: FoodCardProps) {
           {item.tagline}
         </p>
         <div className="food-card-prices flex flex-wrap items-baseline gap-x-2 gap-y-1 mt-auto pt-2">
-          {item.discount ? (
+          {isVariants ? (
+            <div className="flex items-center justify-between w-full">
+              <span className="food-card-current-price whitespace-nowrap text-sm font-bold text-primary">
+                From Rs. {minPrice.toFixed(2)}
+              </span>
+              <span className="text-[10px] px-1.5 py-0.5 bg-primary/10 text-primary border border-primary/20 rounded-full font-medium">
+                {item.options!.length} options
+              </span>
+            </div>
+          ) : item.discount ? (
             <>
               <span className="food-card-original-price whitespace-nowrap text-xs text-muted-foreground line-through">
                 Rs. {item.originalPrice.toFixed(2)}

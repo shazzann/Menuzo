@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 
 const day = (date: Date) => date.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
 
-// In-app notice before Pro ends, during the grace period, and while items are hidden.
+// In-app notice before a paid plan ends, during the grace period, and while items are hidden.
 // `kinds` limits which notices a page shows (the dashboard shows all of them).
 export function PlanStatusBanner({ className, kinds }: { className?: string; kinds?: PlanNoticeKind[] }) {
   const { state, dispatch } = useApp();
@@ -16,6 +16,8 @@ export function PlanStatusBanner({ className, kinds }: { className?: string; kin
   if (!notice || (kinds && !kinds.includes(notice))) return null;
   const openSubscription = () => dispatch({ type: 'SET_VIEW', payload: 'admin-subscription' });
 
+  const planName = state.user?.subscription.plan === 'enterprise' ? 'Enterprise' : 'Plus';
+
   let tone: 'warning' | 'info';
   let Icon = Clock;
   let title: string;
@@ -24,13 +26,13 @@ export function PlanStatusBanner({ className, kinds }: { className?: string; kin
 
   if (plan.phase === 'ending-soon') {
     tone = 'warning';
-    title = `Your Pro plan ends on ${day(plan.endsAt)}`;
+    title = `Your ${planName} plan ends on ${day(plan.endsAt)}`;
     body = `Renew to keep your full menu visible. On the Free plan, customers see up to ${FREE_PLAN_LIMITS.items} items in ${FREE_PLAN_LIMITS.categories} categories.`;
     action = 'Renew';
   } else if (plan.phase === 'grace') {
     tone = 'warning';
     Icon = AlertTriangle;
-    title = `Your Pro plan ended on ${day(plan.endedAt)}`;
+    title = `Your ${planName} plan ended on ${day(plan.endedAt)}`;
     body = `All your items stay visible until ${day(plan.graceEndsAt)}. After that, customers see up to ${FREE_PLAN_LIMITS.items} items in ${FREE_PLAN_LIMITS.categories} categories.`;
     action = 'Renew now';
   } else if (plan.phase === 'free' && hidden > 0) {
@@ -38,7 +40,7 @@ export function PlanStatusBanner({ className, kinds }: { className?: string; kin
     Icon = EyeOff;
     title = `${hidden} ${hidden === 1 ? 'item is' : 'items are'} hidden from customers`;
     body = `The Free plan shows your first ${FREE_PLAN_LIMITS.categories} categories and up to ${FREE_PLAN_LIMITS.items} items. Reorder categories to choose what shows, or upgrade to show everything.`;
-    action = 'Upgrade to Pro';
+    action = 'Upgrade plan';
   } else {
     return null;
   }

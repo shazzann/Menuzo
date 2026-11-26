@@ -20,6 +20,7 @@ const statusColors: Record<string, string> = {
 const planColors: Record<string, string> = {
   free: 'bg-slate-500/10 text-slate-500',
   starter: 'bg-blue-500/10 text-blue-500',
+  plus: 'bg-orange-500/10 text-orange-500',
   pro: 'bg-orange-500/10 text-orange-500',
   enterprise: 'bg-violet-500/10 text-violet-500',
 };
@@ -95,7 +96,7 @@ export function CompanyShopList() {
       shop.owner.toLowerCase().includes(searchQuery.toLowerCase()) ||
       shop.location.toLowerCase().includes(searchQuery.toLowerCase());
     const matchStatus = statusFilter === 'all' || shop.status === statusFilter;
-    const matchPlan = planFilter === 'all' || shop.plan === planFilter;
+    const matchPlan = planFilter === 'all' || shop.plan === planFilter || (planFilter === 'plus' && shop.plan === 'pro');
     return matchSearch && matchStatus && matchPlan;
   });
 
@@ -192,7 +193,7 @@ export function CompanyShopList() {
               >
                 <option value="all">All Plans</option>
                 <option value="free">Free</option>
-                <option value="starter">Starter</option>
+                <option value="plus">Plus</option>
                 <option value="pro">Pro</option>
                 <option value="enterprise">Enterprise</option>
               </select>

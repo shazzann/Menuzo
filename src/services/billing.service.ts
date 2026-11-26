@@ -65,6 +65,7 @@ export const BillingService = {
       p_expected_months: input.expectedMonths,
       p_requested_slug: input.requestedSlug?.trim().toLowerCase() || null,
       p_customer_note: input.customerNote?.trim() || null,
+      p_plan_slug: input.planSlug || 'plus',
     });
 
     if (error) throw error;

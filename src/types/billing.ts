@@ -31,6 +31,7 @@ export type PaymentRequest = {
   transferred_on: string;
   requested_slug: string | null;
   customer_note: string | null;
+  plan_slug?: string | null;
   status: 'pending' | 'approved' | 'rejected';
   rejection_reason: string | null;
   created_at: string;
@@ -54,4 +55,19 @@ export interface SubmitPaymentRequestInput {
   expectedMonths: number;
   requestedSlug?: string | null;
   customerNote?: string;
+  planSlug?: string | null;
+}
+
+export interface SubscriptionPlan {
+  id: string;
+  name: string;
+  slug: 'free' | 'plus' | 'enterprise' | string;
+  monthly_price: number;
+  annual_price: number;
+  max_items: number;
+  max_categories: number;
+  features: Record<string, unknown>;
+  is_active: boolean;
+  created_at?: string;
+  updated_at?: string;
 }

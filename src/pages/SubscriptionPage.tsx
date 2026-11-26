@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ArrowLeft, ArrowRight, Check, CheckCircle2, Clock, Copy, Crown, ExternalLink, Landmark, Link2, Loader2, MessageCircle, RefreshCw, ShieldCheck, XCircle } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, CheckCircle2, Clock, Copy, Crown, ExternalLink, Landmark, Link2, Loader2, MessageCircle, RefreshCw, ShieldCheck, XCircle, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useApp } from '@/store';
 import { BillingService } from '@/services/billing.service';
 import { SubscriptionService } from '@/services/subscription.service';
-import { isProActive } from '@/lib/subscription';
+import { isPaidActive, PLAN_PRICING, getPlanLimits } from '@/lib/subscription';
 import { billingErrorMessage, formatPaymentAmount, isCheckoutReady, paymentWhatsAppUrl, placeholderPeriods } from '@/lib/billing';
 import { getTodayDateString } from '@/lib/timeUtils';
 import type { BankTransferSettings, BillingPeriod, PaymentRequest, ShopCustomUrl } from '@/types/billing';
@@ -20,10 +20,21 @@ const panel = 'rounded-2xl border border-border bg-card p-5 sm:p-7';
 export function SubscriptionPage() {
   const { state, dispatch } = useApp();
   const { user, shop } = state;
+  const foodItems = state.foodItems || [];
+  const categories = state.categories || [];
   const [periods, setPeriods] = useState<BillingPeriod[]>(placeholderPeriods);
   const [bank, setBank] = useState<BankTransferSettings | null>(null);
   const [requests, setRequests] = useState<PaymentRequest[]>([]);
   const [customUrl, setCustomUrl] = useState<ShopCustomUrl | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<'plus' | 'enterprise'>(() => {
+    try {
+      if (typeof sessionStorage !== 'undefined') {
+        const intent = sessionStorage.getItem('menuzo_upgrade_intent');
+        if (intent === 'enterprise') return 'enterprise';
+      }
+    } catch {}
+    return 'plus';
+  });
   const [selectedId, setSelectedId] = useState(() => {
     try {
       if (typeof sessionStorage !== 'undefined') {
@@ -46,8 +57,21 @@ export function SubscriptionPage() {
   const submitLock = useRef(false);
   const pageActive = useRef(false);
   const userId = user?.id;
-  const proActive = isProActive(user?.subscription);
-  const currentPeriod = periods.find(period => period.id === selectedId);
+  const proActive = isPaidActive(user?.subscription);
+  const isEnterprise = user?.subscription?.plan === 'enterprise' && proActive;
+  const planLimits = getPlanLimits(user?.subscription);
+  const currentCategories = categories.filter(c => c.id !== 'all');
+
+  // Compute price for currently selected period & plan
+  const basePeriod = periods.find(period => period.id === selectedId);
+  const currentPeriod: BillingPeriod | undefined = basePeriod ? {
+    ...basePeriod,
+    amount: selectedPlan === 'enterprise'
+      ? (basePeriod.months === 12 ? PLAN_PRICING.enterprise.annual : PLAN_PRICING.enterprise.monthly)
+      : (basePeriod.amount ?? (basePeriod.months === 12 ? PLAN_PRICING.plus.annual : PLAN_PRICING.plus.monthly)),
+    label: `${basePeriod.label} ${selectedPlan === 'enterprise' ? 'Enterprise' : 'Plus'}`,
+  } : undefined;
+
   const selected = step === 0 ? currentPeriod : checkoutPeriod || undefined;
   const pending = requests.find(request => request.status === 'pending');
   const needsCustomUrl = !customUrl && !requests.some(request => request.status === 'approved');
@@ -56,7 +80,7 @@ export function SubscriptionPage() {
   const showComparison = !proActive && !pending && step === 0;
   const priceUnchanged = step === 0 || (currentPeriod?.id === checkoutPeriod?.id && currentPeriod?.amount === checkoutPeriod?.amount
     && currentPeriod?.currency === checkoutPeriod?.currency && currentPeriod?.months === checkoutPeriod?.months);
-  const ready = !loading && !loadError && priceUnchanged && !!currentPeriod?.active && isCheckoutReady(selected, bank);
+  const ready = !loading && !loadError && priceUnchanged && !!basePeriod?.active && isCheckoutReady(selected, bank);
 
   const refresh = useCallback(async () => {
     if (!userId || !shop.id) return;
@@ -85,7 +109,6 @@ export function SubscriptionPage() {
   useEffect(() => {
     let cancelled = false;
     pageActive.current = true;
-    // Start after the effect is installed so cleanup can cancel the initial load.
     void Promise.resolve().then(() => { if (!cancelled) return refresh(); });
     const onFocus = () => { void refresh(); };
     window.addEventListener('focus', onFocus);
@@ -103,9 +126,12 @@ export function SubscriptionPage() {
     catch { toast.error('Could not copy. Please select and copy the text.'); }
   };
 
+  const planDisplayName = selectedPlan === 'enterprise' ? 'Enterprise' : 'Plus';
+
   const whatsappUrl = ready && bank && selected ? paymentWhatsAppUrl(bank.whatsapp_number, [
-    'Hello Menuzo, I would like to verify my Pro bank transfer.',
+    `Hello Menuzo, I would like to verify my ${planDisplayName} bank transfer.`,
     `Shop: ${shop.name} (${shop.username})`, `Account: ${user?.email || ''}`,
+    `Plan: ${planDisplayName}`,
     `Period: ${selected.label}`, `Amount: ${formatPaymentAmount(selected.amount, selected.currency)}`,
     `Payer: ${form.payerName.trim()}`, `Reference: ${form.reference.trim()}`, `Transfer date: ${form.date}`,
     customUrl ? `Existing custom URL: ${window.location.host}/${customUrl.slug} (keep unchanged)`
@@ -119,12 +145,20 @@ export function SubscriptionPage() {
     setSubmitting(true);
     setSubmitError('');
     try {
-      const request = await BillingService.submitRequest({ shopId: shop.id, periodId: selected.id,
-        expectedAmount: selected.amount!, expectedCurrency: selected.currency, expectedMonths: selected.months,
-        payerName: form.payerName, transferReference: form.reference, transferredOn: form.date,
-        requestedSlug, customerNote: form.note });
+      const request = await BillingService.submitRequest({
+        shopId: shop.id,
+        periodId: selected.id,
+        expectedAmount: selected.amount!,
+        expectedCurrency: selected.currency,
+        expectedMonths: selected.months,
+        payerName: form.payerName,
+        transferReference: form.reference,
+        transferredOn: form.date,
+        requestedSlug,
+        customerNote: form.note,
+        planSlug: selectedPlan,
+      });
       if (!pageActive.current) return;
-      // Persisted pending requests never grant paid access.
       setRequests(current => [request, ...current.filter(item => item.id !== request.id)]);
       toast.success('Verification request submitted');
       setStep(0);
@@ -146,76 +180,380 @@ export function SubscriptionPage() {
         </div>
       </header>
       <main className="max-w-6xl mx-auto px-4 py-8 space-y-6">
-        <div className="space-y-2"><span className="inline-flex items-center gap-2 text-primary text-sm font-semibold"><Crown className="w-4 h-4" /> MENUZO PRO</span><h2 className="text-3xl sm:text-4xl font-bold tracking-tight">{showComparison ? 'Your next chapter starts with Pro.' : 'A little more room to grow.'}</h2><p className="text-muted-foreground max-w-2xl">{showComparison ? 'Your Free plan gets you started. Compare what you have with the extra space and benefits of Pro.' : 'Choose your period, pay by bank transfer, and send your receipt for verification. Pro starts after your payment is approved.'}</p></div>
+        <div className="space-y-2">
+          <span className="inline-flex items-center gap-2 text-primary text-sm font-semibold">
+            <Crown className="w-4 h-4" /> MENUZO SUBSCRIPTIONS
+          </span>
+          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">
+            {showComparison ? 'Grow your restaurant with Menuzo.' : 'Choose your plan & billing.'}
+          </h2>
+          <p className="text-muted-foreground max-w-2xl">
+            {showComparison
+              ? 'Compare what you have on Free with the extra features, capacity, and benefits of Plus and Enterprise.'
+              : 'Choose your period, pay by bank transfer, and send your receipt for verification. Benefits start upon approval.'}
+          </p>
+        </div>
+
         {loadError && <div role="alert" className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm">{loadError}</div>}
         {!shop.id && <p role="status" className="text-sm text-muted-foreground">Loading your shop details…</p>}
-        {showComparison && <SubscriptionPlanComparison
-          periods={periods} selectedId={selectedId} loading={loading} ready={ready && !!shop.id}
-          onSelect={id => { setSelectedId(id); setTransferMade(false); setReceiptSent(false); }}
-          onKeepFree={() => dispatch({ type: 'SET_VIEW', payload: 'user-dashboard' })}
-          onUpgrade={() => {
-            if (!ready || !selected || !shop.id) return;
-            setCheckoutPeriod(selected); setTransferMade(false); setReceiptSent(false); setStep(1);
-          }}
-        />}
+
+        {showComparison && (
+          <SubscriptionPlanComparison
+            periods={periods}
+            selectedId={selectedId}
+            loading={loading}
+            ready={ready && !!shop.id}
+            onSelect={id => { setSelectedId(id); setTransferMade(false); setReceiptSent(false); }}
+            onKeepFree={() => dispatch({ type: 'SET_VIEW', payload: 'user-dashboard' })}
+            onUpgrade={(plan = 'plus') => {
+              if (!ready || !currentPeriod || !shop.id) return;
+              setSelectedPlan(plan);
+              const computedPeriod: BillingPeriod = {
+                ...currentPeriod,
+                amount: plan === 'enterprise'
+                  ? (currentPeriod.months === 12 ? PLAN_PRICING.enterprise.annual : PLAN_PRICING.enterprise.monthly)
+                  : (currentPeriod.amount ?? (currentPeriod.months === 12 ? PLAN_PRICING.plus.annual : PLAN_PRICING.plus.monthly)),
+                label: `${currentPeriod.label.replace(/ (Plus|Enterprise)/, '')} ${plan === 'enterprise' ? 'Enterprise' : 'Plus'}`,
+              };
+              setCheckoutPeriod(computedPeriod);
+              setTransferMade(false);
+              setReceiptSent(false);
+              setStep(1);
+            }}
+          />
+        )}
+
         <div className={showComparison ? 'space-y-6' : 'grid lg:grid-cols-[minmax(0,1fr)_320px] gap-6 items-start'}>
           <div className="space-y-6 min-w-0">
             {pending ? (
               <section className={`${panel} border-amber-500/30`} aria-live="polite">
-                <Clock className="w-10 h-10 text-amber-500 mb-4" /><h3 className="text-xl font-bold mb-2">Payment verification pending</h3>
-                <p className="text-sm text-muted-foreground">We received your {pending.period_label.toLowerCase()} Pro request. {proActive ? 'Your current subscription stays active until its expiry date.' : 'Your account stays on Free while we review the transfer.'}</p>
-                <dl className="mt-5 grid sm:grid-cols-2 gap-4 text-sm"><div><dt className="text-muted-foreground">Amount</dt><dd className="font-semibold">{formatPaymentAmount(pending.amount, pending.currency)}</dd></div><div><dt className="text-muted-foreground">Transfer reference</dt><dd className="font-mono break-all">{pending.transfer_reference}</dd></div><div className="sm:col-span-2"><dt className="text-muted-foreground">Request ID</dt><dd className="font-mono break-all text-xs mt-1">{pending.id}</dd></div></dl>
+                <Clock className="w-10 h-10 text-amber-500 mb-4" />
+                <h3 className="text-xl font-bold mb-2">Payment verification pending</h3>
+                <p className="text-sm text-muted-foreground">
+                  We received your {pending.period_label.toLowerCase()} request. {proActive ? 'Your current subscription stays active until its expiry date.' : 'Your account stays on Free while we review the transfer.'}
+                </p>
+                <dl className="mt-5 grid sm:grid-cols-2 gap-4 text-sm">
+                  <div><dt className="text-muted-foreground">Amount</dt><dd className="font-semibold">{formatPaymentAmount(pending.amount, pending.currency)}</dd></div>
+                  <div><dt className="text-muted-foreground">Transfer reference</dt><dd className="font-mono break-all">{pending.transfer_reference}</dd></div>
+                  <div className="sm:col-span-2"><dt className="text-muted-foreground">Request ID</dt><dd className="font-mono break-all text-xs mt-1">{pending.id}</dd></div>
+                </dl>
                 <p className="text-xs text-muted-foreground mt-5">This page checks for updates automatically. You can return here at any time.</p>
               </section>
             ) : (
               <>
-                {latest?.status === 'rejected' && <section role="status" className={`${panel} border-destructive/30`}><div className="flex items-center gap-2 font-semibold text-destructive"><XCircle className="w-5 h-5" />Payment request rejected</div><p className="text-sm mt-2">{latest.rejection_reason || 'We could not verify this transfer. Please check your details and send a new request.'}</p><p className="text-sm text-muted-foreground mt-2">{proActive ? 'Your existing subscription is unchanged.' : 'Your plan remains Free.'} You can correct your payment details below.</p></section>}
-                {latest?.status === 'approved' && <section role="status" className={`${panel} border-emerald-500/30`}><div className="flex items-center gap-2 font-semibold text-emerald-600"><CheckCircle2 className="w-5 h-5" />Payment verified</div><p className="text-sm mt-2 text-muted-foreground">{proActive ? 'Your Pro subscription is active.' : user?.subscription.status === 'expired' ? 'Your subscription has expired. Choose a period below to renew.' : user?.subscription.status === 'cancelled' ? 'Your previous payment was verified, but your subscription has been cancelled. Your account is on Free.' : 'Your payment has been verified. We are waiting for your subscription to be activated.'}</p></section>}
-                {!showComparison && <section className={panel}>
-                  <ol className="grid grid-cols-3 gap-2 mb-8" aria-label="Upgrade progress">{steps.map((label, index) => <li key={label} aria-current={step === index ? 'step' : undefined} className={`text-xs sm:text-sm ${step >= index ? 'text-foreground' : 'text-muted-foreground'}`}><span className={`flex h-8 w-8 items-center justify-center rounded-full mb-2 ${step >= index ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>{step > index ? <Check className="w-4 h-4" /> : index + 1}</span>{label}</li>)}</ol>
-                  {step === 0 && <div className="space-y-6">
-                    <div><h3 className="text-xl font-bold">{proActive ? 'Renew Pro' : 'Choose Pro'}</h3><p className="text-sm text-muted-foreground mt-1">Pay once for the selected period. No automatic renewals.</p>{proActive && <p className="text-sm text-primary mt-2">Renew anytime. Once your payment is approved, a monthly purchase adds 1 month and a yearly purchase adds 12 months to your current expiry. Your remaining paid time is kept, even when switching periods.</p>}</div>
-                    <fieldset><legend className="sr-only">Subscription period</legend><div className="grid sm:grid-cols-2 gap-3">{periods.map(period => <label key={period.id} className={`relative cursor-pointer rounded-xl border-2 p-5 flex items-start gap-3 transition-colors ${selectedId === period.id ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/40'}`}><input className="mt-1 accent-primary" type="radio" name="period" value={period.id} checked={selectedId === period.id} onChange={() => { setSelectedId(period.id); setTransferMade(false); setReceiptSent(false); }} /><span><span className="block font-semibold">{period.label}</span><span className="block text-xl font-bold mt-2">{formatPaymentAmount(period.amount, period.currency)}</span><span className="block text-xs text-muted-foreground mt-1">{period.months} {period.months === 1 ? 'month' : 'months'} of Pro</span></span></label>)}</div></fieldset>
-                    {!periods.length && <p className="text-sm text-muted-foreground">No subscription periods are available yet.</p>}
-                    <ul className="grid sm:grid-cols-2 gap-3 text-sm">{['Up to 100 menu items', 'Up to 20 categories', 'Custom menu URL', 'Priority support'].map(feature => <li key={feature} className="flex items-center gap-2"><Check className="w-4 h-4 text-primary" />{feature}</li>)}</ul>
-                    {!ready && <p className="text-sm bg-muted rounded-xl p-4 text-muted-foreground">Pro payments are coming soon. Prices and bank transfer details will appear here when available.</p>}
-                    <Button className="w-full sm:w-auto gap-2" disabled={!selected || !shop.id} onClick={() => { setCheckoutPeriod(selected || null); setTransferMade(false); setReceiptSent(false); setStep(1); }}>Proceed to pay<ArrowRight className="w-4 h-4" /></Button>
-                  </div>}
-                  {step === 1 && <form className="space-y-6" onSubmit={event => { event.preventDefault(); if (ready && transferMade) { setReceiptSent(false); setStep(2); } }}>
-                    <div><h3 className="text-xl font-bold flex items-center gap-2"><Landmark className="w-5 h-5" />Make a bank transfer</h3><p className="text-sm text-muted-foreground mt-2">Transfer the exact amount below, then keep your receipt to send on WhatsApp.</p></div>
-                    <div className="bg-muted/50 rounded-xl p-4 space-y-4"><div className="flex justify-between gap-4 border-b border-border pb-4"><span className="text-sm text-muted-foreground">{selected?.label} Pro</span><strong>{selected ? formatPaymentAmount(selected.amount, selected.currency) : 'Price coming soon'}</strong></div>{[['Bank', bank?.bank_name], ['Account name', bank?.account_name], ['Account number', bank?.account_number], ['Branch', bank?.branch]].map(([label, value]) => <div key={label} className="flex justify-between gap-4 items-center"><div className="min-w-0"><p className="text-xs text-muted-foreground">{label}</p><p className={`text-sm break-words ${value ? 'font-medium' : 'text-muted-foreground italic'}`}>{value || 'Details coming soon'}</p></div>{value && <Button type="button" variant="ghost" size="icon" aria-label={`Copy ${label?.toLowerCase()}`} onClick={() => void copy(value)}><Copy className="w-4 h-4" /></Button>}</div>)}</div>
-                    {!ready && <p role="status" className="text-sm text-amber-600">{!priceUnchanged ? 'Pricing has changed. Go back to review the latest period and amount before making a transfer.' : 'Bank payments are not available yet. Please wait for confirmed pricing and payment details before making a transfer.'}</p>}
-                    <fieldset disabled={!ready} className="space-y-4 disabled:opacity-60"><legend className="font-semibold mb-3">Your transfer details</legend>
-                      <div className="space-y-2"><Label htmlFor="payer-name">Account holder / payer name</Label><Input id="payer-name" required minLength={2} maxLength={120} value={form.payerName} onChange={event => setForm({ ...form, payerName: event.target.value })} autoComplete="name" /></div>
-                      <div className="grid sm:grid-cols-2 gap-4"><div className="space-y-2"><Label htmlFor="transfer-reference">Transfer reference</Label><Input id="transfer-reference" required minLength={3} maxLength={120} value={form.reference} onChange={event => setForm({ ...form, reference: event.target.value })} /></div><div className="space-y-2"><Label htmlFor="transfer-date">Transfer date</Label><Input id="transfer-date" type="date" required max={getTodayDateString()} value={form.date} onChange={event => setForm({ ...form, date: event.target.value })} /></div></div>
-                      {needsCustomUrl ? <div className="space-y-2"><Label htmlFor="preferred-url">Preferred custom menu URL (optional)</Label><div className="flex items-center gap-2"><span className="text-sm text-muted-foreground">{window.location.host}/</span><Input id="preferred-url" placeholder="your-restaurant" maxLength={50} minLength={3} pattern="[a-z0-9]+(-[a-z0-9]+)*" title="Use 3–50 lowercase letters or numbers, separated by single hyphens." value={form.slug} onChange={event => setForm({ ...form, slug: event.target.value.toLowerCase() })} /></div><p className="text-xs text-muted-foreground">Subject to availability. Your custom URL activates after approval and assignment. Your existing menu link keeps working.</p></div>
-                        : <div className="rounded-xl bg-muted/50 p-4 space-y-2"><p className="text-sm font-medium">{customUrl ? 'Keeping your custom URL' : 'Custom URL setup'}</p>{customUrl && <p className="text-sm break-all">{window.location.host}/{customUrl.slug}</p>}<p className="text-xs text-muted-foreground">{customUrl ? 'Renewing keeps this URL. You do not need to choose it again.' : 'You do not need to request a custom URL again when renewing. Contact support if your URL has not been assigned yet.'}</p></div>}
-                      <div className="space-y-2"><Label htmlFor="payment-note">Note (optional)</Label><Textarea id="payment-note" maxLength={1000} value={form.note} onChange={event => setForm({ ...form, note: event.target.value })} /></div>
-                      <label className="flex items-start gap-3 text-sm"><input type="checkbox" required checked={transferMade} onChange={event => setTransferMade(event.target.checked)} className="mt-1 accent-primary" />I have completed this bank transfer and kept the receipt.</label>
-                    </fieldset>
-                    <div className="flex flex-wrap gap-3"><Button type="button" variant="outline" onClick={() => setStep(0)}>Back</Button><Button type="submit" disabled={!ready || !transferMade} className="gap-2">Continue to WhatsApp<ArrowRight className="w-4 h-4" /></Button></div>
-                  </form>}
-                  {step === 2 && <form onSubmit={submit} className="space-y-6">
-                    <div><h3 className="text-xl font-bold">Send your receipt, then submit</h3><p className="text-sm text-muted-foreground mt-2">Open WhatsApp, attach your bank receipt to the prepared message, and send it. Then return here to submit your verification request.</p></div>
-                    <div className="rounded-xl bg-muted/50 p-4 text-sm space-y-2"><p><span className="text-muted-foreground">Period: </span>{selected?.label}</p><p><span className="text-muted-foreground">Amount: </span>{selected && formatPaymentAmount(selected.amount, selected.currency)}</p><p className="break-all"><span className="text-muted-foreground">Reference: </span>{form.reference}</p></div>
-                    {!priceUnchanged && <p role="alert" className="text-sm text-amber-600">Pricing has changed. Go back to select a period and review the updated amount before submitting.</p>}
-                    {whatsappUrl ? <Button asChild className="bg-emerald-600 text-white hover:bg-emerald-700 gap-2"><a href={whatsappUrl} target="_blank" rel="noopener noreferrer"><MessageCircle className="w-4 h-4" />Open WhatsApp<ExternalLink className="w-4 h-4" /></a></Button> : <p className="text-sm text-muted-foreground">WhatsApp payment support is not available yet.</p>}
-                    <p className="text-xs text-muted-foreground">WhatsApp opens a draft. You attach and send the receipt yourself.</p>
-                    <label className="flex items-start gap-3 text-sm"><input type="checkbox" required disabled={!ready || submitting} checked={receiptSent} onChange={event => setReceiptSent(event.target.checked)} className="mt-1 accent-primary" />I have sent my receipt and transfer details on WhatsApp.</label>
-                    {submitError && <p role="alert" className="text-sm text-destructive">{submitError}</p>}
-                    <div className="flex flex-wrap gap-3"><Button type="button" variant="outline" disabled={submitting} onClick={() => setStep(1)}>Back</Button><Button type="submit" disabled={!ready || !receiptSent || submitting} className="gap-2">{submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}Submit verification request</Button></div>
-                    <p className="text-xs text-muted-foreground">Submitting a request does not activate Pro. Your payment must be reviewed first.</p>
-                  </form>}
-                </section>}
+                {latest?.status === 'rejected' && (
+                  <section role="status" className={`${panel} border-destructive/30`}>
+                    <div className="flex items-center gap-2 font-semibold text-destructive"><XCircle className="w-5 h-5" />Payment request rejected</div>
+                    <p className="text-sm mt-2">{latest.rejection_reason || 'We could not verify this transfer. Please check your details and send a new request.'}</p>
+                    <p className="text-sm text-muted-foreground mt-2">{proActive ? 'Your existing subscription is unchanged.' : 'Your plan remains Free.'} You can correct your payment details below.</p>
+                  </section>
+                )}
+                {latest?.status === 'approved' && (
+                  <section role="status" className={`${panel} border-emerald-500/30`}>
+                    <div className="flex items-center gap-2 font-semibold text-emerald-600"><CheckCircle2 className="w-5 h-5" />Payment verified</div>
+                    <p className="text-sm mt-2 text-muted-foreground">
+                      {proActive ? `Your ${isEnterprise ? 'Enterprise' : 'Plus'} subscription is active.` : user?.subscription.status === 'expired' ? 'Your subscription has expired. Choose a period below to renew.' : user?.subscription.status === 'cancelled' ? 'Your previous payment was verified, but your subscription has been cancelled. Your account is on Free.' : 'Your payment has been verified. We are waiting for your subscription to be activated.'}
+                    </p>
+                  </section>
+                )}
+                {!showComparison && (
+                  <section className={panel}>
+                    <ol className="grid grid-cols-3 gap-2 mb-8" aria-label="Upgrade progress">
+                      {steps.map((label, index) => (
+                        <li key={label} aria-current={step === index ? 'step' : undefined} className={`text-xs sm:text-sm ${step >= index ? 'text-foreground' : 'text-muted-foreground'}`}>
+                          <span className={`flex h-8 w-8 items-center justify-center rounded-full mb-2 ${step >= index ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
+                            {step > index ? <Check className="w-4 h-4" /> : index + 1}
+                          </span>
+                          {label}
+                        </li>
+                      ))}
+                    </ol>
+
+                    {step === 0 && (
+                      <div className="space-y-6">
+                        <div>
+                          <h3 className="text-xl font-bold">
+                            {proActive ? `Renew ${isEnterprise ? 'Enterprise' : 'Plus'}` : `Choose ${planDisplayName}`}
+                          </h3>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            Pay once for the selected period. No automatic renewals.
+                          </p>
+                          {proActive && (
+                            <p className="text-sm text-primary mt-2">
+                              Renew anytime. Once approved, monthly purchase adds 1 month and yearly purchase adds 12 months to your current expiry.
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Plan Selector for Renewals/Upgrades */}
+                        <div className="grid sm:grid-cols-2 gap-3">
+                          <button
+                            type="button"
+                            onClick={() => setSelectedPlan('plus')}
+                            className={`p-4 rounded-xl border-2 text-left transition-all ${
+                              selectedPlan === 'plus' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/40'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="font-bold text-sm">Plus Plan</span>
+                              <Crown className="w-4 h-4 text-primary" />
+                            </div>
+                            <p className="text-xs text-muted-foreground">100 items · 20 categories · Custom URL & themes</p>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => setSelectedPlan('enterprise')}
+                            className={`p-4 rounded-xl border-2 text-left transition-all ${
+                              selectedPlan === 'enterprise' ? 'border-purple-500 bg-purple-500/5' : 'border-border hover:border-purple-500/40'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="font-bold text-sm text-purple-400">Enterprise Plan</span>
+                              <Zap className="w-4 h-4 text-purple-400" />
+                            </div>
+                            <p className="text-xs text-muted-foreground">500 items · 50 categories · Full feature access</p>
+                          </button>
+                        </div>
+
+                        <fieldset>
+                          <legend className="sr-only">Subscription period</legend>
+                          <div className="grid sm:grid-cols-2 gap-3">
+                            {periods.map(period => {
+                              const amount = selectedPlan === 'enterprise'
+                                ? (period.months === 12 ? PLAN_PRICING.enterprise.annual : PLAN_PRICING.enterprise.monthly)
+                                : (period.amount ?? (period.months === 12 ? PLAN_PRICING.plus.annual : PLAN_PRICING.plus.monthly));
+
+                              return (
+                                <label key={period.id} className={`relative cursor-pointer rounded-xl border-2 p-5 flex items-start gap-3 transition-colors ${selectedId === period.id ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/40'}`}>
+                                  <input className="mt-1 accent-primary" type="radio" name="period" value={period.id} checked={selectedId === period.id} onChange={() => { setSelectedId(period.id); setTransferMade(false); setReceiptSent(false); }} />
+                                  <span>
+                                    <span className="block font-semibold">{period.label} {planDisplayName}</span>
+                                    <span className="block text-xl font-bold mt-2">{formatPaymentAmount(amount, period.currency)}</span>
+                                    <span className="block text-xs text-muted-foreground mt-1">{period.months} {period.months === 1 ? 'month' : 'months'} of {planDisplayName}</span>
+                                  </span>
+                                </label>
+                              );
+                            })}
+                          </div>
+                        </fieldset>
+
+                        {!periods.length && <p className="text-sm text-muted-foreground">No subscription periods are available yet.</p>}
+
+                        <ul className="grid sm:grid-cols-2 gap-3 text-sm">
+                          {(selectedPlan === 'enterprise'
+                            ? ['Up to 500 menu items', 'Up to 50 categories', 'Advanced customization', 'Priority support 24/7']
+                            : ['Up to 100 menu items', 'Up to 20 categories', 'Custom menu URL', 'Priority support']
+                          ).map(feature => (
+                            <li key={feature} className="flex items-center gap-2">
+                              <Check className={`w-4 h-4 ${selectedPlan === 'enterprise' ? 'text-purple-400' : 'text-primary'}`} />
+                              {feature}
+                            </li>
+                          ))}
+                        </ul>
+
+                        {!ready && <p className="text-sm bg-muted rounded-xl p-4 text-muted-foreground">Subscription payments are coming soon. Prices and bank details will appear here when ready.</p>}
+
+                        <Button
+                          className={`w-full sm:w-auto gap-2 ${selectedPlan === 'enterprise' ? 'bg-purple-600 hover:bg-purple-700 text-white' : ''}`}
+                          disabled={!selected || !shop.id}
+                          onClick={() => {
+                            setCheckoutPeriod(selected || null);
+                            setTransferMade(false);
+                            setReceiptSent(false);
+                            setStep(1);
+                          }}
+                        >
+                          Proceed to pay<ArrowRight className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    )}
+
+                    {step === 1 && (
+                      <form className="space-y-6" onSubmit={event => { event.preventDefault(); if (ready && transferMade) { setReceiptSent(false); setStep(2); } }}>
+                        <div>
+                          <h3 className="text-xl font-bold flex items-center gap-2"><Landmark className="w-5 h-5" />Make a bank transfer</h3>
+                          <p className="text-sm text-muted-foreground mt-2">Transfer the exact amount below, then keep your receipt to send on WhatsApp.</p>
+                        </div>
+                        <div className="bg-muted/50 rounded-xl p-4 space-y-4">
+                          <div className="flex justify-between gap-4 border-b border-border pb-4">
+                            <span className="text-sm text-muted-foreground">{selected?.label}</span>
+                            <strong>{selected ? formatPaymentAmount(selected.amount, selected.currency) : 'Price coming soon'}</strong>
+                          </div>
+                          {[['Bank', bank?.bank_name], ['Account name', bank?.account_name], ['Account number', bank?.account_number], ['Branch', bank?.branch]].map(([label, value]) => (
+                            <div key={label} className="flex justify-between gap-4 items-center">
+                              <div className="min-w-0">
+                                <p className="text-xs text-muted-foreground">{label}</p>
+                                <p className={`text-sm break-words ${value ? 'font-medium' : 'text-muted-foreground italic'}`}>{value || 'Details coming soon'}</p>
+                              </div>
+                              {value && <Button type="button" variant="ghost" size="icon" aria-label={`Copy ${label?.toLowerCase()}`} onClick={() => void copy(value)}><Copy className="w-4 h-4" /></Button>}
+                            </div>
+                          ))}
+                        </div>
+
+                        {!ready && <p role="status" className="text-sm text-amber-600">{!priceUnchanged ? 'Pricing has changed. Go back to review the latest period and amount before making a transfer.' : 'Bank payments are not available yet. Please wait for confirmed pricing and payment details before making a transfer.'}</p>}
+
+                        <fieldset disabled={!ready} className="space-y-4 disabled:opacity-60">
+                          <legend className="font-semibold mb-3">Your transfer details</legend>
+                          <div className="space-y-2">
+                            <Label htmlFor="payer-name">Account holder / payer name</Label>
+                            <Input id="payer-name" required minLength={2} maxLength={120} value={form.payerName} onChange={event => setForm({ ...form, payerName: event.target.value })} autoComplete="name" />
+                          </div>
+                          <div className="grid sm:grid-cols-2 gap-4">
+                            <div className="space-y-2"><Label htmlFor="transfer-reference">Transfer reference</Label><Input id="transfer-reference" required minLength={3} maxLength={120} value={form.reference} onChange={event => setForm({ ...form, reference: event.target.value })} /></div>
+                            <div className="space-y-2"><Label htmlFor="transfer-date">Transfer date</Label><Input id="transfer-date" type="date" required max={getTodayDateString()} value={form.date} onChange={event => setForm({ ...form, date: event.target.value })} /></div>
+                          </div>
+                          {needsCustomUrl ? (
+                            <div className="space-y-2">
+                              <Label htmlFor="preferred-url">Preferred custom menu URL (optional)</Label>
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm text-muted-foreground">{window.location.host}/</span>
+                                <Input id="preferred-url" placeholder="your-restaurant" maxLength={50} minLength={3} pattern="[a-z0-9]+(-[a-z0-9]+)*" title="Use 3–50 lowercase letters or numbers, separated by single hyphens." value={form.slug} onChange={event => setForm({ ...form, slug: event.target.value.toLowerCase() })} />
+                              </div>
+                              <p className="text-xs text-muted-foreground">Subject to availability. Your custom URL activates after approval and assignment. Your existing menu link keeps working.</p>
+                            </div>
+                          ) : (
+                            <div className="rounded-xl bg-muted/50 p-4 space-y-2">
+                              <p className="text-sm font-medium">{customUrl ? 'Keeping your custom URL' : 'Custom URL setup'}</p>
+                              {customUrl && <p className="text-sm break-all">{window.location.host}/{customUrl.slug}</p>}
+                              <p className="text-xs text-muted-foreground">{customUrl ? 'Renewing keeps this URL. You do not need to choose it again.' : 'You do not need to request a custom URL again when renewing. Contact support if your URL has not been assigned yet.'}</p>
+                            </div>
+                          )}
+                          <div className="space-y-2"><Label htmlFor="payment-note">Note (optional)</Label><Textarea id="payment-note" maxLength={1000} value={form.note} onChange={event => setForm({ ...form, note: event.target.value })} /></div>
+                          <label className="flex items-start gap-3 text-sm"><input type="checkbox" required checked={transferMade} onChange={event => setTransferMade(event.target.checked)} className="mt-1 accent-primary" />I have completed this bank transfer and kept the receipt.</label>
+                        </fieldset>
+
+                        <div className="flex flex-wrap gap-3">
+                          <Button type="button" variant="outline" onClick={() => setStep(0)}>Back</Button>
+                          <Button type="submit" disabled={!ready || !transferMade} className="gap-2">Continue to WhatsApp<ArrowRight className="w-4 h-4" /></Button>
+                        </div>
+                      </form>
+                    )}
+
+                    {step === 2 && (
+                      <form onSubmit={submit} className="space-y-6">
+                        <div>
+                          <h3 className="text-xl font-bold">Send your receipt, then submit</h3>
+                          <p className="text-sm text-muted-foreground mt-2">Open WhatsApp, attach your bank receipt to the prepared message, and send it. Then return here to submit your verification request.</p>
+                        </div>
+                        <div className="rounded-xl bg-muted/50 p-4 text-sm space-y-2">
+                          <p><span className="text-muted-foreground">Plan: </span><strong>{planDisplayName}</strong></p>
+                          <p><span className="text-muted-foreground">Period: </span>{selected?.label}</p>
+                          <p><span className="text-muted-foreground">Amount: </span>{selected && formatPaymentAmount(selected.amount, selected.currency)}</p>
+                          <p className="break-all"><span className="text-muted-foreground">Reference: </span>{form.reference}</p>
+                        </div>
+                        {!priceUnchanged && <p role="alert" className="text-sm text-amber-600">Pricing has changed. Go back to select a period and review the updated amount before submitting.</p>}
+                        {whatsappUrl ? (
+                          <Button asChild className="bg-emerald-600 text-white hover:bg-emerald-700 gap-2">
+                            <a href={whatsappUrl} target="_blank" rel="noopener noreferrer"><MessageCircle className="w-4 h-4" />Open WhatsApp<ExternalLink className="w-4 h-4" /></a>
+                          </Button>
+                        ) : (
+                          <p className="text-sm text-muted-foreground">WhatsApp payment support is not available yet.</p>
+                        )}
+                        <p className="text-xs text-muted-foreground">WhatsApp opens a draft. You attach and send the receipt yourself.</p>
+                        <label className="flex items-start gap-3 text-sm"><input type="checkbox" required disabled={!ready || submitting} checked={receiptSent} onChange={event => setReceiptSent(event.target.checked)} className="mt-1 accent-primary" />I have sent my receipt and transfer details on WhatsApp.</label>
+                        {submitError && <p role="alert" className="text-sm text-destructive">{submitError}</p>}
+                        <div className="flex flex-wrap gap-3">
+                          <Button type="button" variant="outline" disabled={submitting} onClick={() => setStep(1)}>Back</Button>
+                          <Button type="submit" disabled={!ready || !receiptSent || submitting} className="gap-2">
+                            {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
+                            Submit verification request
+                          </Button>
+                        </div>
+                        <p className="text-xs text-muted-foreground">Submitting a request does not activate paid access immediately. Your payment must be reviewed first.</p>
+                      </form>
+                    )}
+                  </section>
+                )}
               </>
             )}
-            {(!showComparison || requests.length > 0) && <section className={panel}><h3 className="font-semibold mb-4">Payment requests</h3>{!requests.length ? <p className="text-sm text-muted-foreground">{loading ? 'Loading payment requests…' : loadError ? 'Payment history could not be loaded.' : 'No payment requests yet. Your submitted requests will appear here.'}</p> : <ul className="divide-y divide-border">{requests.map(request => <li key={request.id} className="py-4 first:pt-0 last:pb-0"><div className="flex flex-wrap justify-between gap-2"><div><p className="font-medium text-sm">{request.period_label} Pro · {formatPaymentAmount(request.amount, request.currency)}</p><p className="text-xs text-muted-foreground mt-1">{new Date(request.created_at).toLocaleDateString()} · {request.transfer_reference}</p></div><span className={`self-start rounded-full px-3 py-1 text-xs font-medium ${request.status === 'approved' ? 'bg-emerald-500/10 text-emerald-600' : request.status === 'rejected' ? 'bg-destructive/10 text-destructive' : 'bg-amber-500/10 text-amber-600'}`}>{request.status === 'approved' ? 'Payment verified' : request.status === 'pending' ? 'Pending review' : 'Rejected'}</span></div>{request.rejection_reason && <p className="text-xs text-muted-foreground mt-2">{request.rejection_reason}</p>}</li>)}</ul>}</section>}
+
+            {(!showComparison || requests.length > 0) && (
+              <section className={panel}>
+                <h3 className="font-semibold mb-4">Payment requests</h3>
+                {!requests.length ? (
+                  <p className="text-sm text-muted-foreground">{loading ? 'Loading payment requests…' : loadError ? 'Payment history could not be loaded.' : 'No payment requests yet. Your submitted requests will appear here.'}</p>
+                ) : (
+                  <ul className="divide-y divide-border">
+                    {requests.map(request => (
+                      <li key={request.id} className="py-4 first:pt-0 last:pb-0">
+                        <div className="flex flex-wrap justify-between gap-2">
+                          <div>
+                            <p className="font-medium text-sm">
+                              {request.period_label} · {formatPaymentAmount(request.amount, request.currency)}
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {new Date(request.created_at).toLocaleDateString()} · {request.transfer_reference}
+                            </p>
+                          </div>
+                          <span className={`self-start rounded-full px-3 py-1 text-xs font-medium ${request.status === 'approved' ? 'bg-emerald-500/10 text-emerald-600' : request.status === 'rejected' ? 'bg-destructive/10 text-destructive' : 'bg-amber-500/10 text-amber-600'}`}>
+                            {request.status === 'approved' ? 'Payment verified' : request.status === 'pending' ? 'Pending review' : 'Rejected'}
+                          </span>
+                        </div>
+                        {request.rejection_reason && <p className="text-xs text-muted-foreground mt-2">{request.rejection_reason}</p>}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </section>
+            )}
           </div>
-          {!showComparison && <aside className="space-y-5">
-            <section className={`${panel} bg-primary/5 border-primary/20`}><Crown className="w-7 h-7 text-primary mb-4" /><p className="text-xs text-muted-foreground uppercase tracking-wide">Current plan</p><h3 className="text-2xl font-bold mt-1">{proActive ? 'Pro active' : 'Free'}</h3><p className="text-sm text-muted-foreground mt-2">{proActive && user?.subscription.expiresAt ? `Active until ${new Date(user.subscription.expiresAt).toLocaleDateString()}` : user?.subscription.status === 'expired' ? 'Your paid subscription has expired. Your standard menu link is still available.' : 'Keep sharing your menu. Upgrade when you are ready.'}</p></section>
-            <section className={panel}><Link2 className="w-6 h-6 text-primary mb-3" /><h3 className="font-semibold">Your custom URL</h3>{customUrl ? <><p className="text-xs text-emerald-600 mt-2 mb-3">Your purchased URL stays active after Pro expires</p><a className="text-sm text-primary break-all hover:underline" href={`/${customUrl.slug}`} target="_blank" rel="noopener noreferrer">{window.location.host}/{customUrl.slug}</a><Button className="w-full mt-4 gap-2" variant="outline" size="sm" onClick={() => void copy(`${window.location.origin}/${customUrl.slug}`)}><Copy className="w-4 h-4" />Copy custom URL</Button></> : <p className="text-sm text-muted-foreground mt-2">{proActive ? 'Your custom URL will appear here once assigned.' : 'Available after your Pro subscription is activated and your requested URL is assigned.'}</p>}<div className="mt-5 pt-4 border-t border-border"><p className="text-xs text-muted-foreground mb-1">Original link · redirects to your current menu</p><a href={`/${shop.username}`} className="text-xs break-all hover:underline" target="_blank" rel="noopener noreferrer">{window.location.host}/{shop.username}</a></div></section>
-            <p className="text-xs text-muted-foreground px-2 flex items-start gap-2"><ShieldCheck className="w-4 h-4 shrink-0" />Payment approval unlocks Pro and your assigned custom URL. Your purchased URL stays active even after Pro expires.</p>
-          </aside>}
+
+          {!showComparison && (
+            <aside className="space-y-5">
+              <section className={`${panel} ${isEnterprise ? 'bg-purple-500/10 border-purple-500/30' : 'bg-primary/5 border-primary/20'}`}>
+                <Crown className={`w-7 h-7 mb-4 ${isEnterprise ? 'text-purple-400' : 'text-primary'}`} />
+                <p className="text-xs text-muted-foreground uppercase tracking-wide">Current plan</p>
+                <h3 className="text-2xl font-bold mt-1">
+                  {proActive ? (isEnterprise ? 'Enterprise active' : 'Plus active') : 'Free'}
+                </h3>
+                <p className="text-sm text-muted-foreground mt-2">
+                  {proActive && user?.subscription.expiresAt
+                    ? `Active until ${new Date(user.subscription.expiresAt).toLocaleDateString()}`
+                    : user?.subscription.status === 'expired'
+                    ? 'Your paid subscription has expired. Your standard menu link is still available.'
+                    : 'Keep sharing your menu. Upgrade when you are ready.'}
+                </p>
+
+                {/* Plan Usage in Sidebar */}
+                <div className="mt-4 pt-4 border-t border-border/50 space-y-2 text-xs">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Food items:</span>
+                    <span className="font-semibold">{foodItems.length} / {planLimits.items}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Categories:</span>
+                    <span className="font-semibold">{currentCategories.length} / {planLimits.categories}</span>
+                  </div>
+                </div>
+              </section>
+
+              <section className={panel}>
+                <Link2 className="w-6 h-6 text-primary mb-3" />
+                <h3 className="font-semibold">Your custom URL</h3>
+                {customUrl ? (
+                  <>
+                    <p className="text-xs text-emerald-600 mt-2 mb-3">Your purchased URL stays active after subscription expires</p>
+                    <a className="text-sm text-primary break-all hover:underline" href={`/${customUrl.slug}`} target="_blank" rel="noopener noreferrer">{window.location.host}/{customUrl.slug}</a>
+                    <Button className="w-full mt-4 gap-2" variant="outline" size="sm" onClick={() => void copy(`${window.location.origin}/${customUrl.slug}`)}><Copy className="w-4 h-4" />Copy custom URL</Button>
+                  </>
+                ) : (
+                  <p className="text-sm text-muted-foreground mt-2">
+                    {proActive ? 'Your custom URL will appear here once assigned.' : 'Available after your Plus or Enterprise subscription is activated and your requested URL is assigned.'}
+                  </p>
+                )}
+                <div className="mt-5 pt-4 border-t border-border">
+                  <p className="text-xs text-muted-foreground mb-1">Original link · redirects to your current menu</p>
+                  <a href={`/${shop.username}`} className="text-xs break-all hover:underline" target="_blank" rel="noopener noreferrer">{window.location.host}/{shop.username}</a>
+                </div>
+              </section>
+
+              <p className="text-xs text-muted-foreground px-2 flex items-start gap-2">
+                <ShieldCheck className="w-4 h-4 shrink-0" />
+                Payment approval unlocks paid features and your assigned custom URL.
+              </p>
+            </aside>
+          )}
         </div>
       </main>
     </div>

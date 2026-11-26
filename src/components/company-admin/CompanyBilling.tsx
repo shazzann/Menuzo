@@ -19,7 +19,7 @@ type ShopAction = 'status' | 'revoke' | 'expiry';
 
 // Subscription controls live in the View shop window, next to the shop's billing history.
 function SubscriptionActions({ shop, now, onAction }: { shop: AdminShopSubscription; now: number; onAction: (action: ShopAction) => void }) {
-  const paid = ['pro', 'enterprise'].includes(shop.subscription_plan || '');
+  const paid = ['plus', 'pro', 'enterprise'].includes(shop.subscription_plan || '');
   const hasTimeLeft = !!shop.subscription_expires_at && new Date(shop.subscription_expires_at).getTime() > now;
   return <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border bg-muted/30 p-3">
     <p className="mr-auto text-sm font-medium">{paid ? 'Manage subscription' : 'No paid subscription to manage'}</p>

@@ -1,3 +1,24 @@
+export interface FoodItemOption {
+  id: string;
+  foodItemId?: string;
+  name: string;
+  description?: string;
+  price: number;
+  isAvailable: boolean;
+  displayOrder?: number;
+}
+
+export interface OrderItemSnapshot {
+  foodItemId: string;
+  foodItemName: string;
+  optionId?: string;
+  optionName?: string;
+  optionDescription?: string;
+  unitPrice: number;
+  quantity: number;
+  lineTotal: number;
+}
+
 export interface FoodItem {
   id: string;
   name: string;
@@ -11,6 +32,8 @@ export interface FoodItem {
   finalPrice: number;
   isSpecialOffer: boolean;
   isAvailable: boolean;
+  pricingType?: 'fixed' | 'variants';
+  options?: FoodItemOption[];
 }
 
 export interface ShopSchedule {
@@ -76,7 +99,7 @@ export interface User {
   shopName: string;
   shopId: string;
   subscription: {
-    plan: 'free' | 'pro' | 'enterprise';
+    plan: 'free' | 'plus' | 'pro' | 'enterprise';
     expiresAt: Date | null;
     status: 'active' | 'expired' | 'cancelled';
   };
@@ -166,7 +189,7 @@ export interface ManagedShop {
   ownerEmail: string;
   phone: string;
   location: string;
-  plan: 'free' | 'starter' | 'pro' | 'enterprise';
+  plan: 'free' | 'starter' | 'plus' | 'pro' | 'enterprise';
   status: 'active' | 'inactive' | 'suspended' | 'trial' | 'expired';
   revenue: number;
   menuItems: number;
