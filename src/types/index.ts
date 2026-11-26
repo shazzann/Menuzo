@@ -157,6 +157,7 @@ export type CompanyAdminSection =
   | 'shop-requests'
   | 'subscription-plans'
   | 'coupons'
+  | 'promo-codes'
   | 'promotions'
   | 'theme-library'
   | 'theme-marketplace'

@@ -17,6 +17,7 @@ import { CompanyDashboard } from '@/components/company-admin/CompanyDashboard';
 import { CompanyShopList } from '@/components/company-admin/CompanyShopList';
 import { CompanyShopDetail } from '@/components/company-admin/CompanyShopDetail';
 import { CompanyPlans } from '@/components/company-admin/CompanyPlans';
+import { CompanyPromoCodes } from '@/components/company-admin/CompanyPromoCodes';
 import { CompanyReports } from '@/components/company-admin/CompanyReports';
 import { CompanySupport } from '@/components/company-admin/CompanySupport';
 import { CompanyThemeLibrary } from '@/components/company-admin/CompanyThemeLibrary';
@@ -54,7 +55,7 @@ const navGroups: NavGroup[] = [
     icon: <CreditCard className="w-4 h-4" />,
     items: [
       { label: 'Subscription Plans', section: 'subscription-plans', icon: <CreditCard className="w-4 h-4" /> },
-      { label: 'Coupons', section: 'coupons', icon: <Tag className="w-4 h-4" /> },
+      { label: 'Promo Codes', section: 'promo-codes', icon: <Tag className="w-4 h-4" /> },
       { label: 'Promotions', section: 'promotions', icon: <Megaphone className="w-4 h-4" /> },
     ],
   },
@@ -212,6 +213,8 @@ export function CompanyAdminPage() {
       case 'shop-verification':
       case 'shop-requests':
         return <CompanyShopList />;
+      case 'promo-codes':
+        return <CompanyPromoCodes />;
       case 'subscription-plans':
       case 'coupons':
       case 'promotions':

@@ -2,6 +2,7 @@ export { CompanyDashboard } from './CompanyDashboard';
 export { CompanyShopList } from './CompanyShopList';
 export { CompanyShopDetail } from './CompanyShopDetail';
 export { CompanyPlans } from './CompanyPlans';
+export { CompanyPromoCodes } from './CompanyPromoCodes';
 export { CompanyReports } from './CompanyReports';
 export { CompanySupport } from './CompanySupport';
 export { CompanySettings } from './CompanySettings';
