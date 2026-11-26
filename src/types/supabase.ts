@@ -357,7 +357,7 @@ export interface Database {
       admin_list_promo_codes: { Args: Record<string, never>; Returns: AdminPromoCode[] }
       admin_list_promo_code_usage: { Args: { p_promo_code_id: string }; Returns: PromoCodeUsage[] }
       redeem_promo_code: {
-        Args: { p_code: string; p_shop_id: string; p_plan: PromoPlan }
+        Args: { p_code: string; p_shop_id: string; p_plan: PromoPlan | 'pro' }
         Returns: PromoRedemption
       }
       admin_get_shop_billing: {

@@ -1,6 +1,8 @@
-export type PromoPlan = 'plus' | 'pro' | 'enterprise';
+// Menuzo plans a promo code can discount. 'pro' is the legacy name of Plus: the database
+// stores it as 'plus', and a 'pro' subscriber redeems Plus codes.
+export type PromoPlan = 'plus' | 'enterprise';
 
-export const PROMO_PLANS: readonly PromoPlan[] = ['plus', 'pro', 'enterprise'];
+export const PROMO_PLANS: readonly PromoPlan[] = ['plus', 'enterprise'];
 
 export type PromoCode = {
   id: string;

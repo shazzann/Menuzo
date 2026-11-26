@@ -9,7 +9,7 @@ import { endOfSriLankaDay, sriLankaDateInput, startOfSriLankaDay } from '@/lib/b
 import { PROMO_PLANS, type AdminPromoCode, type PromoCodeStatus, type PromoCodeUsage, type PromoPlan } from '@/types/promo-codes';
 
 const inputClass = 'w-full rounded-xl border border-border bg-background px-3 py-2 text-sm';
-const planLabel: Record<PromoPlan, string> = { plus: 'Plus', pro: 'Pro', enterprise: 'Enterprise' };
+const planLabel: Record<PromoPlan, string> = { plus: 'Plus', enterprise: 'Enterprise' };
 const day = (value: string) => new Date(value).toLocaleDateString('en-US', { timeZone: 'Asia/Colombo', year: 'numeric', month: 'short', day: 'numeric' });
 const dateTime = (value: string | null) => value ? new Date(value).toLocaleString() : '—';
 
@@ -204,7 +204,7 @@ export function CompanyPromoCodes() {
       : loading ? <p role="status" className="p-10 text-center text-muted-foreground">Loading promo codes…</p>
       : visible.length === 0 ? <div className="rounded-2xl border border-dashed p-12 text-center">
         <h2 className="font-semibold">{codes.length ? 'No matching promo codes' : 'No promo codes yet'}</h2>
-        <p className="mt-2 text-sm text-muted-foreground">{codes.length ? 'Try another search or status.' : 'Create a code to offer shop owners a discount on Plus, Pro or Enterprise.'}</p>
+        <p className="mt-2 text-sm text-muted-foreground">{codes.length ? 'Try another search or status.' : 'Create a code to offer shop owners a discount on Plus or Enterprise.'}</p>
         {!codes.length && <Button className="mt-4" onClick={openCreate}><Plus className="mr-2 h-4 w-4" />New promo code</Button>}
       </div>
       : <div className="overflow-x-auto rounded-2xl border border-border bg-card"><table className="w-full text-left text-sm">

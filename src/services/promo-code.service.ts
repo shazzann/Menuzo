@@ -36,7 +36,7 @@ export const PromoCodeService = {
     if (error) throw error;
     return data ?? [];
   },
-  async redeem(code: string, shopId: string, plan: PromoPlan): Promise<PromoRedemption> {
+  async redeem(code: string, shopId: string, plan: PromoPlan | 'pro'): Promise<PromoRedemption> {
     const { data, error } = await supabase.rpc('redeem_promo_code', { p_code: code.trim(), p_shop_id: shopId, p_plan: plan });
     if (error) throw error;
     return data;
