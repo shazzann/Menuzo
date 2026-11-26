@@ -56,7 +56,6 @@ const navGroups: NavGroup[] = [
     items: [
       { label: 'Subscription Plans', section: 'subscription-plans', icon: <CreditCard className="w-4 h-4" /> },
       { label: 'Promo Codes', section: 'promo-codes', icon: <Tag className="w-4 h-4" /> },
-      { label: 'Promotions', section: 'promotions', icon: <Megaphone className="w-4 h-4" /> },
     ],
   },
   {
@@ -216,8 +215,6 @@ export function CompanyAdminPage() {
       case 'promo-codes':
         return <CompanyPromoCodes />;
       case 'subscription-plans':
-      case 'coupons':
-      case 'promotions':
         return <CompanyPlans />;
       case 'revenue-reports':
       case 'shop-reports':
