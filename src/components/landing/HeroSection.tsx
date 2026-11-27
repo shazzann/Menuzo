@@ -10,12 +10,12 @@ export function HeroSection() {
   const [loadIframe, setLoadIframe] = useState(false);
 
   const handleCTAClick = () => {
-    trackEvent('hero_cta_clicked', { location: 'hero' });
+    trackEvent('hero_cta_clicked', { source: 'hero' });
     dispatch({ type: 'SET_VIEW', payload: 'login' });
   };
 
   const handleDemoClick = () => {
-    trackEvent('demo_opened', { source: 'hero_secondary_button' });
+    trackEvent('demo_first_interaction', { source: 'hero_secondary_button' });
     setLoadIframe(true);
     document.getElementById('product-demo')?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -57,14 +57,14 @@ export function HeroSection() {
             <span className="text-transparent bg-clip-text bg-gradient-to-br from-primary via-orange-400 to-red-500">Live in minutes.</span>
           </motion.h1>
           <motion.p variants={itemVariants} className="text-xl sm:text-2xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed font-medium">
-            Turn your printed menu into a beautiful, interactive digital experience that grows your sales.
+            Menuzo gives Sri Lankan cafés and restaurants a QR menu you can change any time, so prices and sold-out dishes are always right.
           </motion.p>
           <motion.div variants={itemVariants} className="flex flex-col w-full sm:w-auto items-center">
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full sm:w-auto mb-6">
               <Button
                 size="lg"
                 onClick={handleCTAClick}
-                className="bg-primary text-primary-foreground hover:bg-primary/90 w-full sm:w-auto h-14 px-8 rounded-full text-lg font-semibold shadow-[0_8px_30px_rgb(255,100,50,0.3)] hover:shadow-[0_8px_40px_rgb(255,100,50,0.4)] hover:-translate-y-1 transition-all duration-300"
+                className="bg-primary text-[#12261F] hover:bg-primary/90 w-full sm:w-auto h-14 px-8 rounded-full text-lg font-semibold shadow-[0_8px_30px_rgb(255,100,50,0.3)] hover:shadow-[0_8px_40px_rgb(255,100,50,0.4)] hover:-translate-y-1 transition-all duration-300"
               >
                 Create Your Free Menu
                 <ArrowRight className="w-5 h-5 ml-2" />
@@ -82,7 +82,7 @@ export function HeroSection() {
 
             {/* Trust Elements */}
             <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs font-semibold text-muted-foreground uppercase tracking-widest">
-              <span className="flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-green-500" /> Setup in under 5 minutes</span>
+              <span className="flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-green-500" /> Free plan · No card · No app for guests</span>
             </div>
           </motion.div>
         </motion.div>
