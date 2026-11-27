@@ -2,6 +2,7 @@ import { ArrowRight, QrCode } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useApp } from '@/store';
 import { motion } from 'framer-motion';
+import { trackEvent } from '@/lib/analytics';
 
 export function FinalCTASection() {
   const { dispatch } = useApp();
@@ -28,33 +29,23 @@ export function FinalCTASection() {
         
         <h2 className="text-5xl md:text-7xl font-bold mb-8 tracking-tighter">Ready when you are.</h2>
         <p className="text-2xl text-muted-foreground mb-12 max-w-2xl mx-auto font-medium">
-          Build your QR menu today. Upgrade only when you are ready. Join hundreds of restaurants upgrading their dining experience.
+          Create a digital menu you can update whenever your prices or dishes change.
         </p>
         
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <Button
             size="lg"
-            onClick={() => dispatch({ type: 'SET_VIEW', payload: 'login' })}
-            className="bg-primary text-primary-foreground hover:bg-primary/90 w-full sm:w-auto h-16 px-12 rounded-full text-xl font-bold shadow-[0_8px_30px_rgb(255,100,50,0.3)] hover:shadow-[0_8px_40px_rgb(255,100,50,0.4)] hover:-translate-y-1 transition-all duration-300"
+            onClick={() => {
+              trackEvent('hero_cta_clicked', { source: 'final_cta' });
+              dispatch({ type: 'SET_VIEW', payload: 'login' });
+            }}}
+            className="bg-primary text-[#12261F] hover:bg-primary/90 w-full sm:w-auto h-16 px-12 rounded-full text-xl font-bold shadow-[0_8px_30px_rgb(255,100,50,0.3)] hover:shadow-[0_8px_40px_rgb(255,100,50,0.4)] hover:-translate-y-1 transition-all duration-300"
           >
             Create your menu
             <ArrowRight className="w-6 h-6 ml-2" />
           </Button>
-          <Button
-            variant="outline"
-            size="lg"
-            className="w-full sm:w-auto h-16 px-12 rounded-full text-xl font-bold border-border/80 bg-background/50 backdrop-blur-md hover:bg-muted/80 transition-all duration-300"
-          >
-            Talk to sales
-          </Button>
         </div>
         
-        <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-4 mt-12 text-base text-muted-foreground font-semibold uppercase tracking-widest">
-          <span className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-primary" />
-            24/7 Support
-          </span>
-        </div>
       </motion.div>
     </section>
   );
