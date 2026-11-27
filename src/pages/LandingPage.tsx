@@ -8,7 +8,6 @@ import { FeaturesSection } from '@/components/landing/FeaturesSection';
 import { UseCasesSection } from '@/components/landing/UseCasesSection';
 import { HowItWorksSection } from '@/components/landing/HowItWorksSection';
 import { PricingSection } from '@/components/landing/PricingSection';
-import { TestimonialsSection } from '@/components/landing/TestimonialsSection';
 import { FAQSection } from '@/components/landing/FAQSection';
 import { FinalCTASection } from '@/components/landing/FinalCTASection';
 import { Footer } from '@/components/landing/Footer';
@@ -28,7 +27,6 @@ export function LandingPage() {
 
         <AnalyticsSection />
         <PricingSection />
-        <TestimonialsSection />
         <FAQSection />
         <FinalCTASection />
       </main>
