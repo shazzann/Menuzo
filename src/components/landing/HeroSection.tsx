@@ -11,7 +11,7 @@ export function HeroSection() {
 
   const handleCTAClick = () => {
     trackEvent('hero_cta_clicked', { source: 'hero' });
-    dispatch({ type: 'SET_VIEW', payload: 'login' });
+    dispatch({ type: 'SET_VIEW', payload: 'signup' });
   };
 
   const handleDemoClick = () => {
