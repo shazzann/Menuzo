@@ -10,7 +10,7 @@ export function UseCasesSection() {
       icon: '☕',
       desc: 'Fast-moving menus for coffee shops, cafés, and dessert bars.',
       image: '/Landing/mobile1.png',
-      features: ['Fast ordering', 'Daily specials', 'QR access', 'Brand customization']
+      features: ['Daily specials', 'QR access', 'Brand customization', 'Easy menu updates']
     },
     {
       id: 'restaurant',
@@ -34,13 +34,13 @@ export function UseCasesSection() {
       icon: '🥐',
       desc: 'Showcase fresh pastries and cakes with stunning photo galleries.',
       image: '/Landing/UseCase/Bakery.png',
-      features: ['High-res galleries', 'Pre-order options', 'Dietary tags', 'Sold-out toggles']
+      features: ['High-res galleries', 'Dietary tags', 'Sold-out toggles', 'Easy menu updates']
     },
     {
       id: 'food-truck',
       name: 'Food Truck',
       icon: '🚚',
-      desc: 'Serve customers faster with a clean digital menu that works anywhere.',
+      desc: 'Share a clean digital menu that customers can open wherever they find your food.',
       image: '/Landing/mobile5.png',
       features: ['Scan-and-go', 'Easy to update', 'Mobile optimized', 'No printed menus']
     },
