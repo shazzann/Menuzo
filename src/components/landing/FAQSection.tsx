@@ -10,23 +10,23 @@ export function FAQSection() {
   const faqs = [
     {
       q: 'Do I need a credit card to sign up?',
-      a: 'No, you can start building your menu completely free without a credit card. You only need one if you decide to upgrade to a paid plan later.'
+      a: 'No. You can create and publish a menu on the Free plan without entering card details.'
     },
     {
       q: 'Can customers order and pay through the menu?',
-      a: 'Currently, Menuzo is focused on providing a beautiful, fast browsing experience. Ordering and payments are on our roadmap for future updates.'
+      a: 'Not today. Menuzo is a digital menu, not an ordering or payment system. Guests browse the menu and place their orders with your staff.'
     },
     {
       q: 'How do I update my menu?',
-      a: 'You can update your menu instantly from your dashboard on any device. Changes go live immediately—no need to reprint QR codes.'
+      a: 'Edit a dish, change a price or mark an item sold out from your dashboard. The published menu updates, and your QR code stays the same.'
     },
     {
       q: 'Does it work offline?',
-      a: 'Yes, once a customer loads your menu, it works perfectly even if they lose their internet connection while browsing.'
+      a: 'Guests need an internet connection to open and browse the online menu.'
     },
     {
       q: 'Can I use my own domain name?',
-      a: 'Custom menu links are available on our Plus and Enterprise plans. Otherwise, you get a clean standard menuzo link.'
+      a: 'Custom menu links are available on eligible paid plans. The Free plan uses a Menuzo menu link.'
     }
   ];
 
