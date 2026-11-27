@@ -25,7 +25,7 @@ export function MobileFloatingCTA() {
 
   const handleClick = () => {
     trackEvent('hero_cta_clicked', { source: 'mobile_floating_cta' });
-    dispatch({ type: 'SET_VIEW', payload: 'login' });
+    dispatch({ type: 'SET_VIEW', payload: 'signup' });
   };
 
   return (
@@ -40,7 +40,7 @@ export function MobileFloatingCTA() {
           <Button 
             onClick={handleClick}
             size="lg" 
-            className="w-full h-14 rounded-full text-lg font-bold shadow-2xl shadow-primary/40"
+            className="w-full h-14 rounded-full text-lg font-bold bg-primary text-[#12261F] hover:bg-primary/90 shadow-2xl shadow-primary/40"
           >
             Create Free Menu <ArrowRight className="w-5 h-5 ml-2" />
           </Button>
