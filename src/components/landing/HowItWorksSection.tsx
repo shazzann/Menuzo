@@ -23,7 +23,7 @@ export function HowItWorksSection() {
     {
       step: '03',
       title: 'Go live instantly.',
-      description: 'Generate high-quality QR codes for your tables. Customers scan, view your stunning digital menu, and order instantly—no app required.',
+      description: 'Generate high-quality QR codes for your tables. Guests scan the QR code and view your digital menu in their browser—no app required.',
       icon: <QrCode className="w-6 h-6 text-emerald-500" />,
       image: '/Landing/mobile14.png',
       color: 'bg-emerald-500/10'
@@ -49,7 +49,7 @@ export function HowItWorksSection() {
             How It Works
           </span>
           <h2 className="text-4xl md:text-6xl font-bold tracking-tight mb-6">
-            From signup to live <br className="hidden md:block" /> in under 5 minutes.
+            From signup to a live digital menu.
           </h2>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             We've stripped away the complexity. Launching a world-class digital menu has never been easier.
@@ -95,7 +95,7 @@ export function HowItWorksSection() {
                     <div className="mt-10">
                       <Link
                         to="/signup"
-                        className="inline-flex items-center gap-2 px-8 py-4 bg-primary text-primary-foreground font-semibold rounded-full hover:bg-primary/90 transition-all hover:gap-3 hover:shadow-xl hover:shadow-primary/20"
+                        className="inline-flex items-center gap-2 px-8 py-4 bg-primary text-[#12261F] font-semibold rounded-full hover:bg-primary/90 transition-all hover:gap-3 hover:shadow-xl hover:shadow-primary/20"
                       >
                         Create your menu now <ArrowRight className="w-5 h-5" />
                       </Link>
