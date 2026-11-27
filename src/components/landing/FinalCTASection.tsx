@@ -37,7 +37,7 @@ export function FinalCTASection() {
             size="lg"
             onClick={() => {
               trackEvent('hero_cta_clicked', { source: 'final_cta' });
-              dispatch({ type: 'SET_VIEW', payload: 'login' });
+              dispatch({ type: 'SET_VIEW', payload: 'signup' });
             }}}
             className="bg-primary text-[#12261F] hover:bg-primary/90 w-full sm:w-auto h-16 px-12 rounded-full text-xl font-bold shadow-[0_8px_30px_rgb(255,100,50,0.3)] hover:shadow-[0_8px_40px_rgb(255,100,50,0.4)] hover:-translate-y-1 transition-all duration-300"
           >
