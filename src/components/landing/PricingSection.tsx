@@ -7,6 +7,7 @@ import { BillingService } from '@/services/billing.service';
 import type { BillingPeriod } from '@/types/billing';
 import { PricingService } from '@/services/pricing.service';
 import { PLAN_PRICING, PLAN_LIMITS } from '@/lib/subscription';
+import { trackEvent } from '@/lib/analytics';
 
 export function PricingSection() {
   const { state, dispatch } = useApp();
@@ -289,6 +290,7 @@ export function PricingSection() {
                   }`}
                   variant={isPlus ? 'default' : isEnterprise ? 'default' : 'outline'}
                   onClick={() => {
+                    trackEvent('pricing_cta_clicked', { source: 'pricing', plan: plan.id, billing_cycle: isYearly ? 'yearly' : 'monthly' });
                     try {
                       if (typeof sessionStorage !== 'undefined') {
                         sessionStorage.setItem('menuzo_upgrade_period', isYearly ? 'yearly' : 'monthly');
