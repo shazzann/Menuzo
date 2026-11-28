@@ -1,10 +1,7 @@
 import { useState } from 'react';
 import { CalendarClock, Check, CircleCheck, EyeOff, MoreVertical, Pencil, Star, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel,
-  DropdownMenuSeparator, DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { Drawer, DrawerContent, DrawerDescription, DrawerTitle } from '@/components/ui/drawer';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
   AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -13,10 +10,10 @@ import { cn } from '@/lib/utils';
 import type { FoodItem } from '@/types';
 import { foodAvailability, formatReturnTime, type FoodAvailability } from '@/lib/foodAvailability';
 
-const statusStyle: Record<FoodAvailability, { label: string; className: string; dot: string }> = {
-  available: { label: 'Available', className: 'bg-emerald-500/15 text-emerald-500', dot: 'bg-emerald-500' },
-  today: { label: 'Sold out today', className: 'bg-amber-500/15 text-amber-500', dot: 'bg-amber-500' },
-  off: { label: 'Unavailable', className: 'bg-muted text-muted-foreground', dot: 'bg-muted-foreground' },
+const statusStyle: Record<FoodAvailability, { label: string; className: string }> = {
+  available: { label: 'Available', className: 'bg-emerald-500/15 text-emerald-500' },
+  today: { label: 'Sold out today', className: 'bg-amber-500/15 text-amber-500' },
+  off: { label: 'Unavailable', className: 'bg-muted text-muted-foreground' },
 };
 
 export function FoodAvailabilityBadge({ item, className }: { item: FoodItem; className?: string }) {
@@ -45,87 +42,78 @@ type Props = {
 };
 
 export function FoodItemActionsMenu({ item, soldOutUntil, onEdit, onToggleSpecial, onSetAvailability, onDelete }: Props) {
+  const [open, setOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const status = foodAvailability(item);
-  const price = item.pricingType === 'variants' && item.options?.length
-    ? `From Rs. ${item.finalPrice.toFixed(2)}` : `Rs. ${item.finalPrice.toFixed(2)}`;
+  // Close the sheet first, then act, so its slide-down and the next view don't overlap.
+  const run = (action: () => void) => { setOpen(false); window.setTimeout(action, 180); };
 
   const options: { value: FoodAvailability; title: string; hint: string; icon: React.ReactNode; tone: string }[] = [
-    { value: 'available', title: 'Available', hint: 'Customers can see and order it', icon: <CircleCheck className="h-4 w-4 text-emerald-500" />, tone: 'bg-emerald-500/15' },
+    { value: 'available', title: 'Available', hint: 'Customers can see and order it', icon: <CircleCheck className="h-5 w-5 text-emerald-500" />, tone: 'bg-emerald-500/15' },
     {
       value: 'today', title: 'Sold out for today',
       hint: status === 'today' && item.unavailableUntil
         ? `Back automatically ${formatReturnTime(item.unavailableUntil)}`
         : `Back automatically ${formatReturnTime(soldOutUntil)}`,
-      icon: <CalendarClock className="h-4 w-4 text-amber-500" />, tone: 'bg-amber-500/15',
+      icon: <CalendarClock className="h-5 w-5 text-amber-500" />, tone: 'bg-amber-500/15',
     },
-    { value: 'off', title: 'Unavailable', hint: 'Hidden until you turn it back on', icon: <EyeOff className="h-4 w-4 text-muted-foreground" />, tone: 'bg-muted' },
+    { value: 'off', title: 'Unavailable', hint: 'Hidden until you turn it back on', icon: <EyeOff className="h-5 w-5 text-muted-foreground" />, tone: 'bg-muted' },
   ];
+  const row = 'flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left transition-colors hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-[0.99]';
 
   return (
+    // The sheet renders in a portal, but React events still bubble to the item card; stop them here.
     <div onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className="text-muted-foreground data-[state=open]:bg-muted data-[state=open]:text-foreground" aria-label={`Actions for ${item.name}`}>
-            <MoreVertical className="w-4 h-4" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" sideOffset={6} collisionPadding={12}
-          className="w-[19rem] max-w-[calc(100vw_-_1.5rem)] rounded-2xl border-border/70 bg-popover p-1.5 shadow-2xl shadow-black/40">
-          {/* Item summary */}
-          <div className="flex items-center gap-3 px-2 pb-2.5 pt-1.5">
-            <img src={item.image} alt="" className="h-11 w-11 shrink-0 rounded-xl object-cover ring-1 ring-border/60" />
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-semibold leading-tight">{item.name}</p>
-              <div className="mt-1 flex items-center gap-2">
-                <span className="text-xs font-medium text-muted-foreground">{price}</span>
-                <span className={cn('inline-flex items-center gap-1 rounded-full px-1.5 py-px text-[10px] font-semibold', statusStyle[status].className)}>
-                  <span className={cn('h-1.5 w-1.5 rounded-full', statusStyle[status].dot)} />{statusStyle[status].label}
-                </span>
-              </div>
-            </div>
+      <Button variant="ghost" size="icon" className="text-muted-foreground" aria-label={`Actions for ${item.name}`} aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen(true)}>
+        <MoreVertical className="w-4 h-4" />
+      </Button>
+
+      <Drawer open={open} onOpenChange={setOpen}>
+        <DrawerContent className="mx-auto w-full max-w-lg rounded-t-3xl border-border/60 px-3 pb-[max(1rem,env(safe-area-inset-bottom))]">
+          <div className="flex items-center gap-3 px-3 pb-3 pt-4">
+            <img src={item.image} alt="" className="h-12 w-12 shrink-0 rounded-xl object-cover ring-1 ring-border/60" />
+            <DrawerTitle className="min-w-0 flex-1 truncate text-base font-semibold">{item.name}</DrawerTitle>
+            <DrawerDescription className="sr-only">Change availability, feature, edit or delete this item.</DrawerDescription>
           </div>
 
-          <DropdownMenuSeparator className="mx-0" />
-          <DropdownMenuLabel className="px-2 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Availability</DropdownMenuLabel>
-          <DropdownMenuGroup role="group" aria-label="Availability">
+          <div role="radiogroup" aria-label="Availability" className="space-y-1">
             {options.map((option) => {
               const selected = status === option.value;
               return (
-                <DropdownMenuItem key={option.value} role="menuitemradio" aria-checked={selected}
-                  onSelect={() => { if (!selected) onSetAvailability(option.value); }}
-                  className={cn('items-start gap-3 rounded-xl px-2 py-2', selected && 'bg-primary/10 focus:bg-primary/15')}>
-                  <span className={cn('mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg', option.tone)}>{option.icon}</span>
+                <button key={option.value} type="button" role="radio" aria-checked={selected}
+                  onClick={() => run(() => { if (!selected) onSetAvailability(option.value); })}
+                  className={cn(row, selected && 'bg-primary/10 hover:bg-primary/15')}>
+                  <span className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-xl', option.tone)}>{option.icon}</span>
                   <span className="min-w-0 flex-1">
-                    <span className="block text-sm font-medium leading-tight">{option.title}</span>
+                    <span className="block text-[15px] font-medium leading-tight">{option.title}</span>
                     <span className="mt-0.5 block text-xs leading-snug text-muted-foreground">{option.hint}</span>
                   </span>
-                  <span className={cn('mt-1.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border', selected ? 'border-primary bg-primary text-primary-foreground' : 'border-border')}>
-                    {selected && <Check className="!h-2.5 !w-2.5 !text-current" strokeWidth={3} />}
+                  <span className={cn('flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2', selected ? 'border-primary bg-primary text-primary-foreground' : 'border-border')}>
+                    {selected && <Check className="h-3 w-3" strokeWidth={3} />}
                   </span>
-                </DropdownMenuItem>
+                </button>
               );
             })}
-          </DropdownMenuGroup>
+          </div>
 
-          <DropdownMenuSeparator className="mx-0 my-1.5" />
-          <DropdownMenuItem onSelect={onToggleSpecial} className="gap-3 rounded-xl px-2 py-2">
-            <span className={cn('flex h-7 w-7 items-center justify-center rounded-lg', item.isSpecialOffer ? 'bg-primary/15' : 'bg-muted')}>
-              <Star className={cn('h-4 w-4', item.isSpecialOffer ? 'fill-current text-primary' : 'text-muted-foreground')} />
+          <div className="mx-3 my-2 h-px bg-border/70" />
+          <button type="button" className={row} onClick={() => run(onToggleSpecial)}>
+            <span className={cn('flex h-10 w-10 items-center justify-center rounded-xl', item.isSpecialOffer ? 'bg-primary/15' : 'bg-muted')}>
+              <Star className={cn('h-5 w-5', item.isSpecialOffer ? 'fill-current text-primary' : 'text-muted-foreground')} />
             </span>
-            <span className="flex-1 text-sm">{item.isSpecialOffer ? 'Remove from Specials' : 'Feature as Special'}</span>
-          </DropdownMenuItem>
-          <DropdownMenuItem onSelect={onEdit} className="gap-3 rounded-xl px-2 py-2">
-            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-muted"><Pencil className="h-4 w-4" /></span>
-            <span className="flex-1 text-sm">Edit item</span>
-          </DropdownMenuItem>
-          <DropdownMenuSeparator className="mx-0 my-1.5" />
-          <DropdownMenuItem variant="destructive" onSelect={() => setConfirmDelete(true)} className="gap-3 rounded-xl px-2 py-2">
-            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-destructive/10"><Trash2 className="h-4 w-4" /></span>
-            <span className="flex-1 text-sm font-medium">Delete item</span>
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+            <span className="flex-1 text-[15px]">{item.isSpecialOffer ? 'Remove from Specials' : 'Feature as Special'}</span>
+          </button>
+          <button type="button" className={row} onClick={() => run(onEdit)}>
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted"><Pencil className="h-5 w-5 text-muted-foreground" /></span>
+            <span className="flex-1 text-[15px]">Edit item</span>
+          </button>
+          <div className="mx-3 my-2 h-px bg-border/70" />
+          <button type="button" className={cn(row, 'text-destructive hover:bg-destructive/10')} onClick={() => run(() => setConfirmDelete(true))}>
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-destructive/10"><Trash2 className="h-5 w-5 text-destructive" /></span>
+            <span className="flex-1 text-[15px] font-medium">Delete item</span>
+          </button>
+        </DrawerContent>
+      </Drawer>
 
       <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
         <AlertDialogContent className="rounded-2xl">

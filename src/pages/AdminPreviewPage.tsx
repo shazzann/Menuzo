@@ -8,7 +8,6 @@ import { SpecialOffersCarousel } from '@/components/shared/SpecialOffersCarousel
 import { FoodCard } from '@/components/shared/FoodCard';
 import { BottomNav } from '@/components/shared/BottomNav';
 import type { AdminTab, FoodItem } from '@/types';
-import { PlanStatusBanner } from '@/components/subscription/PlanStatusBanner';
 import { motion, AnimatePresence, useMotionValue, useTransform, type Variants } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
@@ -576,7 +575,6 @@ export function AdminPreviewPage() {
         </div>
       </div>
 
-      <PlanStatusBanner className="mx-4 mt-3" kinds={['hidden']} />
 
       {/* Banner */}
       <div className="relative h-40 overflow-hidden bg-muted flex items-center justify-center">

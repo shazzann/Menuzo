@@ -20,7 +20,6 @@ import { CategoryReorderModal } from '@/components/shared/CategoryReorderModal';
 import { trackEvent } from '@/lib/analytics';
 import { getPlanLimits, planLimitMessage } from '@/lib/subscription';
 import { usePlanCatalog } from '@/lib/plan-catalog';
-import { PlanStatusBanner } from '@/components/subscription/PlanStatusBanner';
 import { toast } from 'sonner';
 import { MenuService, CategoryService, StorageService } from '@/services';
 import {
@@ -854,7 +853,6 @@ export function AdminAddFoodPage() {
 
       {/* Search & Add */}
       <div className="px-4 py-4 space-y-4">
-        <PlanStatusBanner kinds={['hidden']} />
         <div className="flex gap-3">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
