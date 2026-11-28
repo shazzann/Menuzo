@@ -9,7 +9,6 @@ const showcaseCategories: Category[] = [
   { id: 'all', name: 'All' },
   { id: 'kottu', name: 'Kottu' },
   { id: 'rice', name: 'Rice & Curry' },
-  { id: 'desserts', name: 'Desserts' },
 ];
 
 const showcaseItems: FoodItem[] = [
@@ -69,32 +68,6 @@ const showcaseItems: FoodItem[] = [
     discount: 0,
     isAvailable: true,
     isSpecialOffer: false,
-  },
-  {
-    id: 'showcase-sundae',
-    name: 'Chocolate Fudge Sundae',
-    description: 'Velvety vanilla scoops topped with warm chocolate fudge.',
-    tagline: 'Rich hot fudge topping',
-    image: '/Landing/food-chocolate-sundae.webp',
-    category: 'desserts',
-    originalPrice: 750,
-    finalPrice: 750,
-    discount: 0,
-    isAvailable: true,
-    isSpecialOffer: false,
-  },
-  {
-    id: 'showcase-cinnamon-roll',
-    name: 'Glazed Cinnamon Roll',
-    description: 'Warm baked swirl finished with vanilla bean glaze.',
-    tagline: 'Fresh morning bake',
-    image: '/Landing/audience-bakery.webp',
-    category: 'desserts',
-    originalPrice: 680,
-    finalPrice: 590,
-    discount: 13,
-    isAvailable: true,
-    isSpecialOffer: true,
   },
 ];
 
