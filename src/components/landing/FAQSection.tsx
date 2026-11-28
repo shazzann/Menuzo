@@ -1,9 +1,5 @@
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion';
+import { useState } from 'react';
+import { ChevronDown } from 'lucide-react';
 import { FREE_PLAN_LIMITS } from '@/lib/subscription';
 import { FinalCTASection } from '@/components/landing/FinalCTASection';
 
@@ -35,6 +31,8 @@ const faqs = [
 ];
 
 export function FAQSection() {
+  const [openIndex, setOpenIndex] = useState<number | null>(0);
+
   return (
     <section id="faq" className="bg-white">
       <div className="landing-section">
@@ -48,22 +46,46 @@ export function FAQSection() {
             </h2>
           </div>
 
-          <Accordion type="single" collapsible className="w-full border-t border-[#D2D8CF]">
-            {faqs.map((faq, index) => (
-              <AccordionItem
-                key={faq.q}
-                value={`item-${index}`}
-                className="border-b border-[#D2D8CF]"
-              >
-                <AccordionTrigger className="py-4 text-left text-base sm:text-lg font-semibold text-[#12261F] hover:text-[#3D4A44] hover:no-underline">
-                  {faq.q}
-                </AccordionTrigger>
-                <AccordionContent className="text-sm sm:text-base text-[#3D4A44] leading-relaxed pb-4">
-                  {faq.a}
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
+          <div className="w-full border-t border-[#D2D8CF]">
+            {faqs.map((faq, index) => {
+              const isOpen = openIndex === index;
+              const panelId = `landing-faq-panel-${index}`;
+              const buttonId = `landing-faq-trigger-${index}`;
+
+              return (
+                <div key={faq.q} className="border-b border-[#D2D8CF]">
+                  <h3>
+                    <button
+                      id={buttonId}
+                      type="button"
+                      aria-expanded={isOpen}
+                      aria-controls={panelId}
+                      onClick={() => setOpenIndex(isOpen ? null : index)}
+                      className="w-full py-4 flex items-center justify-between gap-4 text-left text-base sm:text-lg font-semibold text-[#12261F] hover:text-[#3D4A44]"
+                    >
+                      <span>{faq.q}</span>
+                      <ChevronDown
+                        className={`w-4 h-4 shrink-0 text-[#3D4A44] transition-transform duration-150 ${
+                          isOpen ? 'rotate-180' : ''
+                        }`}
+                        aria-hidden="true"
+                      />
+                    </button>
+                  </h3>
+                  {isOpen && (
+                    <div
+                      id={panelId}
+                      role="region"
+                      aria-labelledby={buttonId}
+                      className="pb-4 text-sm sm:text-base text-[#3D4A44] leading-relaxed"
+                    >
+                      {faq.a}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
 

@@ -128,4 +128,13 @@ test('landing page keeps 7-section structure, zero framer-motion, zero iframes, 
   const contactSource = readFileSync(new URL('../src/lib/contact.ts', import.meta.url), 'utf8');
   assert.ok(contactSource.includes('VITE_WHATSAPP_NUMBER'));
   assert.ok(!contactSource.includes('bank_transfer_settings'));
+
+  const heroSource = readFileSync(new URL('../src/components/landing/HeroSection.tsx', import.meta.url), 'utf8');
+  assert.ok(heroSource.includes('https://menuzo.lk/spicegardenkitchen'));
+  assert.ok(heroSource.includes('Explore a live menu'));
+  assert.ok(heroSource.includes('Contact us'));
+  assert.ok(heroSource.includes('/Landing/spice-garden-menu.webp'));
+
+  const finalCtaSource = readFileSync(new URL('../src/components/landing/FinalCTASection.tsx', import.meta.url), 'utf8');
+  assert.ok(finalCtaSource.includes('Contact us'));
 });

@@ -62,7 +62,7 @@ export function FinalCTASection() {
               className="landing-btn bg-transparent text-white border border-[#5B6B63] hover:border-white px-5 py-3.5 text-base"
             >
               <MessageCircle className="w-4 h-4 text-[#F97316]" aria-hidden="true" />
-              Talk to us
+              Contact us
             </button>
           )}
         </div>
