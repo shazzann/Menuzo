@@ -133,7 +133,9 @@ test('landing page keeps 7-section structure, zero framer-motion, zero iframes, 
   assert.ok(heroSource.includes('https://menuzo.lk/spicegardenkitchen'));
   assert.ok(heroSource.includes('Explore a live menu'));
   assert.ok(heroSource.includes('Contact us'));
-  assert.ok(heroSource.includes('/Landing/spice-garden-menu.webp'));
+  assert.ok(heroSource.includes('FoodCard'));
+  assert.ok(heroSource.includes('CategoryTabs'));
+  assert.ok(heroSource.includes('/Landing/spice-garden-qr.svg'));
 
   const finalCtaSource = readFileSync(new URL('../src/components/landing/FinalCTASection.tsx', import.meta.url), 'utf8');
   assert.ok(finalCtaSource.includes('Contact us'));

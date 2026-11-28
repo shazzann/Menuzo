@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ChevronDown } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { FREE_PLAN_LIMITS } from '@/lib/subscription';
 import { FinalCTASection } from '@/components/landing/FinalCTASection';
 
@@ -34,26 +35,29 @@ export function FAQSection() {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   return (
-    <section id="faq" className="bg-white">
+    <section id="faq" className="bg-muted/30">
       <div className="landing-section">
         <div className="landing-container max-w-3xl">
           <div className="mb-8 sm:mb-10">
-            <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[#3D4A44] mb-2">
+            <Badge
+              variant="outline"
+              className="mb-3 bg-primary/10 text-primary border-primary/20 text-xs font-semibold uppercase tracking-wider"
+            >
               FAQ
-            </p>
-            <h2 className="text-2xl sm:text-4xl font-bold text-[#12261F]">
+            </Badge>
+            <h2 className="text-2xl sm:text-4xl font-bold tracking-tight text-foreground">
               Frequently asked questions
             </h2>
           </div>
 
-          <div className="w-full border-t border-[#D2D8CF]">
+          <div className="w-full border-t border-border">
             {faqs.map((faq, index) => {
               const isOpen = openIndex === index;
               const panelId = `landing-faq-panel-${index}`;
               const buttonId = `landing-faq-trigger-${index}`;
 
               return (
-                <div key={faq.q} className="border-b border-[#D2D8CF]">
+                <div key={faq.q} className="border-b border-border">
                   <h3>
                     <button
                       id={buttonId}
@@ -61,11 +65,11 @@ export function FAQSection() {
                       aria-expanded={isOpen}
                       aria-controls={panelId}
                       onClick={() => setOpenIndex(isOpen ? null : index)}
-                      className="w-full py-4 flex items-center justify-between gap-4 text-left text-base sm:text-lg font-semibold text-[#12261F] hover:text-[#3D4A44]"
+                      className="w-full py-4 flex items-center justify-between gap-4 text-left text-base sm:text-lg font-semibold text-foreground hover:text-primary transition-colors"
                     >
                       <span>{faq.q}</span>
                       <ChevronDown
-                        className={`w-4 h-4 shrink-0 text-[#3D4A44] transition-transform duration-150 ${
+                        className={`w-4 h-4 shrink-0 text-muted-foreground transition-transform duration-150 ${
                           isOpen ? 'rotate-180' : ''
                         }`}
                         aria-hidden="true"
@@ -77,7 +81,7 @@ export function FAQSection() {
                       id={panelId}
                       role="region"
                       aria-labelledby={buttonId}
-                      className="pb-4 text-sm sm:text-base text-[#3D4A44] leading-relaxed"
+                      className="pb-4 text-sm sm:text-base text-muted-foreground leading-relaxed"
                     >
                       {faq.a}
                     </div>

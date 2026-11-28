@@ -1,4 +1,6 @@
 import { AlertCircle, BookOpen, Printer } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Card } from '@/components/ui/card';
 
 const problems = [
   {
@@ -20,16 +22,19 @@ const problems = [
 
 export function ProblemSolutionSection() {
   return (
-    <section id="problem" className="landing-section bg-white border-b border-[#D2D8CF]">
+    <section id="problem" className="landing-section bg-muted/30 border-b border-border">
       <div className="landing-container">
         <div className="max-w-2xl mb-10 sm:mb-12">
-          <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[#3D4A44] mb-2">
+          <Badge
+            variant="outline"
+            className="mb-3 bg-primary/10 text-primary border-primary/20 text-xs font-semibold uppercase tracking-wider"
+          >
             The problem
-          </p>
-          <h2 className="text-2xl sm:text-4xl font-bold text-[#12261F] mb-3">
+          </Badge>
+          <h2 className="text-2xl sm:text-4xl font-bold tracking-tight text-foreground mb-3">
             Still managing your menu with printed copies?
           </h2>
-          <p className="text-base sm:text-lg text-[#3D4A44] leading-relaxed">
+          <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
             Small menu changes can create unnecessary work for restaurant owners.
           </p>
         </div>
@@ -38,15 +43,15 @@ export function ProblemSolutionSection() {
           {problems.map((item) => {
             const Icon = item.icon;
             return (
-              <div key={item.title} className="landing-card p-6 bg-[#F3F5F0]">
-                <div className="w-10 h-10 rounded-[4px] bg-white border border-[#D2D8CF] flex items-center justify-center text-[#12261F] mb-4">
-                  <Icon className="w-5 h-5 text-[#F97316]" aria-hidden="true" />
+              <Card key={item.title} className="p-6 rounded-2xl border-border bg-card shadow-xs gap-3">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
+                  <Icon className="w-5 h-5 text-primary" aria-hidden="true" />
                 </div>
-                <h3 className="text-lg font-bold text-[#12261F] mb-2">{item.title}</h3>
-                <p className="text-sm sm:text-base text-[#3D4A44] leading-relaxed">
+                <h3 className="text-lg font-bold text-foreground">{item.title}</h3>
+                <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
                   {item.description}
                 </p>
-              </div>
+              </Card>
             );
           })}
         </div>

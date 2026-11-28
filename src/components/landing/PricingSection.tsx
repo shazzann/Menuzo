@@ -1,5 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ArrowRight, Check, Minus, RefreshCw } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { useApp } from '@/store';
 import { BillingService } from '@/services/billing.service';
 import type { BillingPeriod } from '@/types/billing';
@@ -108,17 +111,20 @@ export function PricingSection() {
   };
 
   return (
-    <section id="pricing" className="landing-section border-b border-[#D2D8CF]">
+    <section id="pricing" className="landing-section bg-background border-b border-border">
       <div className="landing-container">
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-10 sm:mb-12">
           <div className="max-w-xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[#3D4A44] mb-2">
+            <Badge
+              variant="outline"
+              className="mb-3 bg-primary/10 text-primary border-primary/20 text-xs font-semibold uppercase tracking-wider"
+            >
               Pricing
-            </p>
-            <h2 className="text-2xl sm:text-4xl font-bold text-[#12261F] mb-3">
+            </Badge>
+            <h2 className="text-2xl sm:text-4xl font-bold tracking-tight text-foreground mb-3">
               A plan that fits your restaurant.
             </h2>
-            <p className="text-base sm:text-lg text-[#3D4A44]">
+            <p className="text-base sm:text-lg text-muted-foreground">
               Start free and upgrade when your menu needs more.
             </p>
           </div>
@@ -127,17 +133,17 @@ export function PricingSection() {
             <div
               role="radiogroup"
               aria-label="Billing cycle"
-              className="inline-flex p-1 bg-white border border-[#D2D8CF] rounded-[4px]"
+              className="inline-flex p-1 bg-muted border border-border rounded-full"
             >
               <button
                 type="button"
                 role="radio"
                 aria-checked={billingCycle === 'monthly'}
                 onClick={() => handleToggleCycle('monthly')}
-                className={`px-4 py-2 text-sm font-semibold rounded-[4px] transition-colors ${
+                className={`px-4 py-2 text-sm font-semibold rounded-full transition-colors ${
                   billingCycle === 'monthly'
-                    ? 'bg-[#12261F] text-white'
-                    : 'text-[#3D4A44] hover:text-[#12261F]'
+                    ? 'bg-primary text-[#12261F]'
+                    : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
                 Monthly
@@ -147,21 +153,25 @@ export function PricingSection() {
                 role="radio"
                 aria-checked={billingCycle === 'yearly'}
                 onClick={() => handleToggleCycle('yearly')}
-                className={`px-4 py-2 text-sm font-semibold rounded-[4px] transition-colors ${
+                className={`px-4 py-2 text-sm font-semibold rounded-full transition-colors ${
                   billingCycle === 'yearly'
-                    ? 'bg-[#12261F] text-white'
-                    : 'text-[#3D4A44] hover:text-[#12261F]'
+                    ? 'bg-primary text-[#12261F]'
+                    : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
                 Annual
               </button>
             </div>
-            <p className="min-h-[1.25rem] text-xs font-medium text-[#3D4A44]" aria-live="polite">
-              {billingCycle === 'yearly' && model.hasConfirmedAnnualSavings
-                ? model.annualSavingsLabel
-                : model.hasConfirmedAnnualSavings
-                  ? 'Annual billing lowers your monthly cost on Plus.'
-                  : 'Clear LKR pricing with no hidden card fees.'}
+            <p className="min-h-[1.25rem] text-xs font-medium text-muted-foreground" aria-live="polite">
+              {billingCycle === 'yearly' && model.hasConfirmedAnnualSavings ? (
+                <span className="text-emerald-600 dark:text-emerald-400">
+                  {model.annualSavingsLabel}
+                </span>
+              ) : model.hasConfirmedAnnualSavings ? (
+                'Annual billing lowers your monthly cost on Plus.'
+              ) : (
+                'Clear LKR pricing with no hidden card fees.'
+              )}
             </p>
           </div>
         </div>
@@ -173,41 +183,43 @@ export function PricingSection() {
             const isBusiness = plan.id === 'business';
 
             return (
-              <article
+              <Card
                 key={plan.id}
-                className={`flex flex-col p-6 sm:p-7 rounded-[4px] bg-white ${
-                  isPlus
-                    ? 'border-2 border-[#12261F]'
-                    : 'border border-[#D2D8CF]'
+                className={`flex flex-col p-6 sm:p-7 rounded-2xl bg-card shadow-xs gap-0 ${
+                  isPlus ? 'border-2 border-primary' : 'border border-border'
                 }`}
               >
                 <div className="flex items-center justify-between gap-2 mb-2">
-                  <h3 className="text-xl font-bold text-[#12261F]">{plan.name}</h3>
+                  <h3 className="text-xl font-bold text-foreground">{plan.name}</h3>
                   {plan.badgeText && (
-                    <span className="px-2.5 py-0.5 text-xs font-semibold rounded-[4px] bg-[#F97316]/15 text-[#12261F] border border-[#F97316]/40">
+                    <Badge className="bg-primary/10 text-primary border border-primary/20 text-xs font-semibold">
                       {plan.badgeText}
-                    </span>
+                    </Badge>
                   )}
                 </div>
 
-                <p className="text-sm text-[#3D4A44] min-h-[2.75rem] mb-5">{plan.tagline}</p>
+                <p className="text-sm text-muted-foreground min-h-[2.75rem] mb-5">{plan.tagline}</p>
 
-                <div className="pb-5 mb-5 border-b border-[#EAECE6]">
+                <div className="pb-5 mb-5 border-b border-border">
                   <div className="flex items-baseline gap-1.5 min-h-[2.75rem]">
-                    <span className="text-3xl sm:text-4xl font-bold text-[#12261F] tabular-nums">
+                    <span className="text-3xl sm:text-4xl font-bold text-foreground tabular-nums">
                       {plan.priceText}
                     </span>
                     {plan.periodText && (
-                      <span className="text-sm font-medium text-[#3D4A44]">{plan.periodText}</span>
+                      <span className="text-sm font-medium text-muted-foreground">
+                        {plan.periodText}
+                      </span>
                     )}
                   </div>
-                  <p className="mt-1.5 text-xs text-[#3D4A44] min-h-[2rem]">{plan.billingNote}</p>
+                  <p className="mt-1.5 text-xs text-muted-foreground min-h-[2rem]">
+                    {plan.billingNote}
+                  </p>
 
                   {isPlus && status === 'error' && (
                     <button
                       type="button"
                       onClick={() => void loadPeriods()}
-                      className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-[#12261F] underline underline-offset-2"
+                      className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-primary underline underline-offset-2"
                     >
                       <RefreshCw className="w-3.5 h-3.5" aria-hidden="true" />
                       Retry loading rate
@@ -215,15 +227,15 @@ export function PricingSection() {
                   )}
                 </div>
 
-                <p className="text-xs font-semibold uppercase tracking-wider text-[#3D4A44] mb-3">
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
                   {plan.limitsSummary}
                 </p>
 
                 <ul className="space-y-2.5 mb-7 flex-1">
                   {plan.features.map((feat) => (
-                    <li key={feat} className="flex items-start gap-2.5 text-sm text-[#12261F]">
+                    <li key={feat} className="flex items-start gap-2.5 text-sm text-foreground">
                       <Check
-                        className="w-4 h-4 mt-0.5 shrink-0 text-[#1F8A4C]"
+                        className="w-4 h-4 mt-0.5 shrink-0 text-primary"
                         aria-hidden="true"
                       />
                       <span>{feat}</span>
@@ -232,19 +244,21 @@ export function PricingSection() {
                 </ul>
 
                 {isBusiness && businessWhatsappUrl ? (
-                  <a
-                    href={businessWhatsappUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={handleBusinessContact}
-                    className="landing-btn landing-btn-secondary w-full"
-                  >
-                    {plan.ctaLabel}
-                    <ArrowRight className="w-4 h-4" aria-hidden="true" />
-                  </a>
+                  <Button variant="outline" size="lg" asChild className="w-full h-11 rounded-xl font-semibold">
+                    <a
+                      href={businessWhatsappUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={handleBusinessContact}
+                    >
+                      {plan.ctaLabel}
+                      <ArrowRight className="w-4 h-4" aria-hidden="true" />
+                    </a>
+                  </Button>
                 ) : (
-                  <button
-                    type="button"
+                  <Button
+                    variant={isPlus ? 'default' : 'outline'}
+                    size="lg"
                     onClick={
                       plan.id === 'free'
                         ? handleFreeClick
@@ -252,24 +266,24 @@ export function PricingSection() {
                           ? handlePlusClick
                           : handleBusinessContact
                     }
-                    className={`landing-btn w-full ${
-                      isPlus ? 'landing-btn-primary' : 'landing-btn-dark'
+                    className={`w-full h-11 rounded-xl font-semibold ${
+                      isPlus ? 'bg-primary text-[#12261F] hover:bg-primary/90' : ''
                     }`}
                   >
                     {plan.ctaLabel}
                     <ArrowRight className="w-4 h-4" aria-hidden="true" />
-                  </button>
+                  </Button>
                 )}
-              </article>
+              </Card>
             );
           })}
         </div>
 
         {/* Compact Semantic Comparison Table */}
-        <div className="landing-card bg-white overflow-hidden">
-          <div className="px-5 py-4 border-b border-[#EAECE6]">
-            <h3 className="text-lg font-bold text-[#12261F]">Plan comparison</h3>
-            <p className="text-xs sm:text-sm text-[#3D4A44]">
+        <Card className="rounded-2xl border-border bg-card shadow-xs overflow-hidden p-0 gap-0">
+          <div className="px-5 py-4 border-b border-border">
+            <h3 className="text-lg font-bold text-foreground">Plan comparison</h3>
+            <p className="text-xs sm:text-sm text-muted-foreground">
               Verified limits and features across Free, Plus, and Business.
             </p>
           </div>
@@ -277,45 +291,45 @@ export function PricingSection() {
             <table className="w-full min-w-[560px] text-left border-collapse text-sm">
               <caption className="sr-only">Comparison of Menuzo Free, Plus, and Business plans</caption>
               <thead>
-                <tr className="border-b border-[#D2D8CF] bg-[#F3F5F0]">
-                  <th scope="col" className="py-3 px-4 font-semibold text-[#12261F]">
+                <tr className="border-b border-border bg-muted/40">
+                  <th scope="col" className="py-3 px-4 font-semibold text-foreground">
                     Capability
                   </th>
-                  <th scope="col" className="py-3 px-4 font-semibold text-center text-[#12261F]">
+                  <th scope="col" className="py-3 px-4 font-semibold text-center text-foreground">
                     Free
                   </th>
-                  <th scope="col" className="py-3 px-4 font-semibold text-center text-[#12261F]">
+                  <th scope="col" className="py-3 px-4 font-semibold text-center text-primary">
                     Plus
                   </th>
-                  <th scope="col" className="py-3 px-4 font-semibold text-center text-[#12261F]">
+                  <th scope="col" className="py-3 px-4 font-semibold text-center text-foreground">
                     Business
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#EAECE6]">
+              <tbody className="divide-y divide-border">
                 {model.comparisonRows.map((row) => (
                   <tr key={row.feature}>
-                    <th scope="row" className="py-3 px-4 font-medium text-[#12261F]">
+                    <th scope="row" className="py-3 px-4 font-medium text-foreground">
                       {row.feature}
                     </th>
                     {(['free', 'plus', 'business'] as const).map((tier) => {
                       const value = row[tier];
                       return (
-                        <td key={tier} className="py-3 px-4 text-center text-[#3D4A44]">
+                        <td key={tier} className="py-3 px-4 text-center text-muted-foreground">
                           {typeof value === 'boolean' ? (
                             value ? (
                               <span className="inline-flex items-center justify-center">
-                                <Check className="w-4 h-4 text-[#1F8A4C]" aria-hidden="true" />
+                                <Check className="w-4 h-4 text-primary" aria-hidden="true" />
                                 <span className="sr-only">Included</span>
                               </span>
                             ) : (
                               <span className="inline-flex items-center justify-center">
-                                <Minus className="w-4 h-4 text-[#B6C0B3]" aria-hidden="true" />
+                                <Minus className="w-4 h-4 text-muted-foreground/40" aria-hidden="true" />
                                 <span className="sr-only">Not included</span>
                               </span>
                             )
                           ) : (
-                            <span className="font-medium text-[#12261F]">{value}</span>
+                            <span className="font-medium text-foreground">{value}</span>
                           )}
                         </td>
                       );
@@ -325,7 +339,7 @@ export function PricingSection() {
               </tbody>
             </table>
           </div>
-        </div>
+        </Card>
       </div>
     </section>
   );

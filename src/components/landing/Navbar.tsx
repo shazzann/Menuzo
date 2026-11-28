@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { LayoutDashboard, Menu, X } from 'lucide-react';
-import { useApp } from '@/store';
+import { Button } from '@/components/ui/button';
+import { ThemeToggle } from '@/components/shared/ThemeToggle';
 import { SwitchAccountButton } from '@/components/shared/SwitchAccountButton';
+import { useApp } from '@/store';
 import { trackEvent } from '@/lib/analytics';
 
 const navLinks = [
@@ -60,8 +62,8 @@ export function Navbar() {
     <header
       className={`sticky top-0 z-40 transition-colors duration-150 ${
         isScrolled
-          ? 'bg-[#F3F5F0]/95 border-b border-[#D2D8CF]'
-          : 'bg-[#F3F5F0] border-b border-transparent'
+          ? 'bg-background/95 border-b border-border'
+          : 'bg-background border-b border-transparent'
       }`}
     >
       <div className="landing-container h-16 flex items-center justify-between gap-4">
@@ -71,7 +73,7 @@ export function Navbar() {
             e.preventDefault();
             scrollToTarget('#home');
           }}
-          className="inline-flex items-center shrink-0 rounded-[4px]"
+          className="inline-flex items-center shrink-0 rounded-md"
           aria-label="Menuzo home"
         >
           <img
@@ -79,7 +81,14 @@ export function Navbar() {
             alt="Menuzo"
             width={120}
             height={32}
-            className="h-7 w-auto"
+            className="h-7 w-auto dark:hidden"
+          />
+          <img
+            src="/logo/Logo main4dark.png"
+            alt="Menuzo"
+            width={120}
+            height={32}
+            className="h-7 w-auto hidden dark:block"
           />
         </a>
 
@@ -92,7 +101,7 @@ export function Navbar() {
                 e.preventDefault();
                 scrollToTarget(link.href);
               }}
-              className="text-sm font-medium text-[#3D4A44] hover:text-[#12261F] transition-colors whitespace-nowrap"
+              className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors whitespace-nowrap"
             >
               {link.name}
             </a>
@@ -100,73 +109,77 @@ export function Navbar() {
         </nav>
 
         <div className="hidden md:flex items-center gap-2.5 shrink-0">
+          <ThemeToggle />
           {state.authChecking && !state.user ? (
             <div
-              className="h-9 w-44 rounded-[4px] bg-[#E3E7DF]"
+              className="h-9 w-40 rounded-xl bg-muted/70"
               role="status"
               aria-label="Checking account status"
             />
           ) : state.user ? (
             <>
               <SwitchAccountButton />
-              <button
-                type="button"
+              <Button
+                size="sm"
                 onClick={() => handlePrimaryClick('navbar')}
-                className="landing-btn landing-btn-dark !min-h-[38px] !py-2 !px-4 text-sm"
+                className="rounded-xl bg-primary text-[#12261F] hover:bg-primary/90 font-semibold px-4 gap-2"
               >
                 <LayoutDashboard className="w-4 h-4" aria-hidden="true" />
                 Dashboard
-              </button>
+              </Button>
             </>
           ) : (
             <>
-              <button
-                type="button"
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => dispatch({ type: 'SET_VIEW', payload: 'login' })}
-                className="px-3 py-2 text-sm font-semibold text-[#12261F] hover:text-[#3D4A44] rounded-[4px]"
+                className="font-medium rounded-xl"
               >
                 Log in
-              </button>
-              <button
-                type="button"
+              </Button>
+              <Button
+                size="sm"
                 onClick={() => handlePrimaryClick('navbar')}
-                className="landing-btn landing-btn-primary !min-h-[38px] !py-2 !px-4 text-sm"
+                className="rounded-xl bg-primary text-[#12261F] hover:bg-primary/90 font-semibold px-4"
               >
                 Build my free menu
-              </button>
+              </Button>
             </>
           )}
         </div>
 
         <div className="flex md:hidden items-center gap-2">
+          <ThemeToggle />
           {state.authChecking && !state.user ? (
-            <div className="h-9 w-28 rounded-[4px] bg-[#E3E7DF]" aria-hidden="true" />
+            <div className="h-9 w-24 rounded-xl bg-muted/70" aria-hidden="true" />
           ) : (
-            <button
-              type="button"
+            <Button
+              size="sm"
               onClick={() => handlePrimaryClick('navbar_mobile')}
-              className="landing-btn landing-btn-primary !min-h-[38px] !py-1.5 !px-3 text-xs sm:text-sm"
+              className="rounded-xl bg-primary text-[#12261F] hover:bg-primary/90 font-semibold px-3 text-xs sm:text-sm"
             >
               {state.user ? 'Dashboard' : 'Start free'}
-            </button>
+            </Button>
           )}
-          <button
-            type="button"
-            className="inline-flex items-center justify-center w-10 h-10 rounded-[4px] border border-[#D2D8CF] bg-white text-[#12261F]"
+          <Button
+            variant="outline"
+            size="icon"
             onClick={() => setMobileMenuOpen((open) => !open)}
             aria-expanded={mobileMenuOpen}
             aria-controls="landing-mobile-nav"
             aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
+            className="rounded-xl"
           >
             {mobileMenuOpen ? <X className="w-5 h-5" aria-hidden="true" /> : <Menu className="w-5 h-5" aria-hidden="true" />}
-          </button>
+          </Button>
         </div>
       </div>
 
       {mobileMenuOpen && (
         <div
           id="landing-mobile-nav"
-          className="md:hidden border-t border-[#D2D8CF] bg-white px-4 py-4"
+          className="md:hidden border-t border-border bg-card px-4 py-4"
         >
           <nav className="flex flex-col gap-1" aria-label="Mobile navigation">
             {navLinks.map((link) => (
@@ -177,50 +190,48 @@ export function Navbar() {
                   e.preventDefault();
                   scrollToTarget(link.href);
                 }}
-                className="py-2.5 px-2 text-base font-medium text-[#12261F] border-b border-[#EAECE6] last:border-b-0"
+                className="py-2.5 px-2 text-base font-medium text-foreground hover:text-primary border-b border-border/60 last:border-b-0"
               >
                 {link.name}
               </a>
             ))}
           </nav>
 
-          <div className="mt-4 pt-3 border-t border-[#D2D8CF] flex flex-col gap-2">
+          <div className="mt-4 pt-3 border-t border-border flex flex-col gap-2.5">
             {state.authChecking && !state.user ? (
-              <div className="h-11 w-full rounded-[4px] bg-[#EAECE6]" aria-label="Checking account status" />
+              <div className="h-10 w-full rounded-xl bg-muted/70" aria-label="Checking account status" />
             ) : state.user ? (
               <>
-                <p className="text-xs text-[#3D4A44] break-all">{state.user.email}</p>
+                <p className="text-xs text-muted-foreground break-all">{state.user.email}</p>
                 <div className="flex items-center justify-between gap-2">
                   <SwitchAccountButton />
-                  <button
-                    type="button"
+                  <Button
                     onClick={() => handlePrimaryClick('navbar_mobile_drawer')}
-                    className="landing-btn landing-btn-dark flex-1"
+                    className="rounded-xl bg-primary text-[#12261F] hover:bg-primary/90 font-semibold flex-1 gap-2"
                   >
                     <LayoutDashboard className="w-4 h-4" aria-hidden="true" />
                     Dashboard
-                  </button>
+                  </Button>
                 </div>
               </>
             ) : (
               <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
+                <Button
+                  variant="outline"
                   onClick={() => {
                     setMobileMenuOpen(false);
                     dispatch({ type: 'SET_VIEW', payload: 'login' });
                   }}
-                  className="landing-btn landing-btn-secondary w-full"
+                  className="rounded-xl font-semibold w-full"
                 >
                   Log in
-                </button>
-                <button
-                  type="button"
+                </Button>
+                <Button
                   onClick={() => handlePrimaryClick('navbar_mobile_drawer')}
-                  className="landing-btn landing-btn-primary w-full"
+                  className="rounded-xl bg-primary text-[#12261F] hover:bg-primary/90 font-semibold w-full"
                 >
                   Build my free menu
-                </button>
+                </Button>
               </div>
             )}
           </div>
