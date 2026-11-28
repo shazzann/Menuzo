@@ -1,4 +1,4 @@
-import type { ManagedShop, ActivityItem, SubscriptionPlan, SupportTicket, KPICard } from '@/types';
+import type { ManagedShop, ActivityItem, SubscriptionPlan, SupportTicket } from '@/types';
 
 export const mockManagedShops: ManagedShop[] = [
   {
@@ -191,19 +191,6 @@ export const mockManagedShops: ManagedShop[] = [
     qrScans: 870,
     visitors: 2300,
   },
-];
-
-export const mockKPICards: KPICard[] = [
-  { title: 'Total Shops', value: 2847, previousValue: 2680, change: 6.2, icon: 'Store', trend: 'up', color: 'from-blue-500 to-blue-600' },
-  { title: 'Active Shops', value: 2134, previousValue: 2010, change: 6.2, icon: 'CheckCircle', trend: 'up', color: 'from-emerald-500 to-emerald-600' },
-  { title: 'Trial Users', value: 312, previousValue: 280, change: 11.4, icon: 'Clock', trend: 'up', color: 'from-amber-500 to-amber-600' },
-  { title: 'Expired Shops', value: 89, previousValue: 102, change: -12.7, icon: 'AlertCircle', trend: 'down', color: 'from-red-500 to-red-600' },
-  { title: 'Monthly Revenue', value: '$48.2K', previousValue: '$42.1K', change: 14.5, icon: 'DollarSign', trend: 'up', color: 'from-violet-500 to-violet-600' },
-  { title: 'Annual Revenue', value: '$524K', previousValue: '$468K', change: 12.0, icon: 'TrendingUp', trend: 'up', color: 'from-cyan-500 to-cyan-600' },
-  { title: 'New Registrations', value: 167, previousValue: 143, change: 16.8, icon: 'UserPlus', trend: 'up', color: 'from-pink-500 to-pink-600' },
-  { title: 'Pending Verification', value: 23, previousValue: 18, change: 27.8, icon: 'ShieldCheck', trend: 'up', color: 'from-orange-500 to-orange-600' },
-  { title: 'Avg Revenue/Shop', value: '$22.6', previousValue: '$20.9', change: 8.1, icon: 'BarChart3', trend: 'up', color: 'from-teal-500 to-teal-600' },
-  { title: 'Inactive Shops', value: 312, previousValue: 350, change: -10.9, icon: 'PauseCircle', trend: 'down', color: 'from-slate-500 to-slate-600' },
 ];
 
 export const mockActivities: ActivityItem[] = [

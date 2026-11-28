@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Store, UserPlus, Tag, Palette, BarChart3, Bell, TrendingUp, TrendingDown,
   DollarSign, CheckCircle, Clock, AlertCircle, ShieldCheck,
@@ -7,13 +7,16 @@ import {
 } from 'lucide-react';
 import { useApp } from '@/store';
 import {
-  mockKPICards, mockActivities, mockRevenueData, mockGrowthData,
+  mockActivities, mockRevenueData, mockGrowthData,
   mockPlanDistribution, mockManagedShops,
 } from '@/data/companyAdminData';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   BarChart, Bar, PieChart, Pie, Cell,
 } from 'recharts';
+import { CompanyBillingService, companyBillingError } from '@/services/company-billing.service';
+import { buildDashboardKpis } from '@/lib/admin-dashboard';
+import type { KPICard } from '@/types';
 
 const iconMap: Record<string, React.ReactNode> = {
   Store: <Store className="w-5 h-5" />,
@@ -36,6 +39,16 @@ const iconMap: Record<string, React.ReactNode> = {
 export function CompanyDashboard() {
   const { dispatch } = useApp();
   const [revenueRange, setRevenueRange] = useState<'daily' | 'weekly' | 'monthly' | 'yearly'>('monthly');
+  const [kpis, setKpis] = useState<KPICard[] | null>(null);
+  const [kpiError, setKpiError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    CompanyBillingService.dashboardStats()
+      .then((stats) => { if (!cancelled) setKpis(buildDashboardKpis(stats)); })
+      .catch((error) => { if (!cancelled) setKpiError(companyBillingError(error)); });
+    return () => { cancelled = true; };
+  }, []);
 
   const quickActions = [
     { label: 'Add Shop', icon: <Store className="w-4 h-4" />, color: 'from-blue-500 to-blue-600' },
@@ -80,8 +93,16 @@ export function CompanyDashboard() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 lg:gap-4">
-        {mockKPICards.map((kpi, index) => (
+      {kpiError && (
+        <div className="rounded-2xl border border-red-500/30 bg-red-500/5 px-4 py-3 text-sm text-red-500">
+          Couldn't load dashboard numbers. {kpiError}
+        </div>
+      )}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 lg:gap-4">
+        {!kpis && !kpiError && Array.from({ length: 8 }, (_, i) => (
+          <div key={i} className="h-[132px] rounded-2xl border border-border/50 bg-card/80 animate-pulse" />
+        ))}
+        {kpis?.map((kpi, index) => (
           <div
             key={kpi.title}
             className="group relative bg-card/80 backdrop-blur-sm border border-border/50 rounded-2xl p-4 hover:border-primary/30 hover:shadow-xl hover:shadow-primary/5 transition-all duration-300 cursor-pointer hover:-translate-y-1"
@@ -91,23 +112,23 @@ export function CompanyDashboard() {
               <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${kpi.color} flex items-center justify-center text-white shadow-lg`}>
                 {iconMap[kpi.icon] || <BarChart3 className="w-5 h-5" />}
               </div>
-              <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold ${
+              {!kpi.hideChange && <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold ${
                 kpi.trend === 'up'
                   ? 'bg-emerald-500/10 text-emerald-500'
                   : kpi.trend === 'down'
                   ? 'bg-red-500/10 text-red-500'
                   : 'bg-slate-500/10 text-slate-500'
               }`}>
-                {kpi.trend === 'up' ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                {kpi.trend === 'up' ? <TrendingUp className="w-3 h-3" /> : kpi.trend === 'down' ? <TrendingDown className="w-3 h-3" /> : null}
                 {Math.abs(kpi.change)}%
-              </div>
+              </div>}
             </div>
             <div className="space-y-1">
               <p className="text-2xl font-bold tracking-tight">{kpi.value}</p>
               <p className="text-xs text-muted-foreground">{kpi.title}</p>
             </div>
             <div className="mt-2 text-[11px] text-muted-foreground/70">
-              Previous: {kpi.previousValue}
+              {kpi.previousValue}
             </div>
           </div>
         ))}

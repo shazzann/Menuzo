@@ -214,6 +214,8 @@ export interface KPICard {
   icon: string;
   trend: 'up' | 'down' | 'neutral';
   color: string;
+  /** Hide the percent badge when there is nothing to compare against. */
+  hideChange?: boolean;
 }
 
 export interface ActivityItem {

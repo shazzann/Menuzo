@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import type { AdminDashboardStats } from '@/lib/admin-dashboard';
 
 export const CompanyBillingService = {
   async isAdmin() {
@@ -53,6 +54,11 @@ export const CompanyBillingService = {
       p_shop_id: shopId, p_expires_at: expiresAt, p_reason: reason.trim(),
     });
     if (error) throw error;
+  },
+  async dashboardStats() {
+    const { data, error } = await supabase.rpc('admin_dashboard_stats');
+    if (error) throw error;
+    return data as unknown as AdminDashboardStats;
   },
   async assignUrl(shopId: string, slug: string) {
     const { error } = await supabase.rpc('admin_assign_shop_url', {
