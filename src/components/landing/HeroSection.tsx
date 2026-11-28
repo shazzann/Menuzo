@@ -15,7 +15,6 @@ const INITIAL_DISH_PRICE = 1350;
 const demoCategories: Category[] = [
   { id: 'all', name: 'All' },
   { id: 'kottu', name: 'Kottu' },
-  { id: 'rice', name: 'Portions' },
   { id: 'special', name: 'Our Special' },
 ];
 
@@ -89,30 +88,12 @@ export function HeroSection() {
         isAvailable: true,
         isSpecialOffer: true,
       },
-      {
-        id: 'demo-seafood-rice',
-        name: 'Seafood Fried Rice',
-        description: 'Prawns, cuttlefish, and wok-tossed basmati rice.',
-        image: '/Landing/demo-seafood-rice.webp',
-        originalPrice: 1250,
-        finalPrice: 1250,
-        discount: 0,
-        category: 'rice',
-        tagline: 'Portion options',
-        isAvailable: true,
-        isSpecialOffer: false,
-        pricingType: 'variants',
-        options: [
-          { id: 'reg', name: 'Regular', price: 1250, isAvailable: true },
-          { id: 'lg', name: 'Large', price: 1650, isAvailable: true },
-        ],
-      },
     ],
     [dishPrice, dishAvailable]
   );
 
   const visibleDemoItems = useMemo(() => {
-    if (selectedCategory === 'all') return demoItems.slice(0, 2);
+    if (selectedCategory === 'all') return demoItems;
     return demoItems.filter((item) => item.category === selectedCategory);
   }, [demoItems, selectedCategory]);
 
@@ -259,7 +240,6 @@ export function HeroSection() {
             className="landing-phone-frame overflow-hidden max-w-[460px] mx-auto lg:max-w-none"
             aria-label="Smartphone view of Spice Garden Kitchen live Menuzo menu"
           >
-            {/* Subtle Phone Top Chrome */}
             <div className="px-4 py-2 border-b border-border bg-muted/30 flex items-center justify-between gap-2 text-xs text-muted-foreground">
               <span className="truncate font-medium">menuzo.lk/spicegardenkitchen</span>
               <span className="inline-flex items-center gap-1.5 text-[#18753F] dark:text-emerald-400 font-medium shrink-0">
@@ -268,7 +248,6 @@ export function HeroSection() {
               </span>
             </div>
 
-            {/* Real Shop Header Inside Smartphone */}
             <div className="p-3.5 sm:px-4 border-b border-border flex flex-wrap items-center justify-between gap-3 bg-card">
               <div className="flex items-center gap-3 min-w-0">
                 <img
@@ -302,7 +281,6 @@ export function HeroSection() {
               </a>
             </div>
 
-            {/* Real Menuzo CategoryTabs + FoodCard */}
             <div className="bg-background">
               <CategoryTabs
                 categories={demoCategories}
@@ -319,7 +297,7 @@ export function HeroSection() {
                 ))}
               </div>
               <p className="px-4 py-2 border-t border-border bg-muted/20 text-xs text-muted-foreground text-center">
-                Tap Portions to see size options, or edit Chicken Kottu above
+                Interactive preview: edit Chicken Kottu above to test live guest sync
               </p>
             </div>
           </div>

@@ -1,54 +1,40 @@
-import { FREE_PLAN_LIMITS, PLUS_PLAN_LIMITS } from '@/lib/subscription';
-
 const capabilityGroups = [
   {
     category: 'Menu authoring',
     items: [
       {
-        title: 'Digital dishes & categories',
-        detail: `Organize up to ${FREE_PLAN_LIMITS.items} items across ${FREE_PLAN_LIMITS.categories} categories free, or ${PLUS_PLAN_LIMITS.items} items across ${PLUS_PLAN_LIMITS.categories} categories on Plus.`,
+        title: 'Dishes, photos, and categories',
+        detail: 'Group dishes into clear sections with tasting notes, discount tags, and square dish thumbnails.',
       },
       {
-        title: 'Portion options & discounts',
-        detail: 'Offer fixed dish prices, discount pricing, or size variants (such as Regular and Large) under one listing.',
-      },
-      {
-        title: 'Food imagery & descriptions',
-        detail: 'Upload dish photos and short tasting notes so guests browse with confidence.',
+        title: 'Single and portion pricing',
+        detail: 'Publish fixed prices or multi-size portion variants with individual availability per option.',
       },
     ],
   },
   {
-    category: 'Live menu control',
+    category: 'Live control',
     items: [
       {
-        title: 'Price & detail updates',
-        detail: 'Edit LKR prices anytime without replacing printed QR table cards.',
+        title: 'Real-time stock switches',
+        detail: 'Mark sold-out items unavailable during service while keeping them saved for tomorrow.',
       },
       {
-        title: 'Availability switches',
-        detail: 'Mark sold-out items unavailable while keeping your dishes saved in your menu.',
-      },
-      {
-        title: 'Preset & custom themes',
-        detail: 'Start with 5 curated preset themes on Free, or apply custom brand colors on Plus.',
+        title: 'Preset and brand themes',
+        detail: 'Choose from 5 curated themes on Free, or apply custom restaurant colors on Plus.',
       },
     ],
   },
   {
-    category: 'Sharing & insights',
+    category: 'Sharing and insights',
     items: [
       {
-        title: 'PNG & SVG QR code export',
-        detail: 'Download clean square QR codes free, with brand styling, rounded patterns, and logo support on Plus.',
+        title: 'PNG and SVG QR downloads',
+        detail: 'Export table-ready square codes free, or style rounded brand QR exports with your logo on Plus.',
       },
       {
-        title: 'Shareable & custom URLs',
-        detail: 'Get an instant Menuzo menu link, or claim a custom URL path on Plus.',
-      },
-      {
-        title: 'Menu views & QR scan tracking',
-        detail: 'Basic visit tracking on Free. Plus adds Today, 7-day, and 30-day menu view and QR scan charts.',
+        title: 'Menu views and QR scan charts',
+        detail: 'Track basic views on Free. Plus adds Today, 7-day, and 30-day visit and scan trend charts.',
       },
     ],
   },
@@ -60,17 +46,17 @@ export function FeaturesSection() {
       <div className="landing-container">
         <div className="max-w-2xl mb-10 sm:mb-12">
           <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground mb-3">
-            Everything included to run your digital menu
+            Capabilities built for restaurant menus
           </h2>
           <p className="text-base text-muted-foreground leading-relaxed">
-            Built around digital menu publishing and QR sharing, so owners manage dishes from one dashboard while guests order directly with your staff.
+            Focused tools for managing what guests see in their browser while your staff handles service and orders.
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 border-t border-border pt-8">
           {capabilityGroups.map((group) => (
             <div key={group.category} className="space-y-5">
-              <h3 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              <h3 className="text-sm font-medium text-foreground">
                 {group.category}
               </h3>
               <dl className="space-y-5">

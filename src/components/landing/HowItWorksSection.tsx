@@ -3,23 +3,20 @@ import { Globe, QrCode, UtensilsCrossed } from 'lucide-react';
 const steps = [
   {
     number: '01',
-    title: 'Create your digital menu',
-    description:
-      'Add your restaurant profile, menu categories, dish photos, prices, and portion options from one dashboard.',
+    title: 'Build your restaurant menu',
+    description: 'Add categories, dish photos, LKR prices, and portion sizes in one dashboard.',
     icon: UtensilsCrossed,
   },
   {
     number: '02',
-    title: 'Generate your QR code',
-    description:
-      'Pick a preset or custom theme and download a table-ready QR code as PNG or SVG.',
+    title: 'Export your table QR',
+    description: 'Choose a preset or custom theme and download a print-ready PNG or SVG code.',
     icon: QrCode,
   },
   {
     number: '03',
-    title: 'Let customers scan and browse',
-    description:
-      'Guests scan the QR code using their mobile browser with no app download needed, and order directly with your staff.',
+    title: 'Serve with one permanent link',
+    description: 'Place the code on tables once while menu updates publish online anytime.',
     icon: Globe,
   },
 ];
@@ -33,30 +30,25 @@ export function HowItWorksSection() {
             From setup to restaurant tables in three steps
           </h2>
           <p className="text-base text-muted-foreground">
-            Publish once, print your QR code once, and keep every dish up to date without reprinting.
+            Publish your digital menu once and keep the same QR on every table.
           </p>
         </div>
 
-        <ol className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
+        <ol className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {steps.map((step) => {
             const Icon = step.icon;
             return (
-              <li
-                key={step.number}
-                className="rounded-2xl border border-border bg-card p-6 flex flex-col justify-between"
-              >
-                <div>
-                  <div className="flex items-center justify-between gap-3 mb-4">
-                    <span className="text-xs font-medium text-[#C2530A] dark:text-primary tabular-nums">
-                      Step {step.number}
-                    </span>
-                    <Icon className="w-4 h-4 text-muted-foreground" strokeWidth={1.5} aria-hidden="true" />
-                  </div>
-                  <h3 className="text-lg font-medium text-foreground mb-2">{step.title}</h3>
-                  <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
-                    {step.description}
-                  </p>
+              <li key={step.number} className="pt-5 border-t border-border">
+                <div className="flex items-center justify-between gap-3 mb-3">
+                  <span className="text-xs font-medium text-muted-foreground tabular-nums">
+                    {step.number}
+                  </span>
+                  <Icon className="w-4 h-4 text-muted-foreground" strokeWidth={1.5} aria-hidden="true" />
                 </div>
+                <h3 className="text-lg font-medium text-foreground mb-2">{step.title}</h3>
+                <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
+                  {step.description}
+                </p>
               </li>
             );
           })}

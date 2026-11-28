@@ -226,10 +226,6 @@ export function PricingSection() {
                   )}
                 </div>
 
-                <p className="text-xs font-medium text-muted-foreground mb-3 tabular-nums">
-                  {plan.limitsSummary}
-                </p>
-
                 <ul className="space-y-2.5 mb-7 flex-1">
                   {plan.features.map((feat) => (
                     <li key={feat} className="flex items-start gap-2.5 text-sm text-foreground">

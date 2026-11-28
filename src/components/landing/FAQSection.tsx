@@ -5,44 +5,32 @@ import { FinalCTASection } from '@/components/landing/FinalCTASection';
 
 const faqs = [
   {
-    q: 'What is Menuzo?',
-    a: 'Menuzo is a digital menu management platform for cafés, restaurants, and food businesses. Owners create and update dishes, prices, and availability in one place and share the menu through a QR code.',
+    q: 'Does Menuzo handle customer ordering or payments?',
+    a: 'No. Menuzo provides fast digital menu browsing in any phone browser while customers continue placing orders directly with your restaurant staff.',
   },
   {
-    q: 'How does the QR menu work?',
-    a: 'Once you publish dishes in Menuzo, you download your restaurant’s QR code as a PNG or SVG file and place it on tables. Scanning the QR code opens your live mobile menu in any browser.',
+    q: 'Do printed QR codes need replacing when prices or dishes change?',
+    a: 'No. Your printed PNG or SVG QR code keeps the same link while price adjustments and Sold out toggles update immediately online.',
   },
   {
-    q: 'Do customers need an app?',
-    a: 'No. Customers open the digital menu directly in their phone browser. Menuzo focuses on clear menu browsing while customers continue ordering directly with your staff.',
+    q: 'Are multiple categories and portion sizes supported?',
+    a: `Yes. Free supports up to ${FREE_PLAN_LIMITS.categories} categories and Plus supports ${PLUS_PLAN_LIMITS.categories}, with optional Regular/Large portion pricing under individual dishes.`,
   },
   {
-    q: 'Can I update prices after publishing?',
-    a: 'Yes. You can change dish names, descriptions, discounts, and LKR prices at any time, and your printed QR code stays the same.',
+    q: 'What happens if my menu exceeds Free plan limits?',
+    a: `The Free plan includes ${FREE_PLAN_LIMITS.items} items and ${FREE_PLAN_LIMITS.categories} categories with no card required. After a Plus subscription expires, everything stays live for a ${PLUS_GRACE_DAYS}-day grace period before items over the Free allowance are hidden until you renew.`,
   },
   {
-    q: 'Can I mark a dish as sold out?',
-    a: 'Yes. Toggle an item’s availability switch in your dashboard to mark it unavailable immediately without removing it from your saved menu.',
+    q: 'How do custom themes, QR styling, and custom URLs work?',
+    a: 'Free plans pick from 5 preset themes with a standard square QR code. Upgrading to Plus adds custom brand colors, rounded QR patterns with your logo, and a custom URL.',
   },
   {
-    q: 'Can I manage multiple categories?',
-    a: `Yes. The Free plan supports up to ${FREE_PLAN_LIMITS.categories} categories, and Plus expands this to ${PLUS_PLAN_LIMITS.categories} categories that you can reorder anytime.`,
+    q: 'Can I track menu visits and QR scans?',
+    a: 'Yes. Free accounts receive basic view counts, and Plus adds 7-day and 30-day charts separating total menu views from QR scans.',
   },
   {
-    q: 'Are different portion sizes supported?',
-    a: 'Yes. Dishes can use either a single price or multiple portion variants (such as Regular and Large) with separate prices and availability per option.',
-  },
-  {
-    q: 'What is included in the Free plan?',
-    a: `The Free plan includes up to ${FREE_PLAN_LIMITS.items} food items, ${FREE_PLAN_LIMITS.categories} menu categories, standard QR download, a shareable menu URL, curated preset themes, and basic view counts—with no card required. If you exceed Free limits after a paid plan expires, extra dishes stay saved and are hidden after a ${PLUS_GRACE_DAYS}-day grace period.`,
-  },
-  {
-    q: 'Can I upgrade my subscription?',
-    a: 'Yes. You can start free and upgrade to Monthly or Annual Menuzo Plus from your dashboard whenever your menu grows beyond Free limits.',
-  },
-  {
-    q: 'How can I contact Menuzo or discuss a partnership?',
-    a: 'Use Contact sales in Pricing or Become a partner above to message our team via WhatsApp or email (menuzoapp@gmail.com).',
+    q: 'How can agencies or hospitality consultants partner with Menuzo?',
+    a: 'Select Become a partner above or Contact sales in Pricing to message our team directly via WhatsApp or email (menuzoapp@gmail.com).',
   },
 ];
 

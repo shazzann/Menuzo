@@ -1,7 +1,6 @@
-import { ExternalLink, Globe, QrCode, RefreshCw } from 'lucide-react';
+import { Banknote, ExternalLink, UtensilsCrossed } from 'lucide-react';
 import { LANDING_PROOF_ITEMS } from '@/data/landingProof';
 import { Card } from '@/components/ui/card';
-import { FREE_PLAN_LIMITS } from '@/lib/subscription';
 import { trackEvent } from '@/lib/analytics';
 
 const LIVE_MENU_URL = 'https://menuzo.lk/spicegardenkitchen';
@@ -73,32 +72,16 @@ export function ProofSection() {
       <div className="landing-container flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
         <div className="max-w-md">
           <h2 className="text-base font-medium text-foreground mb-1">
-            Real product, verifiable in any browser
+            Inspect the live product before signing up
           </h2>
           <p className="text-sm text-muted-foreground">
-            Inspect the live public Spice Garden Kitchen menu directly in your own browser.
+            Open Spice Garden Kitchen’s public menu in your browser to see what guests receive.
           </p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 flex-1 lg:max-w-2xl">
           <div className="flex items-start gap-2.5">
-            <QrCode className="w-4 h-4 mt-0.5 text-muted-foreground shrink-0" strokeWidth={1.5} aria-hidden="true" />
-            <div>
-              <p className="text-sm font-medium text-foreground">Standard QR included</p>
-              <p className="text-xs text-muted-foreground">Up to {FREE_PLAN_LIMITS.items} items on Free</p>
-            </div>
-          </div>
-
-          <div className="flex items-start gap-2.5">
-            <Globe className="w-4 h-4 mt-0.5 text-muted-foreground shrink-0" strokeWidth={1.5} aria-hidden="true" />
-            <div>
-              <p className="text-sm font-medium text-foreground">Browser access only</p>
-              <p className="text-xs text-muted-foreground">No guest download required</p>
-            </div>
-          </div>
-
-          <div className="flex items-start gap-2.5">
-            <RefreshCw className="w-4 h-4 mt-0.5 text-muted-foreground shrink-0" strokeWidth={1.5} aria-hidden="true" />
+            <ExternalLink className="w-4 h-4 mt-0.5 text-muted-foreground shrink-0" strokeWidth={1.5} aria-hidden="true" />
             <div>
               <a
                 href={LIVE_MENU_URL}
@@ -108,9 +91,24 @@ export function ProofSection() {
                 className="inline-flex items-center gap-1 text-sm font-medium text-foreground hover:text-primary transition-colors min-h-[44px] sm:min-h-0"
               >
                 Spice Garden Kitchen
-                <ExternalLink className="w-3.5 h-3.5 text-muted-foreground" strokeWidth={1.5} aria-hidden="true" />
               </a>
-              <p className="text-xs text-muted-foreground">Live Menuzo customer menu</p>
+              <p className="text-xs text-muted-foreground">Live Menuzo public menu</p>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-2.5">
+            <UtensilsCrossed className="w-4 h-4 mt-0.5 text-muted-foreground shrink-0" strokeWidth={1.5} aria-hidden="true" />
+            <div>
+              <p className="text-sm font-medium text-foreground">Direct table ordering</p>
+              <p className="text-xs text-muted-foreground">Guests browse and order with staff</p>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-2.5">
+            <Banknote className="w-4 h-4 mt-0.5 text-muted-foreground shrink-0" strokeWidth={1.5} aria-hidden="true" />
+            <div>
+              <p className="text-sm font-medium text-foreground">Transparent LKR plans</p>
+              <p className="text-xs text-muted-foreground">No per-order commissions</p>
             </div>
           </div>
         </div>
