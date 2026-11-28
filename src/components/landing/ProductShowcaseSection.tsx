@@ -218,21 +218,21 @@ function QRExportBeat() {
             }`}
           >
             <img
-              src="/Landing/spice-garden-qr.svg"
-              alt="Menuzo QR code for Spice Garden Kitchen"
+              src={
+                tier === 'plus'
+                  ? '/Landing/spice-garden-kitchen-qr-code.png'
+                  : '/Landing/spice-garden-qr.svg'
+              }
+              alt={
+                tier === 'plus'
+                  ? 'Branded Menuzo Plus QR code with Spice Garden Kitchen logo'
+                  : 'Menuzo Free QR code for Spice Garden Kitchen'
+              }
               width={160}
               height={160}
               loading="lazy"
-              className={`w-40 h-40 block transition-opacity ${tier === 'free' ? '' : 'opacity-90'}`}
+              className="w-40 h-40 block bg-white object-contain"
             />
-            {/* Plus logo overlay */}
-            {tier === 'plus' && (
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <div className="w-9 h-9 rounded-lg bg-[#C2530A] dark:bg-primary flex items-center justify-center shadow-md">
-                  <span className="text-white text-[10px] font-bold leading-none">MZ</span>
-                </div>
-              </div>
-            )}
           </div>
 
           {/* URL pill */}

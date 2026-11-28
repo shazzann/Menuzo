@@ -251,11 +251,11 @@ export function HeroSection() {
             <div className="p-3.5 sm:px-4 border-b border-border flex flex-wrap items-center justify-between gap-3 bg-card">
               <div className="flex items-center gap-3 min-w-0">
                 <img
-                  src="/Landing/spice-garden-qr.svg"
-                  alt="QR code for Spice Garden Kitchen live Menuzo menu"
+                  src="/Landing/spice-garden-kitchen-logo.webp"
+                  alt="Spice Garden Kitchen logo"
                   width={44}
                   height={44}
-                  className="w-11 h-11 rounded-lg border border-border bg-white p-0.5 shrink-0"
+                  className="w-11 h-11 rounded-lg border border-border bg-white object-contain p-0.5 shrink-0"
                 />
                 <div className="min-w-0">
                   <h3 className="text-sm font-medium text-foreground truncate">

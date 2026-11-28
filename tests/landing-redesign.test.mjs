@@ -139,7 +139,7 @@ test('landing page keeps V2 9-section main structure, zero framer-motion, zero i
   assert.ok(heroSource.includes('Open live menu'));
   assert.ok(heroSource.includes('FoodCard'));
   assert.ok(heroSource.includes('CategoryTabs'));
-  assert.ok(heroSource.includes('/Landing/spice-garden-qr.svg'));
+  assert.ok(heroSource.includes('/Landing/spice-garden-kitchen-logo.webp'));
 
   const finalCtaSource = readFileSync(new URL('../src/components/landing/FinalCTASection.tsx', import.meta.url), 'utf8');
   assert.ok(finalCtaSource.includes('Explore Menuzo'));
