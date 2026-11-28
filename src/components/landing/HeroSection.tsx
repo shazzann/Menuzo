@@ -124,7 +124,7 @@ export function HeroSection() {
     <section id="home" className="pt-10 pb-16 sm:pt-16 sm:pb-24 border-b border-border bg-background">
       <div className="landing-container grid grid-cols-1 lg:grid-cols-[0.95fr_1.05fr] gap-10 lg:gap-12 items-center">
         {/* Left: Core Product Message & Conversion CTAs */}
-        <div className="max-w-xl">
+        <div className="max-w-xl landing-hero-enter">
           <p className="text-sm font-medium text-muted-foreground mb-3">
             Your menu, online
           </p>
@@ -141,7 +141,7 @@ export function HeroSection() {
             <Button
               size="lg"
               onClick={handlePrimaryCTA}
-              className="h-12 px-6 rounded-xl bg-primary text-[#12261F] hover:bg-primary/90 font-medium text-base w-full sm:w-auto transition-colors"
+              className="h-12 px-6 rounded-xl bg-primary text-[#12261F] hover:bg-primary/90 font-medium text-base w-full sm:w-auto transition-[color,background-color,transform] active:scale-[0.98]"
             >
               Build my free menu
               <ArrowRight className="w-4 h-4" strokeWidth={1.5} aria-hidden="true" />
@@ -152,7 +152,7 @@ export function HeroSection() {
                 variant="outline"
                 size="lg"
                 asChild
-                className="h-12 px-5 rounded-xl font-medium text-base w-full sm:w-auto transition-colors"
+                className="h-12 px-5 rounded-xl font-medium text-base w-full sm:w-auto transition-[color,background-color,transform] active:scale-[0.98]"
               >
                 <a
                   href={whatsappUrl}
@@ -169,7 +169,7 @@ export function HeroSection() {
                 variant="outline"
                 size="lg"
                 onClick={handleContactFallback}
-                className="h-12 px-5 rounded-xl font-medium text-base w-full sm:w-auto transition-colors"
+                className="h-12 px-5 rounded-xl font-medium text-base w-full sm:w-auto transition-[color,background-color,transform] active:scale-[0.98]"
               >
                 <MessageCircle className="w-4 h-4 text-muted-foreground" strokeWidth={1.5} aria-hidden="true" />
                 Contact us
@@ -184,7 +184,7 @@ export function HeroSection() {
 
         {/* Right: Calm, Unified Live Product Example Using Menuzo UI Components */}
         <Card
-          className="landing-demo-preview rounded-2xl border border-border bg-card shadow-xs overflow-hidden p-0 gap-0"
+          className="landing-demo-preview landing-hero-enter-delayed rounded-2xl border border-border bg-card shadow-xs overflow-hidden p-0 gap-0"
           aria-label="Live Spice Garden Kitchen menu example"
         >
           {/* Header with Real Restaurant QR & Live Menu Link */}
@@ -230,9 +230,9 @@ export function HeroSection() {
           {/* Owner Quick-Sync Control Strip (Single Hairline Band) */}
           <div className="px-4 py-3 sm:px-5 bg-muted/30 border-b border-border space-y-2.5">
             <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2 text-xs">
+              <div className="flex items-baseline gap-2.5 text-xs">
                 <span className="font-medium text-foreground">Owner control: Chicken Kottu</span>
-                <span className="text-muted-foreground tabular-nums">· {formattedOwnerPrice}</span>
+                <span className="text-muted-foreground tabular-nums">{formattedOwnerPrice}</span>
               </div>
               <button
                 type="button"
@@ -313,7 +313,7 @@ export function HeroSection() {
               ))}
             </div>
             <p className="px-4 py-2.5 border-t border-border bg-muted/20 text-xs text-muted-foreground text-center">
-              Guest browser preview · Customers browse here and order with staff
+              Guest browser preview — customers browse on their phone and order with staff
             </p>
           </div>
         </Card>

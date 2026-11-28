@@ -77,17 +77,17 @@ export function Navbar() {
           aria-label="Menuzo home"
         >
           <img
-            src="/logo/Logo main4tight.png"
+            src="/logo/logo-light-sm.webp"
             alt="Menuzo"
-            width={120}
-            height={32}
+            width={240}
+            height={120}
             className="h-7 w-auto dark:hidden"
           />
           <img
-            src="/logo/Logo main4dark.png"
+            src="/logo/logo-dark-sm.webp"
             alt="Menuzo"
-            width={120}
-            height={32}
+            width={240}
+            height={120}
             className="h-7 w-auto hidden dark:block"
           />
         </a>

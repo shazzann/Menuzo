@@ -26,9 +26,6 @@ export function HowItWorksSection() {
     <section id="how-it-works" className="landing-section bg-background border-b border-border">
       <div className="landing-container">
         <div className="max-w-2xl mb-10 sm:mb-12">
-          <p className="text-sm font-medium text-muted-foreground mb-2">
-            Four simple steps
-          </p>
           <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground">
             Your digital menu, ready in a few simple steps
           </h2>
@@ -37,7 +34,7 @@ export function HowItWorksSection() {
         <ol className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           {steps.map((step) => (
             <li key={step.number} className="pt-4 border-t border-border">
-              <span className="block text-xs font-mono text-primary tabular-nums mb-3">
+              <span className="block text-xs font-medium text-primary tabular-nums mb-3">
                 {step.number}
               </span>
               <h3 className="text-base sm:text-lg font-medium text-foreground mb-1.5">

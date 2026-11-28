@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ArrowRight, Check, Minus, RefreshCw } from 'lucide-react';
+import { Check, Minus, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useApp } from '@/store';
@@ -114,9 +114,6 @@ export function PricingSection() {
       <div className="landing-container">
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-10 sm:mb-12">
           <div className="max-w-xl">
-            <p className="text-sm font-medium text-muted-foreground mb-2">
-              Simple pricing
-            </p>
             <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground mb-2">
               A plan that fits your restaurant
             </h2>
@@ -248,7 +245,7 @@ export function PricingSection() {
                 </ul>
 
                 {isBusiness && businessWhatsappUrl ? (
-                  <Button variant="outline" size="lg" asChild className="w-full h-11 rounded-xl font-medium transition-colors">
+                  <Button variant="outline" size="lg" asChild className="w-full h-11 rounded-xl font-medium transition-[color,background-color,transform] active:scale-[0.98]">
                     <a
                       href={businessWhatsappUrl}
                       target="_blank"
@@ -256,7 +253,6 @@ export function PricingSection() {
                       onClick={handleBusinessContact}
                     >
                       {plan.ctaLabel}
-                      <ArrowRight className="w-4 h-4" strokeWidth={1.5} aria-hidden="true" />
                     </a>
                   </Button>
                 ) : (
@@ -270,12 +266,11 @@ export function PricingSection() {
                           ? handlePlusClick
                           : handleBusinessContact
                     }
-                    className={`w-full h-11 rounded-xl font-medium transition-colors ${
+                    className={`w-full h-11 rounded-xl font-medium transition-[color,background-color,transform] active:scale-[0.98] ${
                       isPlus ? 'bg-primary text-[#12261F] hover:bg-primary/90' : ''
                     }`}
                   >
                     {plan.ctaLabel}
-                    <ArrowRight className="w-4 h-4" strokeWidth={1.5} aria-hidden="true" />
                   </Button>
                 )}
               </Card>
@@ -292,20 +287,20 @@ export function PricingSection() {
             </p>
           </div>
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[560px] text-left border-collapse text-sm">
+            <table className="w-full min-w-[440px] text-left border-collapse text-sm">
               <caption className="sr-only">Comparison of Menuzo Free, Plus, and Business plans</caption>
               <thead>
                 <tr className="border-b border-border bg-muted/40">
-                  <th scope="col" className="py-3 px-4 font-medium text-foreground">
+                  <th scope="col" className="py-3 px-3 sm:px-4 font-medium text-foreground">
                     Capability
                   </th>
-                  <th scope="col" className="py-3 px-4 font-medium text-center text-foreground">
+                  <th scope="col" className="py-3 px-3 sm:px-4 font-medium text-center text-foreground">
                     Free
                   </th>
-                  <th scope="col" className="py-3 px-4 font-medium text-center text-primary">
+                  <th scope="col" className="py-3 px-3 sm:px-4 font-medium text-center text-primary">
                     Plus
                   </th>
-                  <th scope="col" className="py-3 px-4 font-medium text-center text-foreground">
+                  <th scope="col" className="py-3 px-3 sm:px-4 font-medium text-center text-foreground">
                     Business
                   </th>
                 </tr>
@@ -313,13 +308,13 @@ export function PricingSection() {
               <tbody className="divide-y divide-border">
                 {model.comparisonRows.map((row) => (
                   <tr key={row.feature} className="hover:bg-muted/20 transition-colors">
-                    <th scope="row" className="py-3 px-4 font-normal text-foreground">
+                    <th scope="row" className="py-3 px-3 sm:px-4 font-normal text-foreground">
                       {row.feature}
                     </th>
                     {(['free', 'plus', 'business'] as const).map((tier) => {
                       const value = row[tier];
                       return (
-                        <td key={tier} className="py-3 px-4 text-center text-muted-foreground tabular-nums">
+                        <td key={tier} className="py-3 px-3 sm:px-4 text-center text-muted-foreground tabular-nums">
                           {typeof value === 'boolean' ? (
                             value ? (
                               <span className="inline-flex items-center justify-center">

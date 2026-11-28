@@ -36,7 +36,7 @@
   }
 }
 
-/* Keep the live hero FoodCard preview calm without hover scaling */
+/* Keep the live hero FoodCard preview calm without hover scaling or backdrop blur */
 .landing-demo-preview [data-slot='card'],
 .landing-demo-preview .food-card,
 .landing-demo-preview .rounded-2xl {
@@ -45,8 +45,32 @@
   transition-timing-function: var(--landing-ease);
 }
 
+.landing-demo-preview * {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
 .landing-demo-preview .rounded-2xl:hover {
   transform: none;
+}
+
+@keyframes landingHeroEnter {
+  from {
+    opacity: 0.01;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.landing-hero-enter {
+  animation: landingHeroEnter 420ms var(--landing-ease) both;
+}
+
+.landing-hero-enter-delayed {
+  animation: landingHeroEnter 460ms var(--landing-ease) 70ms both;
 }
 
 @media (prefers-reduced-motion: reduce) {

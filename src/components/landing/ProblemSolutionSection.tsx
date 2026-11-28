@@ -2,19 +2,16 @@ import { AlertCircle, BookOpen, Printer } from 'lucide-react';
 
 const problems = [
   {
-    number: '01',
     title: 'Constant reprinting',
     description: 'A simple price change means editing and printing menus again.',
     icon: Printer,
   },
   {
-    number: '02',
     title: 'Sold-out confusion',
     description: 'Customers may select dishes that are no longer available.',
     icon: AlertCircle,
   },
   {
-    number: '03',
     title: 'Limited menu copies',
     description: 'Customers may have to wait for a physical menu to become available.',
     icon: BookOpen,
@@ -39,12 +36,7 @@ export function ProblemSolutionSection() {
             const Icon = item.icon;
             return (
               <div key={item.title} className="py-6 md:py-8 md:px-6 first:md:pl-0 last:md:pr-0">
-                <div className="flex items-center justify-between gap-4 mb-4">
-                  <span className="text-xs font-mono text-muted-foreground tabular-nums">
-                    {item.number}
-                  </span>
-                  <Icon className="w-5 h-5 text-muted-foreground" strokeWidth={1.5} aria-hidden="true" />
-                </div>
+                <Icon className="w-5 h-5 text-muted-foreground mb-4" strokeWidth={1.5} aria-hidden="true" />
                 <h3 className="text-lg font-medium text-foreground mb-2">{item.title}</h3>
                 <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
                   {item.description}

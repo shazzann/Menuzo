@@ -36,18 +36,18 @@ export function Footer() {
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-8 pb-8 border-b border-border">
           <div className="max-w-sm">
             <img
-              src="/logo/Logo main4tight.png"
+              src="/logo/logo-light-sm.webp"
               alt="Menuzo"
-              width={120}
-              height={32}
+              width={240}
+              height={120}
               className="h-7 w-auto mb-3 dark:hidden"
               loading="lazy"
             />
             <img
-              src="/logo/Logo main4dark.png"
+              src="/logo/logo-dark-sm.webp"
               alt="Menuzo"
-              width={120}
-              height={32}
+              width={240}
+              height={120}
               className="h-7 w-auto mb-3 hidden dark:block"
               loading="lazy"
             />

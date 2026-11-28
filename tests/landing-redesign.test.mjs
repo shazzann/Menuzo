@@ -56,9 +56,9 @@ test('landing pricing adapter produces unified Free, Plus, and Business plans fr
   const business = monthlyModel.plans[2];
 
   assert.equal(free.priceText, 'LKR 0');
-  assert.match(free.limitsSummary, /10 dishes · 2 categories/);
+  assert.match(free.limitsSummary, /10 dishes, 2 categories/);
   assert.equal(plus.priceText, 'LKR 1,500');
-  assert.match(plus.limitsSummary, /100 dishes · 20 categories/);
+  assert.match(plus.limitsSummary, /100 dishes, 20 categories/);
   assert.equal(business.priceText, 'Custom');
   assert.equal(business.ctaLabel, 'Talk to us');
 
@@ -76,7 +76,7 @@ test('landing pricing adapter computes annual monthly equivalent and savings onl
   const plus = yearlyModel.plans.find((p) => p.id === 'plus');
   assert.equal(plus?.priceText, 'LKR 1,250');
   assert.match(plus?.billingNote || '', /Billed LKR 15,000 per year/);
-  assert.match(plus?.billingNote || '', /Save LKR 3,000 \(16\.7%\)/);
+  assert.match(plus?.billingNote || '', /save LKR 3,000 \(16\.7%\)/);
   assert.equal(yearlyModel.hasConfirmedAnnualSavings, true);
 
   const failedModel = landingPricing.buildLandingPricingModel([], 'yearly', 'error');

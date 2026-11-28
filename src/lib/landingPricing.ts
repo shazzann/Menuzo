@@ -91,7 +91,7 @@ export function buildLandingPricingModel(
       plusPriceText = formatLkr(monthlyEquivalent, currency);
       plusPeriodText = '/month';
       plusBillingNote = hasConfirmedAnnualSavings
-        ? `Billed ${formatLkr(yearlyAmount, currency)} per year · Save ${formatLkr(annualSavings, currency)} (${annualSavingsPercent}%)`
+        ? `Billed ${formatLkr(yearlyAmount, currency)} per year — save ${formatLkr(annualSavings, currency)} (${annualSavingsPercent}%)`
         : `Billed ${formatLkr(yearlyAmount, currency)} per ${yearlyMonths} months.`;
     } else {
       pricingUnavailable = true;
@@ -105,7 +105,7 @@ export function buildLandingPricingModel(
   } else if (hasConfirmedMonthly) {
     plusPriceText = formatLkr(monthlyAmount, currency);
     plusPeriodText = '/month';
-    plusBillingNote = `Monthly billing · ${formatLkr(monthlyAmount, currency)} per month.`;
+    plusBillingNote = `Monthly billing — ${formatLkr(monthlyAmount, currency)} per month.`;
   } else {
     pricingUnavailable = true;
     plusPriceText = 'Unavailable';
@@ -150,7 +150,7 @@ export function buildLandingPricingModel(
       priceText: formatLkr(0, currency),
       periodText: 'forever',
       billingNote: 'No card required.',
-      limitsSummary: `${FREE_PLAN_LIMITS.items} dishes · ${FREE_PLAN_LIMITS.categories} categories`,
+      limitsSummary: `${FREE_PLAN_LIMITS.items} dishes, ${FREE_PLAN_LIMITS.categories} categories`,
       features: freeFeatures,
       ctaLabel: 'Build my free menu',
     },
@@ -166,7 +166,7 @@ export function buildLandingPricingModel(
         billingCycle === 'yearly' && hasConfirmedAnnualSavings
           ? `Save ${annualSavingsPercent}%`
           : 'Most popular',
-      limitsSummary: `${PLUS_PLAN_LIMITS.items} dishes · ${PLUS_PLAN_LIMITS.categories} categories`,
+      limitsSummary: `${PLUS_PLAN_LIMITS.items} dishes, ${PLUS_PLAN_LIMITS.categories} categories`,
       features: plusFeatures,
       ctaLabel: 'Choose Plus',
     },
