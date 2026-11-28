@@ -32,6 +32,9 @@ export type PaymentRequest = {
   requested_slug: string | null;
   customer_note: string | null;
   plan_slug?: string | null;
+  promo_code?: string | null;
+  promo_discount_percent?: number | null;
+  original_amount?: number | null;
   status: 'pending' | 'approved' | 'rejected';
   rejection_reason: string | null;
   created_at: string;
@@ -56,6 +59,9 @@ export interface SubmitPaymentRequestInput {
   requestedSlug?: string | null;
   customerNote?: string;
   planSlug?: string | null;
+  // With a promo code, the request records the discounted amount the owner transfers.
+  promoCode?: string | null;
+  expectedDiscountedAmount?: number | null;
 }
 
 export interface SubscriptionPlan {

@@ -150,10 +150,11 @@ export function CompanyBilling({ section }: { section: CompanyBillingSection }) 
       <DialogHeader><DialogTitle>{selected?.status === 'pending' ? 'Review payment' : 'Payment details'}</DialogTitle><DialogDescription>{selected?.shop_name} · {selected?.owner_email}</DialogDescription></DialogHeader>
       {selected && <form className="space-y-4" onSubmit={submitReview}>
         <dl className="grid grid-cols-2 gap-3 rounded-xl bg-muted/40 p-4 text-sm">
-          <div><dt className="text-muted-foreground">Amount</dt><dd>{formatPaymentAmount(selected.amount, selected.currency)}</dd></div>
+          <div><dt className="text-muted-foreground">Amount</dt><dd>{formatPaymentAmount(selected.amount, selected.currency)}{selected.promo_code && selected.original_amount != null && <span className="ml-2 text-xs text-muted-foreground line-through">{formatPaymentAmount(selected.original_amount, selected.currency)}</span>}</dd></div>
           <div><dt className="text-muted-foreground">Purchased period</dt><dd>{selected.period_label} ({selected.months} months)</dd></div>
           <div><dt className="text-muted-foreground">Payer</dt><dd>{selected.payer_name}</dd></div>
           <div><dt className="text-muted-foreground">Transfer date</dt><dd>{selected.transferred_on}</dd></div>
+          {selected.promo_code && <div className="col-span-2"><dt className="text-muted-foreground">Promo code</dt><dd><span className="font-mono">{selected.promo_code}</span> ({Number(selected.promo_discount_percent)}% off). The amount above is what the customer should have transferred.</dd></div>}
           <div className="col-span-2"><dt className="text-muted-foreground">Transfer reference</dt><dd className="break-all">{selected.transfer_reference}</dd></div>
           <div className="col-span-2"><dt className="text-muted-foreground">Request ID</dt><dd className="break-all">{selected.id}</dd></div>
           <div><dt className="text-muted-foreground">Submitted</dt><dd>{date(selected.created_at)}</dd></div>

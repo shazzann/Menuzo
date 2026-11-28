@@ -437,6 +437,9 @@ function subscriptionPageHarness(options = {}) {
       },
     } },
     '@/services/subscription.service': { SubscriptionService: { getSubscription: async () => options.subscription || subscription.freeSubscription() } },
+    '@/services/promo-code.service': { PromoCodeService: {
+      preview: async () => { throw new Error('Checkout tests do not apply promo codes'); },
+    } },
     '@/lib/subscription': subscription,
     '@/lib/billing': billing,
     '@/components/subscription/SubscriptionPlanComparison': comparison,

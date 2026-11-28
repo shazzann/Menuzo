@@ -1,5 +1,5 @@
 // Menuzo plans a promo code can discount. 'pro' is the legacy name of Plus: the database
-// stores it as 'plus', and a 'pro' subscriber redeems Plus codes.
+// stores it as 'plus', and a 'pro' subscriber can use Plus codes.
 export type PromoPlan = 'plus' | 'enterprise';
 
 export const PROMO_PLANS: readonly PromoPlan[] = ['plus', 'enterprise'];
@@ -45,14 +45,17 @@ export type PromoCodeUsage = {
   subscription_plan: string | null;
   subscription_status: string | null;
   subscription_expires_at: string | null;
+  payment_request_id: string | null;
+  payment_status: 'pending' | 'approved' | 'rejected' | null;
+  amount: number | null;
+  original_amount: number | null;
+  currency: string | null;
 };
 
-export type PromoRedemption = {
-  redemption_id: string;
+export type PromoPreview = {
   code: string;
-  plan: PromoPlan;
   discount_percent: number;
-  redeemed_at: string;
+  valid_until: string;
 };
 
 export type PromoCodeStatus = 'active' | 'inactive' | 'scheduled' | 'expired' | 'exhausted';

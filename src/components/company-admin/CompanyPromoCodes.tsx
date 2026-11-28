@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { PromoCodeService, promoCodeError, promoCodeStatus } from '@/services/promo-code.service';
-import { endOfSriLankaDay, sriLankaDateInput, startOfSriLankaDay } from '@/lib/billing';
+import { endOfSriLankaDay, formatPaymentAmount, sriLankaDateInput, startOfSriLankaDay } from '@/lib/billing';
 import { PROMO_PLANS, type AdminPromoCode, type PromoCodeStatus, type PromoCodeUsage, type PromoPlan } from '@/types/promo-codes';
 
 const inputClass = 'w-full rounded-xl border border-border bg-background px-3 py-2 text-sm';
@@ -259,7 +259,7 @@ export function CompanyPromoCodes() {
             onChange={e => setForm(f => ({ ...f, validUntil: e.target.value }))} /></label>
         </div>
         <p className="text-xs text-muted-foreground">Valid from 12:00 AM on the start date to 11:59 PM on the end date (Sri Lanka time).</p>
-        <label className="flex items-center justify-between rounded-xl border border-border p-3 text-sm"><span><span className="font-medium">Active</span><span className="block text-xs text-muted-foreground">Inactive codes cannot be redeemed. Shops that already used it keep their discount.</span></span>
+        <label className="flex items-center justify-between rounded-xl border border-border p-3 text-sm"><span><span className="font-medium">Active</span><span className="block text-xs text-muted-foreground">Inactive codes cannot be used at checkout. Shops that already used it keep their discount.</span></span>
           <Switch checked={form.isActive} disabled={busy} onCheckedChange={checked => setForm(f => ({ ...f, isActive: checked }))} /></label>
         {formError && <p role="alert" className="text-sm text-destructive">{formError}</p>}
         <Button type="submit" className="w-full" disabled={busy}>{busy ? 'Saving…' : editing === 'new' ? 'Create promo code' : 'Save changes'}</Button>
@@ -282,12 +282,13 @@ export function CompanyPromoCodes() {
         : usageLoading ? <p role="status" className="p-6 text-center text-sm text-muted-foreground">Loading shops…</p>
         : usage.length === 0 ? <p className="rounded-xl border border-dashed p-8 text-center text-sm text-muted-foreground">No shop has used this code yet.</p>
         : <div className="overflow-x-auto rounded-xl border border-border"><table className="w-full text-left text-sm">
-          <thead className="bg-muted/40 text-muted-foreground"><tr><th className="p-3">Shop / owner</th><th className="p-3">Plan</th><th className="p-3">Discount</th><th className="p-3">Redeemed</th><th className="p-3">Current subscription</th></tr></thead>
+          <thead className="bg-muted/40 text-muted-foreground"><tr><th className="p-3">Shop / owner</th><th className="p-3">Plan</th><th className="p-3">Discount</th><th className="p-3">Redeemed</th><th className="p-3">Payment</th><th className="p-3">Current subscription</th></tr></thead>
           <tbody>{usage.map(row => <tr key={row.redemption_id} className="border-t border-border">
             <td className="p-3"><p className="font-medium">{row.shop_name || 'Unnamed shop'}</p><p className="text-xs text-muted-foreground">{row.owner_email || '—'}</p></td>
             <td className="p-3">{planLabel[row.plan]}</td>
             <td className="p-3 tabular-nums">{Number(row.discount_percent)}%</td>
             <td className="p-3 whitespace-nowrap text-xs">{dateTime(row.redeemed_at)}</td>
+            <td className="p-3 text-xs">{row.payment_status ? <><span className={`inline-flex rounded-full px-2 py-0.5 font-medium capitalize ${row.payment_status === 'approved' ? 'bg-emerald-500/10 text-emerald-600' : 'bg-amber-500/10 text-amber-600'}`}>{row.payment_status}</span>{row.amount != null && row.currency && <p className="mt-1 whitespace-nowrap">{formatPaymentAmount(row.amount, row.currency)}{row.original_amount != null && <span className="ml-1 text-muted-foreground line-through">{formatPaymentAmount(row.original_amount, row.currency)}</span>}</p>}</> : '—'}</td>
             <td className="p-3 text-xs"><p className="capitalize">{row.subscription_plan || 'free'} · {row.subscription_status || '—'}</p>{row.subscription_expires_at && <p className="text-muted-foreground">until {dateTime(row.subscription_expires_at)}</p>}</td>
           </tr>)}</tbody>
         </table></div>}

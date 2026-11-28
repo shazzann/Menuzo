@@ -1,6 +1,6 @@
 import type { BankTransferSettings, BillingPeriod, PaymentRequest, ShopCustomUrl } from './billing';
 import type { AdminPaymentRequest, AdminShopSubscription, BillingPage, ShopBillingDetails } from './company-billing';
-import type { AdminPromoCode, PromoCode, PromoCodeUsage, PromoPlan, PromoRedemption } from './promo-codes';
+import type { AdminPromoCode, PromoCode, PromoCodeUsage, PromoPlan, PromoPreview } from './promo-codes';
 
 export type Json =
   | string
@@ -356,9 +356,27 @@ export interface Database {
     Functions: {
       admin_list_promo_codes: { Args: Record<string, never>; Returns: AdminPromoCode[] }
       admin_list_promo_code_usage: { Args: { p_promo_code_id: string }; Returns: PromoCodeUsage[] }
-      redeem_promo_code: {
+      preview_promo_code: {
         Args: { p_code: string; p_shop_id: string; p_plan: PromoPlan | 'pro' }
-        Returns: PromoRedemption
+        Returns: PromoPreview
+      }
+      submit_payment_request_with_promo: {
+        Args: {
+          p_shop_id: string
+          p_period_id: string
+          p_payer_name: string
+          p_transfer_reference: string
+          p_transferred_on: string
+          p_expected_amount: number
+          p_expected_currency: string
+          p_expected_months: number
+          p_requested_slug: string | null
+          p_customer_note: string | null
+          p_plan_slug: string
+          p_promo_code: string
+          p_expected_discounted_amount: number
+        }
+        Returns: PaymentRequest
       }
       admin_get_shop_billing: {
         Args: { p_shop_id: string; p_status: string; p_offset: number }

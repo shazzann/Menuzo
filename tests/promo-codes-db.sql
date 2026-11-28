@@ -4,6 +4,28 @@
 \ir ../supabase/migrations/20261126000001_promo_codes.sql
 \ir ../supabase/migrations/20261127000001_promo_codes_merge_pro_into_plus.sql
 
+-- Production runs the subscription restructure, which adds plan_slug and a p_plan_slug
+-- argument to submit_payment_request. Recreate that shape on top of the fixture.
+ALTER TABLE public.billing_payment_requests ADD COLUMN plan_slug text DEFAULT 'plus';
+ALTER FUNCTION public.submit_payment_request(uuid, text, text, text, date, numeric, text, integer, text, text)
+  RENAME TO submit_payment_request_base;
+CREATE FUNCTION public.submit_payment_request(p_shop_id uuid, p_period_id text, p_payer_name text,
+  p_transfer_reference text, p_transferred_on date, p_expected_amount numeric, p_expected_currency text,
+  p_expected_months integer, p_requested_slug text DEFAULT NULL, p_customer_note text DEFAULT NULL,
+  p_plan_slug text DEFAULT 'plus')
+RETURNS public.billing_payment_requests LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_temp AS $$
+DECLARE v public.billing_payment_requests%ROWTYPE;
+BEGIN
+  v := public.submit_payment_request_base(p_shop_id, p_period_id, p_payer_name, p_transfer_reference,
+    p_transferred_on, p_expected_amount, p_expected_currency, p_expected_months, p_requested_slug, p_customer_note);
+  UPDATE public.billing_payment_requests SET plan_slug = p_plan_slug WHERE id = v.id RETURNING * INTO v;
+  RETURN v;
+END $$;
+GRANT EXECUTE ON FUNCTION public.submit_payment_request(uuid, text, text, text, date, numeric, text, integer, text, text, text) TO authenticated;
+UPDATE public.billing_periods SET amount = 1500, currency = 'LKR', active = true WHERE id = 'monthly';
+UPDATE public.billing_payment_requests SET status = 'rejected' WHERE status = 'pending';
+\ir ../supabase/migrations/20261128000001_promo_codes_checkout.sql
+
 -- Users from the fixtures: ...0001 owns shop ...0001, ...0002 owns shop ...0002, ...0003 is an admin.
 SET ROLE anon;
 SELECT pg_temp.expect_error('SELECT count(*) FROM public.promo_codes', 'permission denied%');
@@ -42,32 +64,53 @@ SELECT pg_temp.assert_true((SELECT count(*) >= 3 FROM public.billing_admin_event
 -- Owners redeem through the RPC only.
 SELECT set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000001',false);
 SELECT pg_temp.assert_true((SELECT count(*) = 0 FROM public.promo_codes), 'owners cannot read codes');
-SELECT pg_temp.expect_error($q$SELECT public.redeem_promo_code('launch20','10000000-0000-0000-0000-000000000002','pro')$q$, 'You can only use promo codes for your own shop%');
-SELECT pg_temp.expect_error($q$SELECT public.redeem_promo_code('launch20','10000000-0000-0000-0000-000000000001','enterprise')$q$, '%does not apply to the selected plan%');
-SELECT pg_temp.expect_error($q$SELECT public.redeem_promo_code('later','10000000-0000-0000-0000-000000000001','enterprise')$q$, '%not active yet%');
-SELECT pg_temp.expect_error($q$SELECT public.redeem_promo_code('nope','10000000-0000-0000-0000-000000000001','pro')$q$, '%not valid%');
-SELECT pg_temp.assert_true((SELECT (public.redeem_promo_code(' launch20','10000000-0000-0000-0000-000000000001','pro')->>'discount_percent')::numeric = 20), 'owner redeems');
-SELECT pg_temp.expect_error($q$SELECT public.redeem_promo_code('LAUNCH20','10000000-0000-0000-0000-000000000001','pro')$q$, '%already used this promo code%');
+-- Owners check a code before paying.
+SELECT pg_temp.expect_error($q$SELECT public.preview_promo_code('launch20','10000000-0000-0000-0000-000000000002','plus')$q$, 'You can only use promo codes for your own shop%');
+SELECT pg_temp.expect_error($q$SELECT public.preview_promo_code('launch20','10000000-0000-0000-0000-000000000001','enterprise')$q$, '%does not apply to the selected plan%');
+SELECT pg_temp.expect_error($q$SELECT public.preview_promo_code('later','10000000-0000-0000-0000-000000000001','enterprise')$q$, '%not active yet%');
+SELECT pg_temp.expect_error($q$SELECT public.preview_promo_code('nope','10000000-0000-0000-0000-000000000001','plus')$q$, '%not valid%');
+SELECT pg_temp.assert_true((SELECT (public.preview_promo_code(' launch20','10000000-0000-0000-0000-000000000001','pro')->>'discount_percent')::numeric = 20), 'preview returns the discount');
+SELECT pg_temp.assert_true((SELECT count(*) = 0 FROM public.promo_code_redemptions), 'preview does not use the code');
+SELECT pg_temp.expect_error('SELECT public.redeem_promo_code(''LAUNCH20'',''10000000-0000-0000-0000-000000000001'',''plus'')', '%does not exist%');
+
+-- Checkout applies the code atomically with the payment request.
+SELECT pg_temp.expect_error($q$SELECT public.submit_payment_request_with_promo('10000000-0000-0000-0000-000000000001','monthly','Test Payer','PROMO-REF-1',current_date,1500,'LKR',1,NULL,NULL,'plus','LAUNCH20',1500)$q$, '%promo discount changed%');
+SELECT pg_temp.assert_true((SELECT count(*) = 0 FROM public.billing_payment_requests WHERE transfer_reference = 'PROMO-REF-1'), 'failed checkout leaves no request');
+SELECT pg_temp.expect_error($q$SELECT public.submit_payment_request_with_promo('10000000-0000-0000-0000-000000000001','monthly','Test Payer','PROMO-REF-1',current_date,999,'LKR',1,NULL,NULL,'plus','LAUNCH20',799.2)$q$, 'Pricing changed%');
+SELECT pg_temp.assert_true((SELECT amount = 1200 AND original_amount = 1500 AND promo_code = 'LAUNCH20' AND promo_discount_percent = 20 AND plan_slug = 'pro'
+  FROM public.submit_payment_request_with_promo('10000000-0000-0000-0000-000000000001','monthly','Test Payer','PROMO-REF-1',current_date,1500,'LKR',1,NULL,NULL,'pro','launch20',1200)),
+  'request records the discounted amount');
+SELECT pg_temp.expect_error($q$SELECT public.preview_promo_code('LAUNCH20','10000000-0000-0000-0000-000000000001','plus')$q$, '%already used this promo code%');
 SELECT pg_temp.expect_error($q$INSERT INTO public.promo_code_redemptions (promo_code_id,shop_id,user_id,plan,discount_percent)
-  SELECT id,'10000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000001','pro',100 FROM public.promo_codes$q$, 'permission denied%');
+  SELECT id,'10000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000001','plus',100 FROM public.promo_codes$q$, 'permission denied%');
 SELECT pg_temp.assert_true((SELECT count(*) = 1 FROM public.promo_code_redemptions), 'owner sees own redemption');
-SELECT pg_temp.assert_true((SELECT plan = 'plus' FROM public.promo_code_redemptions), 'legacy pro subscriber redeems as plus');
+SELECT pg_temp.assert_true((SELECT plan = 'plus' AND payment_request_id IS NOT NULL FROM public.promo_code_redemptions), 'legacy pro checkout is recorded as plus');
 SELECT set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000002',false);
-SELECT pg_temp.expect_error($q$SELECT public.redeem_promo_code('LAUNCH20','10000000-0000-0000-0000-000000000002','pro')$q$, '%reached its usage limit%');
+SELECT pg_temp.expect_error($q$SELECT public.preview_promo_code('LAUNCH20','10000000-0000-0000-0000-000000000002','plus')$q$, '%reached its usage limit%');
+SELECT pg_temp.expect_error($q$SELECT public.submit_payment_request_with_promo('10000000-0000-0000-0000-000000000002','monthly','Test Payer','PROMO-REF-2',current_date,1500,'LKR',1,NULL,NULL,'plus','LAUNCH20',1200)$q$, '%reached its usage limit%');
 SELECT pg_temp.assert_true((SELECT count(*) = 0 FROM public.promo_code_redemptions), 'other owners cannot see redemptions');
 
 -- Admin views usage, cannot drop the limit below usage or delete a used code, can deactivate.
 SELECT set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000003',false);
 SELECT pg_temp.assert_true((SELECT (e->>'redemption_count')::int = 1 FROM jsonb_array_elements(public.admin_list_promo_codes()) e WHERE e->>'code'='LAUNCH20'), 'list includes usage count');
 SELECT pg_temp.assert_true((SELECT u->>'shop_name' = 'Free Cafe' AND u->>'owner_email' IS NOT NULL AND u->>'plan' = 'plus'
-  FROM jsonb_array_elements(public.admin_list_promo_code_usage((SELECT id FROM public.promo_codes WHERE code='LAUNCH20'))) u), 'usage lists the shop');
+  AND u->>'payment_status' = 'pending' AND (u->>'amount')::numeric = 1200 AND (u->>'original_amount')::numeric = 1500
+  FROM jsonb_array_elements(public.admin_list_promo_code_usage((SELECT id FROM public.promo_codes WHERE code='LAUNCH20'))) u), 'usage lists the shop and payment');
 SELECT pg_temp.expect_error($q$UPDATE public.promo_codes SET max_redemptions = 0 WHERE code='LAUNCH20'$q$, '%already used by 1 shops%');
 SELECT pg_temp.expect_error($q$DELETE FROM public.promo_codes WHERE code='LAUNCH20'$q$, '%violates RESTRICT setting%');
+RESET ROLE;
+-- A rejected payment frees the code for that shop.
+UPDATE public.billing_payment_requests SET status = 'rejected' WHERE transfer_reference = 'PROMO-REF-1';
+SELECT pg_temp.assert_true((SELECT count(*) = 0 FROM public.promo_code_redemptions), 'rejection releases the redemption');
+SET ROLE authenticated;
+SELECT set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000001',false);
+SELECT pg_temp.assert_true((SELECT (public.preview_promo_code('LAUNCH20','10000000-0000-0000-0000-000000000001','plus')->>'discount_percent')::numeric = 20), 'code usable again after rejection');
+SELECT set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000003',false);
 UPDATE public.promo_codes SET is_active = false, max_redemptions = 2 WHERE code = 'LAUNCH20';
 SELECT set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000002',false);
-SELECT pg_temp.expect_error($q$SELECT public.redeem_promo_code('LAUNCH20','10000000-0000-0000-0000-000000000002','pro')$q$, '%not valid%');
+SELECT pg_temp.expect_error($q$SELECT public.preview_promo_code('LAUNCH20','10000000-0000-0000-0000-000000000002','plus')$q$, '%not valid%');
 SELECT set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000003',false);
 DELETE FROM public.promo_codes WHERE code = 'LATER';
 SELECT pg_temp.assert_true((SELECT count(*) = 1 FROM public.promo_codes), 'unused code deleted');
 RESET ROLE;
-\echo 'Promo code authorization, validation, redemption, usage, and audit checks passed.'
+\echo 'Promo code authorization, validation, checkout, usage, and audit checks passed.'

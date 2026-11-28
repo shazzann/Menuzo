@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ArrowLeft, ArrowRight, Check, CheckCircle2, Clock, Copy, Crown, ExternalLink, Landmark, Link2, Loader2, MessageCircle, RefreshCw, ShieldCheck, XCircle, Zap } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, CheckCircle2, Clock, Copy, Crown, ExternalLink, Landmark, Link2, Loader2, MessageCircle, RefreshCw, ShieldCheck, TicketPercent, X, XCircle, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -7,10 +7,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { useApp } from '@/store';
 import { BillingService } from '@/services/billing.service';
 import { SubscriptionService } from '@/services/subscription.service';
+import { PromoCodeService } from '@/services/promo-code.service';
 import { isPaidActive, PLAN_PRICING, getPlanLimits } from '@/lib/subscription';
-import { billingErrorMessage, formatPaymentAmount, isCheckoutReady, paymentWhatsAppUrl, placeholderPeriods } from '@/lib/billing';
+import { billingErrorMessage, discountedAmount, formatPaymentAmount, isCheckoutReady, paymentWhatsAppUrl, placeholderPeriods } from '@/lib/billing';
 import { getTodayDateString } from '@/lib/timeUtils';
 import type { BankTransferSettings, BillingPeriod, PaymentRequest, ShopCustomUrl } from '@/types/billing';
+import type { PromoPreview } from '@/types/promo-codes';
 import { toast } from 'sonner';
 import { SubscriptionPlanComparison } from '@/components/subscription/SubscriptionPlanComparison';
 
@@ -53,6 +55,11 @@ export function SubscriptionPage() {
   const [transferMade, setTransferMade] = useState(false);
   const [receiptSent, setReceiptSent] = useState(false);
   const [form, setForm] = useState({ payerName: '', reference: '', date: getTodayDateString(), slug: '', note: '' });
+  // A checked promo code belongs to the plan it was checked for; switching plans drops it.
+  const [promoInput, setPromoInput] = useState('');
+  const [promo, setPromo] = useState<(PromoPreview & { plan: 'plus' | 'enterprise' }) | null>(null);
+  const [promoChecking, setPromoChecking] = useState(false);
+  const [promoError, setPromoError] = useState('');
   const generation = useRef(0);
   const submitLock = useRef(false);
   const pageActive = useRef(false);
@@ -73,6 +80,9 @@ export function SubscriptionPage() {
   } : undefined;
 
   const selected = step === 0 ? currentPeriod : checkoutPeriod || undefined;
+  const activePromo = promo?.plan === selectedPlan ? promo : null;
+  const payable = selected?.amount != null && activePromo ? discountedAmount(selected.amount, activePromo.discount_percent) : selected?.amount ?? null;
+  const payableText = selected ? formatPaymentAmount(payable, selected.currency) : 'Price coming soon';
   const pending = requests.find(request => request.status === 'pending');
   const needsCustomUrl = !customUrl && !requests.some(request => request.status === 'approved');
   const requestedSlug = needsCustomUrl ? form.slug : null;
@@ -128,11 +138,34 @@ export function SubscriptionPage() {
 
   const planDisplayName = selectedPlan === 'enterprise' ? 'Enterprise' : 'Plus';
 
+  const applyPromo = async () => {
+    const code = promoInput.trim().toUpperCase();
+    if (!code || !shop.id || promoChecking) return;
+    setPromoChecking(true);
+    setPromoError('');
+    try {
+      const preview = await PromoCodeService.preview(code, shop.id, selectedPlan);
+      if (!pageActive.current) return;
+      setPromo({ ...preview, plan: selectedPlan });
+      setPromoInput(preview.code);
+      setTransferMade(false);
+      setReceiptSent(false);
+      toast.success(`${preview.code} applied: ${Number(preview.discount_percent)}% off`);
+    } catch (error) {
+      if (pageActive.current) { setPromo(null); setPromoError(billingErrorMessage(error)); }
+    } finally {
+      if (pageActive.current) setPromoChecking(false);
+    }
+  };
+  const removePromo = () => { setPromo(null); setPromoInput(''); setPromoError(''); setTransferMade(false); setReceiptSent(false); };
+
   const whatsappUrl = ready && bank && selected ? paymentWhatsAppUrl(bank.whatsapp_number, [
     `Hello Menuzo, I would like to verify my ${planDisplayName} bank transfer.`,
     `Shop: ${shop.name} (${shop.username})`, `Account: ${user?.email || ''}`,
     `Plan: ${planDisplayName}`,
-    `Period: ${selected.label}`, `Amount: ${formatPaymentAmount(selected.amount, selected.currency)}`,
+    `Period: ${selected.label}`,
+    activePromo ? `Promo code: ${activePromo.code} (${Number(activePromo.discount_percent)}% off ${formatPaymentAmount(selected.amount, selected.currency)})` : '',
+    `Amount: ${payableText}`,
     `Payer: ${form.payerName.trim()}`, `Reference: ${form.reference.trim()}`, `Transfer date: ${form.date}`,
     customUrl ? `Existing custom URL: ${window.location.host}/${customUrl.slug} (keep unchanged)`
       : requestedSlug ? `Requested URL: ${requestedSlug}` : '', 'I will attach my transfer receipt here.',
@@ -157,6 +190,7 @@ export function SubscriptionPage() {
         requestedSlug,
         customerNote: form.note,
         planSlug: selectedPlan,
+        ...(activePromo ? { promoCode: activePromo.code, expectedDiscountedAmount: payable } : {}),
       });
       if (!pageActive.current) return;
       setRequests(current => [request, ...current.filter(item => item.id !== request.id)]);
@@ -165,6 +199,8 @@ export function SubscriptionPage() {
       setTransferMade(false);
       setReceiptSent(false);
       setForm({ payerName: '', reference: '', date: getTodayDateString(), slug: '', note: '' });
+      setPromo(null);
+      setPromoInput('');
       void refresh();
     } catch (error) { if (pageActive.current) setSubmitError(billingErrorMessage(error)); }
     finally { submitLock.current = false; if (pageActive.current) setSubmitting(false); }
@@ -233,7 +269,8 @@ export function SubscriptionPage() {
                   We received your {pending.period_label.toLowerCase()} request. {proActive ? 'Your current subscription stays active until its expiry date.' : 'Your account stays on Free while we review the transfer.'}
                 </p>
                 <dl className="mt-5 grid sm:grid-cols-2 gap-4 text-sm">
-                  <div><dt className="text-muted-foreground">Amount</dt><dd className="font-semibold">{formatPaymentAmount(pending.amount, pending.currency)}</dd></div>
+                  <div><dt className="text-muted-foreground">Amount</dt><dd className="font-semibold">{formatPaymentAmount(pending.amount, pending.currency)}{pending.promo_code && pending.original_amount != null && <span className="ml-2 text-xs font-normal text-muted-foreground line-through">{formatPaymentAmount(pending.original_amount, pending.currency)}</span>}</dd></div>
+                  {pending.promo_code && <div><dt className="text-muted-foreground">Promo code</dt><dd className="font-mono">{pending.promo_code} ({Number(pending.promo_discount_percent)}% off)</dd></div>}
                   <div><dt className="text-muted-foreground">Transfer reference</dt><dd className="font-mono break-all">{pending.transfer_reference}</dd></div>
                   <div className="sm:col-span-2"><dt className="text-muted-foreground">Request ID</dt><dd className="font-mono break-all text-xs mt-1">{pending.id}</dd></div>
                 </dl>
@@ -340,6 +377,26 @@ export function SubscriptionPage() {
 
                         {!periods.length && <p className="text-sm text-muted-foreground">No subscription periods are available yet.</p>}
 
+                        <div className="rounded-xl border border-border p-4 space-y-3">
+                          <Label htmlFor="promo-code" className="flex items-center gap-2"><TicketPercent className="w-4 h-4 text-primary" />Promo code (optional)</Label>
+                          {activePromo ? (
+                            <div className="flex flex-wrap items-center gap-3 rounded-lg bg-emerald-500/10 px-3 py-2 text-sm">
+                              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                              <span><strong className="font-mono">{activePromo.code}</strong> applied: {Number(activePromo.discount_percent)}% off {planDisplayName}</span>
+                              <Button type="button" variant="ghost" size="sm" className="ml-auto h-7 gap-1" onClick={removePromo}><X className="w-3.5 h-3.5" />Remove</Button>
+                            </div>
+                          ) : (
+                            <form className="flex gap-2" onSubmit={event => { event.preventDefault(); void applyPromo(); }}>
+                              <Input id="promo-code" className="font-mono uppercase" placeholder="Enter code" maxLength={32} autoComplete="off" value={promoInput} disabled={promoChecking || !shop.id}
+                                onChange={event => { setPromoInput(event.target.value.toUpperCase().replace(/\s/g, '')); setPromoError(''); }} />
+                              <Button type="submit" variant="outline" disabled={!promoInput.trim() || promoChecking || !shop.id}>{promoChecking ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Apply'}</Button>
+                            </form>
+                          )}
+                          {promo && !activePromo && <p className="text-xs text-muted-foreground">{promo.code} was checked for {promo.plan === 'enterprise' ? 'Enterprise' : 'Plus'}. Apply it again for {planDisplayName}.</p>}
+                          {promoError && <p role="alert" className="text-sm text-destructive">{promoError}</p>}
+                          {activePromo && selected?.amount != null && <p className="text-sm">You pay <strong>{payableText}</strong> <span className="text-muted-foreground line-through">{formatPaymentAmount(selected.amount, selected.currency)}</span></p>}
+                        </div>
+
                         <ul className="grid sm:grid-cols-2 gap-3 text-sm">
                           {(selectedPlan === 'enterprise'
                             ? ['Up to 500 menu items', 'Up to 50 categories', 'Advanced customization', 'Priority support 24/7']
@@ -378,8 +435,9 @@ export function SubscriptionPage() {
                         <div className="bg-muted/50 rounded-xl p-4 space-y-4">
                           <div className="flex justify-between gap-4 border-b border-border pb-4">
                             <span className="text-sm text-muted-foreground">{selected?.label}</span>
-                            <strong>{selected ? formatPaymentAmount(selected.amount, selected.currency) : 'Price coming soon'}</strong>
+                            <strong>{payableText}</strong>
                           </div>
+                          {activePromo && selected && <p className="-mt-2 text-xs text-muted-foreground">Promo {activePromo.code}: {Number(activePromo.discount_percent)}% off {formatPaymentAmount(selected.amount, selected.currency)}</p>}
                           {[['Bank', bank?.bank_name], ['Account name', bank?.account_name], ['Account number', bank?.account_number], ['Branch', bank?.branch]].map(([label, value]) => (
                             <div key={label} className="flex justify-between gap-4 items-center">
                               <div className="min-w-0">
@@ -439,7 +497,8 @@ export function SubscriptionPage() {
                         <div className="rounded-xl bg-muted/50 p-4 text-sm space-y-2">
                           <p><span className="text-muted-foreground">Plan: </span><strong>{planDisplayName}</strong></p>
                           <p><span className="text-muted-foreground">Period: </span>{selected?.label}</p>
-                          <p><span className="text-muted-foreground">Amount: </span>{selected && formatPaymentAmount(selected.amount, selected.currency)}</p>
+                          <p><span className="text-muted-foreground">Amount: </span>{selected && payableText}</p>
+                          {activePromo && <p><span className="text-muted-foreground">Promo code: </span><span className="font-mono">{activePromo.code}</span> ({Number(activePromo.discount_percent)}% off)</p>}
                           <p className="break-all"><span className="text-muted-foreground">Reference: </span>{form.reference}</p>
                         </div>
                         {!priceUnchanged && <p role="alert" className="text-sm text-amber-600">Pricing has changed. Go back to select a period and review the updated amount before submitting.</p>}

@@ -54,6 +54,26 @@ export const BillingService = {
   },
 
   async submitRequest(input: SubmitPaymentRequestInput): Promise<PaymentRequest> {
+    if (input.promoCode) {
+      const { data, error } = await supabase.rpc('submit_payment_request_with_promo', {
+        p_shop_id: input.shopId,
+        p_period_id: input.periodId,
+        p_payer_name: input.payerName.trim(),
+        p_transfer_reference: input.transferReference.trim(),
+        p_transferred_on: input.transferredOn,
+        p_expected_amount: input.expectedAmount,
+        p_expected_currency: input.expectedCurrency,
+        p_expected_months: input.expectedMonths,
+        p_requested_slug: input.requestedSlug?.trim().toLowerCase() || null,
+        p_customer_note: input.customerNote?.trim() || null,
+        p_plan_slug: input.planSlug || 'plus',
+        p_promo_code: input.promoCode.trim().toUpperCase(),
+        p_expected_discounted_amount: input.expectedDiscountedAmount ?? input.expectedAmount,
+      });
+      if (error) throw error;
+      if (!data) throw new Error('Your payment request could not be saved. Please try again.');
+      return data;
+    }
     const { data, error } = await supabase.rpc('submit_payment_request', {
       p_shop_id: input.shopId,
       p_period_id: input.periodId,

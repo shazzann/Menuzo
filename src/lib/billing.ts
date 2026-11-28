@@ -45,3 +45,8 @@ export function endOfSriLankaDay(date: string): string {
 export function startOfSriLankaDay(date: string): string {
   return new Date(`${date}T00:00:00+05:30`).toISOString();
 }
+
+// Mirrors submit_payment_request_with_promo: round(amount * (100 - percent) / 100, 2).
+export function discountedAmount(amount: number, percent: number): number {
+  return Math.round(amount * (100 - percent)) / 100;
+}

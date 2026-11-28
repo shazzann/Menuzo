@@ -1,10 +1,11 @@
 import { supabase } from '@/lib/supabase';
 import type {
-  AdminPromoCode, PromoCode, PromoCodeInput, PromoCodeStatus, PromoCodeUsage, PromoPlan, PromoRedemption,
+  AdminPromoCode, PromoCode, PromoCodeInput, PromoCodeStatus, PromoCodeUsage, PromoPlan, PromoPreview,
 } from '@/types/promo-codes';
 
 // Company admins manage promo codes through RLS-guarded table writes; listing and
-// usage go through admin RPCs that join shops and owners. Owners only redeem.
+// usage go through admin RPCs that join shops and owners. Owners preview a code at
+// checkout; BillingService.submitRequest applies it together with the payment request.
 export const PromoCodeService = {
   async list(): Promise<AdminPromoCode[]> {
     const { data, error } = await supabase.rpc('admin_list_promo_codes');
@@ -36,8 +37,8 @@ export const PromoCodeService = {
     if (error) throw error;
     return data ?? [];
   },
-  async redeem(code: string, shopId: string, plan: PromoPlan | 'pro'): Promise<PromoRedemption> {
-    const { data, error } = await supabase.rpc('redeem_promo_code', { p_code: code.trim(), p_shop_id: shopId, p_plan: plan });
+  async preview(code: string, shopId: string, plan: PromoPlan | 'pro'): Promise<PromoPreview> {
+    const { data, error } = await supabase.rpc('preview_promo_code', { p_code: code.trim(), p_shop_id: shopId, p_plan: plan });
     if (error) throw error;
     return data;
   },
