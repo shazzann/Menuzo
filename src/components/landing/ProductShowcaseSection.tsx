@@ -188,56 +188,93 @@ export function ProductShowcaseSection() {
           </Card>
         </div>
 
-        {/* Beat D: Portions and Variations */}
+        {/* Beat D: Portions and Variations (Matches Menuzo FoodDetailPage portion radio UI) */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-          <Card className="landing-demo-preview rounded-2xl border-border bg-muted/30 p-5 sm:p-6 space-y-4 order-2 lg:order-1">
-            <div className="flex items-center gap-4 p-3 rounded-2xl bg-card border border-border">
+          <Card className="landing-demo-preview rounded-2xl border-border bg-card p-5 sm:p-6 space-y-4 order-2 lg:order-1">
+            <div className="flex items-center gap-4">
               <img
                 src="/Landing/demo-seafood-rice.webp"
                 alt="Seafood Fried Rice"
                 width={80}
                 height={80}
                 loading="lazy"
-                className="w-20 h-20 shrink-0 object-cover rounded-xl"
+                className="w-20 h-20 shrink-0 object-cover rounded-xl border border-border"
               />
               <div className="flex-1 min-w-0">
-                <p className="font-semibold text-sm text-foreground truncate">Seafood Fried Rice</p>
+                <p className="font-semibold text-base text-foreground truncate">Seafood Fried Rice</p>
                 <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">
                   Wok-tossed basmati rice with prawns and cuttlefish.
                 </p>
-                <div className="flex items-center gap-2 mt-2 flex-wrap">
-                  <span className="text-sm font-bold text-[#C2530A] dark:text-primary tabular-nums">
+                <div className="flex items-baseline gap-2 mt-2 flex-wrap">
+                  <span className="text-lg font-bold text-[#C2530A] dark:text-primary tabular-nums">
                     {activePortion.price}
                   </span>
-                  <span className="text-[11px] px-2 py-0.5 bg-primary/15 text-[#9A3D06] dark:text-primary border border-primary/25 rounded-full font-medium">
-                    {activePortion.label} selected
+                  <span className="text-xs font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-md">
+                    {activePortion.label} · {activePortion.serve}
                   </span>
                 </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-2.5" role="group" aria-label="Portion sizes">
-              {portionOptions.map((opt, idx) => {
-                const selected = idx === selectedPortionIndex;
-                return (
-                  <button
-                    key={opt.label}
-                    type="button"
-                    aria-pressed={selected}
-                    onClick={() => setSelectedPortionIndex(idx)}
-                    className={`rounded-xl border px-3.5 py-2.5 text-left transition-colors min-h-[44px] ${
-                      selected
-                        ? 'border-primary bg-card text-foreground'
-                        : 'border-border bg-background text-muted-foreground hover:text-foreground'
-                    }`}
-                  >
-                    <span className="block text-sm font-medium text-foreground">{opt.label}</span>
-                    <span className="block text-xs text-muted-foreground tabular-nums">
-                      {opt.serve} — {opt.price}
-                    </span>
-                  </button>
-                );
-              })}
+            <div className="pt-3.5 border-t border-border space-y-2.5">
+              <div className="flex items-center justify-between gap-2 text-xs">
+                <span className="font-semibold uppercase tracking-wider text-muted-foreground">
+                  Portion / Size
+                </span>
+                <span className="text-muted-foreground">
+                  Tap an option to preview
+                </span>
+              </div>
+
+              <div className="space-y-2" role="radiogroup" aria-label="Portion sizes">
+                {portionOptions.map((opt, idx) => {
+                  const selected = idx === selectedPortionIndex;
+                  return (
+                    <button
+                      key={opt.label}
+                      type="button"
+                      role="radio"
+                      aria-checked={selected}
+                      onClick={() => setSelectedPortionIndex(idx)}
+                      className={`w-full flex items-center justify-between p-3.5 rounded-2xl border text-left transition-[color,background-color,border-color,transform] active:scale-[0.99] min-h-[56px] cursor-pointer ${
+                        selected
+                          ? 'bg-primary/10 border-primary ring-1 ring-primary/35'
+                          : 'bg-muted/40 hover:bg-muted/70 border-border text-foreground'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div
+                          className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${
+                            selected ? 'border-primary' : 'border-muted-foreground/40'
+                          }`}
+                          aria-hidden="true"
+                        >
+                          {selected && <div className="w-2 h-2 rounded-full bg-primary" />}
+                        </div>
+                        <div className="min-w-0">
+                          <span
+                            className={`text-sm font-semibold block truncate ${
+                              selected ? 'text-[#C2530A] dark:text-primary' : 'text-foreground'
+                            }`}
+                          >
+                            {opt.label}
+                          </span>
+                          <span className="text-xs text-muted-foreground block truncate mt-0.5">
+                            {opt.serve}
+                          </span>
+                        </div>
+                      </div>
+                      <span
+                        className={`text-sm font-bold tabular-nums shrink-0 pl-3 ${
+                          selected ? 'text-[#C2530A] dark:text-primary' : 'text-foreground'
+                        }`}
+                      >
+                        {opt.price}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </Card>
 
