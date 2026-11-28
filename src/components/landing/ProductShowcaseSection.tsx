@@ -18,7 +18,7 @@ const showcaseItems: FoodItem[] = [
     name: 'Beef Kottu',
     description: 'Chopped godamba roti stir-fried with spiced beef and fresh vegetables.',
     tagline: 'Spicy Beef Delight',
-    image: '/Landing/audience-restaurant.webp',
+    image: '/Landing/food-beef-kottu.webp',
     category: 'kottu',
     originalPrice: 1700,
     finalPrice: 1700,
@@ -31,7 +31,7 @@ const showcaseItems: FoodItem[] = [
     name: 'Cheese Chicken Kottu',
     description: 'Extra cheesy delight with house-roasted spices.',
     tagline: 'Extra Cheesy Delight',
-    image: '/Landing/audience-hotels.webp',
+    image: '/Landing/food-cheese-kottu.webp',
     category: 'kottu',
     originalPrice: 1850,
     finalPrice: 1650,
@@ -44,7 +44,7 @@ const showcaseItems: FoodItem[] = [
     name: 'Seafood Fried Rice',
     description: 'Wok-tossed basmati rice with prawns and cuttlefish.',
     tagline: 'Wok-tossed basmati rice',
-    image: '/Landing/demo-seafood-rice.webp',
+    image: '/Landing/food-seafood-rice.webp',
     category: 'rice',
     originalPrice: 1250,
     finalPrice: 1250,
@@ -62,7 +62,7 @@ const showcaseItems: FoodItem[] = [
     name: 'Spice Garden Biryani',
     description: 'Fragrant spiced basmati rice served with roast chicken.',
     tagline: 'Served with roast chicken',
-    image: '/Landing/audience-cafe.webp',
+    image: '/Landing/food-biryani.webp',
     category: 'rice',
     originalPrice: 1550,
     finalPrice: 1550,
@@ -256,7 +256,7 @@ export function ProductShowcaseSection() {
           <Card className="landing-demo-preview rounded-2xl border-border bg-card p-5 sm:p-6 space-y-4 order-2 lg:order-1">
             <div className="flex items-center gap-4">
               <img
-                src="/Landing/demo-seafood-rice.webp"
+                src="/Landing/food-seafood-rice.webp"
                 alt="Seafood Fried Rice"
                 width={80}
                 height={80}
