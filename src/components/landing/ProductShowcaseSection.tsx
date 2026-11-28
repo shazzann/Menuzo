@@ -1,11 +1,101 @@
 import { useState } from 'react';
 import { QrCode } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import { CategoryTabs } from '@/components/shared/CategoryTabs';
+import { FoodCard } from '@/components/shared/FoodCard';
+import type { Category, FoodItem } from '@/types';
 
-const managementRows = [
-  { name: 'Hot Butter Mushroom', category: 'Starters', price: 'LKR 1,150', status: 'Special offer' },
-  { name: 'Seafood Fried Rice', category: 'Rice & Curry', price: 'From LKR 1,250', status: '2 portions' },
-  { name: 'Fresh Lime Mint', category: 'Beverages', price: 'LKR 550', status: 'Available' },
+const showcaseCategories: Category[] = [
+  { id: 'all', name: 'All' },
+  { id: 'kottu', name: 'Kottu' },
+  { id: 'rice', name: 'Rice & Curry' },
+  { id: 'desserts', name: 'Desserts' },
+];
+
+const showcaseItems: FoodItem[] = [
+  {
+    id: 'showcase-beef-kottu',
+    name: 'Beef Kottu',
+    description: 'Chopped godamba roti stir-fried with spiced beef and fresh vegetables.',
+    tagline: 'Spicy Beef Delight',
+    image: '/Landing/demo-chicken-kottu.webp',
+    category: 'kottu',
+    originalPrice: 1700,
+    finalPrice: 1700,
+    discount: 0,
+    isAvailable: true,
+    isSpecialOffer: false,
+  },
+  {
+    id: 'showcase-cheese-kottu',
+    name: 'Cheese Chicken Kottu',
+    description: 'Extra cheesy delight with house-roasted spices.',
+    tagline: 'Extra Cheesy Delight',
+    image: '/Landing/demo-cheese-kottu.webp',
+    category: 'kottu',
+    originalPrice: 1850,
+    finalPrice: 1650,
+    discount: 11,
+    isAvailable: true,
+    isSpecialOffer: true,
+  },
+  {
+    id: 'showcase-seafood-rice',
+    name: 'Seafood Fried Rice',
+    description: 'Wok-tossed basmati rice with prawns and cuttlefish.',
+    tagline: 'Wok-tossed basmati rice',
+    image: '/Landing/demo-seafood-rice.webp',
+    category: 'rice',
+    originalPrice: 1250,
+    finalPrice: 1250,
+    discount: 0,
+    isAvailable: true,
+    isSpecialOffer: false,
+    pricingType: 'variants',
+    options: [
+      { id: 'regular', name: 'Regular', price: 1250, isAvailable: true },
+      { id: 'large', name: 'Large', price: 1650, isAvailable: true },
+    ],
+  },
+  {
+    id: 'showcase-biryani',
+    name: 'Spice Garden Biryani',
+    description: 'Fragrant spiced basmati rice served with roast chicken.',
+    tagline: 'Served with roast chicken',
+    image: '/Landing/audience-restaurant.webp',
+    category: 'rice',
+    originalPrice: 1550,
+    finalPrice: 1550,
+    discount: 0,
+    isAvailable: true,
+    isSpecialOffer: false,
+  },
+  {
+    id: 'showcase-sundae',
+    name: 'Chocolate Fudge Sundae',
+    description: 'Velvety vanilla scoops topped with warm chocolate fudge.',
+    tagline: 'Rich hot fudge topping',
+    image: '/Landing/audience-dessert.webp',
+    category: 'desserts',
+    originalPrice: 750,
+    finalPrice: 750,
+    discount: 0,
+    isAvailable: true,
+    isSpecialOffer: false,
+  },
+  {
+    id: 'showcase-cinnamon-roll',
+    name: 'Glazed Cinnamon Roll',
+    description: 'Warm baked swirl finished with vanilla bean glaze.',
+    tagline: 'Fresh morning bake',
+    image: '/Landing/audience-bakery.webp',
+    category: 'desserts',
+    originalPrice: 680,
+    finalPrice: 590,
+    discount: 13,
+    isAvailable: true,
+    isSpecialOffer: true,
+  },
 ];
 
 const portionOptions = [
@@ -14,8 +104,14 @@ const portionOptions = [
 ];
 
 export function ProductShowcaseSection() {
+  const [selectedCategory, setSelectedCategory] = useState('kottu');
   const [selectedPortionIndex, setSelectedPortionIndex] = useState(0);
   const activePortion = portionOptions[selectedPortionIndex];
+
+  const visibleSections =
+    selectedCategory === 'all'
+      ? showcaseCategories.filter((category) => category.id === 'kottu' || category.id === 'rice')
+      : showcaseCategories.filter((category) => category.id === selectedCategory);
 
   return (
     <section id="product" className="landing-section bg-background border-b border-border">
@@ -36,29 +132,42 @@ export function ProductShowcaseSection() {
               Organize dishes and categories without layout tools
             </h3>
             <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
-              Sort categories cleanly, reorder featured specials, and maintain consistent LKR pricing across starters, mains, and beverages from a simple list.
+              Sort categories cleanly, highlight specials with discount pricing, and turn every dish into scannable menu cards automatically.
             </p>
           </div>
 
-          <Card className="rounded-2xl border-border bg-card p-5 sm:p-6">
-            <div className="flex items-center justify-between gap-2 pb-3 mb-3 border-b border-border">
-              <span className="text-sm font-medium text-foreground">Category order</span>
-              <span className="text-xs text-muted-foreground">Owner view</span>
+          <Card className="landing-demo-preview rounded-2xl border-border bg-card overflow-hidden p-0 gap-0">
+            <CategoryTabs
+              categories={showcaseCategories}
+              selectedCategory={selectedCategory}
+              onSelectCategory={setSelectedCategory}
+              className="static py-3 px-4 border-b border-border bg-card"
+            />
+            <div className="p-4 sm:p-5 bg-muted/20 space-y-5" aria-live="polite">
+              {visibleSections.map((section) => {
+                const sectionItems = showcaseItems.filter((item) => item.category === section.id);
+                const isFiltered = selectedCategory === section.id;
+                return (
+                  <div key={section.id}>
+                    <div className="flex items-center justify-between gap-2 mb-3">
+                      <h4 className="font-semibold text-sm text-foreground">{section.name}</h4>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedCategory(isFiltered ? 'all' : section.id)}
+                        className="text-xs text-primary hover:underline font-medium min-h-[44px] sm:min-h-0 px-1 cursor-pointer"
+                      >
+                        {isFiltered ? 'All categories' : 'More'}
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      {sectionItems.map((item) => (
+                        <FoodCard key={item.id} item={item} />
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-            <ul className="divide-y divide-border">
-              {managementRows.map((row) => (
-                <li key={row.name} className="py-3 flex items-center justify-between gap-4 text-sm">
-                  <div className="min-w-0">
-                    <p className="font-medium text-foreground truncate">{row.name}</p>
-                    <p className="text-xs text-muted-foreground">{row.category}</p>
-                  </div>
-                  <div className="text-right shrink-0">
-                    <p className="font-medium text-foreground tabular-nums">{row.price}</p>
-                    <p className="text-xs text-muted-foreground">{row.status}</p>
-                  </div>
-                </li>
-              ))}
-            </ul>
           </Card>
         </div>
 

@@ -68,7 +68,8 @@
 }
 
 /* Improve contrast on shared CategoryTabs & FoodCard price tokens inside light landing previews */
-.landing-demo-preview button.bg-primary {
+.landing-demo-preview button.bg-primary,
+.landing-demo-preview .food-card .bg-primary {
   color: #12261F;
 }
 
