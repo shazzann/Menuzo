@@ -101,14 +101,14 @@ export function Navbar() {
                 e.preventDefault();
                 scrollToTarget(link.href);
               }}
-              className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors whitespace-nowrap"
+              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap"
             >
               {link.name}
             </a>
           ))}
         </nav>
 
-        <div className="hidden md:flex items-center gap-2.5 shrink-0">
+        <div className="hidden md:flex items-center gap-3 shrink-0">
           <ThemeToggle />
           {state.authChecking && !state.user ? (
             <div
@@ -122,26 +122,25 @@ export function Navbar() {
               <Button
                 size="sm"
                 onClick={() => handlePrimaryClick('navbar')}
-                className="rounded-xl bg-primary text-[#12261F] hover:bg-primary/90 font-semibold px-4 gap-2"
+                className="rounded-xl bg-primary text-[#12261F] hover:bg-primary/90 font-medium px-4 gap-2"
               >
-                <LayoutDashboard className="w-4 h-4" aria-hidden="true" />
+                <LayoutDashboard className="w-4 h-4" strokeWidth={1.5} aria-hidden="true" />
                 Dashboard
               </Button>
             </>
           ) : (
             <>
-              <Button
-                variant="ghost"
-                size="sm"
+              <button
+                type="button"
                 onClick={() => dispatch({ type: 'SET_VIEW', payload: 'login' })}
-                className="font-medium rounded-xl"
+                className="px-2 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors rounded-md"
               >
                 Log in
-              </Button>
+              </button>
               <Button
                 size="sm"
                 onClick={() => handlePrimaryClick('navbar')}
-                className="rounded-xl bg-primary text-[#12261F] hover:bg-primary/90 font-semibold px-4"
+                className="rounded-xl bg-primary text-[#12261F] hover:bg-primary/90 font-medium px-4"
               >
                 Build my free menu
               </Button>
@@ -157,7 +156,7 @@ export function Navbar() {
             <Button
               size="sm"
               onClick={() => handlePrimaryClick('navbar_mobile')}
-              className="rounded-xl bg-primary text-[#12261F] hover:bg-primary/90 font-semibold px-3 text-xs sm:text-sm"
+              className="rounded-xl bg-primary text-[#12261F] hover:bg-primary/90 font-medium px-3 text-xs sm:text-sm"
             >
               {state.user ? 'Dashboard' : 'Start free'}
             </Button>
@@ -171,7 +170,11 @@ export function Navbar() {
             aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
             className="rounded-xl"
           >
-            {mobileMenuOpen ? <X className="w-5 h-5" aria-hidden="true" /> : <Menu className="w-5 h-5" aria-hidden="true" />}
+            {mobileMenuOpen ? (
+              <X className="w-5 h-5" strokeWidth={1.5} aria-hidden="true" />
+            ) : (
+              <Menu className="w-5 h-5" strokeWidth={1.5} aria-hidden="true" />
+            )}
           </Button>
         </div>
       </div>
@@ -190,7 +193,7 @@ export function Navbar() {
                   e.preventDefault();
                   scrollToTarget(link.href);
                 }}
-                className="py-2.5 px-2 text-base font-medium text-foreground hover:text-primary border-b border-border/60 last:border-b-0"
+                className="py-2.5 px-2 text-base font-medium text-foreground hover:text-primary transition-colors border-b border-border/60 last:border-b-0"
               >
                 {link.name}
               </a>
@@ -207,28 +210,28 @@ export function Navbar() {
                   <SwitchAccountButton />
                   <Button
                     onClick={() => handlePrimaryClick('navbar_mobile_drawer')}
-                    className="rounded-xl bg-primary text-[#12261F] hover:bg-primary/90 font-semibold flex-1 gap-2"
+                    className="rounded-xl bg-primary text-[#12261F] hover:bg-primary/90 font-medium flex-1 gap-2"
                   >
-                    <LayoutDashboard className="w-4 h-4" aria-hidden="true" />
+                    <LayoutDashboard className="w-4 h-4" strokeWidth={1.5} aria-hidden="true" />
                     Dashboard
                   </Button>
                 </div>
               </>
             ) : (
-              <div className="grid grid-cols-2 gap-2">
-                <Button
-                  variant="outline"
+              <div className="flex items-center justify-between gap-3">
+                <button
+                  type="button"
                   onClick={() => {
                     setMobileMenuOpen(false);
                     dispatch({ type: 'SET_VIEW', payload: 'login' });
                   }}
-                  className="rounded-xl font-semibold w-full"
+                  className="px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
                 >
                   Log in
-                </Button>
+                </button>
                 <Button
                   onClick={() => handlePrimaryClick('navbar_mobile_drawer')}
-                  className="rounded-xl bg-primary text-[#12261F] hover:bg-primary/90 font-semibold w-full"
+                  className="rounded-xl bg-primary text-[#12261F] hover:bg-primary/90 font-medium flex-1"
                 >
                   Build my free menu
                 </Button>

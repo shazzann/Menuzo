@@ -1,7 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
-import { ArrowRight, CheckCircle2, ExternalLink, MessageCircle, RotateCcw } from 'lucide-react';
+import { ArrowRight, ExternalLink, MessageCircle, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
@@ -119,34 +118,33 @@ export function HeroSection() {
     return demoItems.filter((item) => item.category === selectedCategory);
   }, [demoItems, selectedCategory]);
 
+  const formattedOwnerPrice = `LKR ${(dishPrice || 0).toLocaleString('en-US')}`;
+
   return (
-    <section id="home" className="pt-8 pb-16 sm:pt-12 sm:pb-20 border-b border-border bg-background">
-      <div className="landing-container grid grid-cols-1 lg:grid-cols-[1.02fr_0.98fr] gap-10 lg:gap-12 items-center">
+    <section id="home" className="pt-10 pb-16 sm:pt-16 sm:pb-24 border-b border-border bg-background">
+      <div className="landing-container grid grid-cols-1 lg:grid-cols-[0.95fr_1.05fr] gap-10 lg:gap-12 items-center">
         {/* Left: Core Product Message & Conversion CTAs */}
         <div className="max-w-xl">
-          <Badge
-            variant="outline"
-            className="mb-4 px-3 py-1 bg-primary/10 text-primary border-primary/20 text-xs font-semibold uppercase tracking-wider"
-          >
-            A simpler way to manage your restaurant menu
-          </Badge>
+          <p className="text-sm font-medium text-muted-foreground mb-3">
+            Your menu, online
+          </p>
 
-          <h1 className="text-3xl sm:text-5xl font-bold leading-[1.1] tracking-tight text-foreground mb-5">
+          <h1 className="text-4xl sm:text-5xl font-semibold leading-[1.08] tracking-tight text-foreground mb-5">
             Update your menu once. Every table sees it instantly.
           </h1>
 
-          <p className="text-base sm:text-lg leading-relaxed text-muted-foreground mb-7">
+          <p className="text-base sm:text-lg leading-relaxed text-muted-foreground mb-8">
             Menuzo gives Sri Lankan cafés and restaurants a QR menu you can change any time, so prices and sold-out dishes are always right.
           </p>
 
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mb-5">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mb-4">
             <Button
               size="lg"
               onClick={handlePrimaryCTA}
-              className="h-12 px-6 rounded-xl bg-primary text-[#12261F] hover:bg-primary/90 font-semibold text-base w-full sm:w-auto"
+              className="h-12 px-6 rounded-xl bg-primary text-[#12261F] hover:bg-primary/90 font-medium text-base w-full sm:w-auto transition-colors"
             >
               Build my free menu
-              <ArrowRight className="w-4 h-4" aria-hidden="true" />
+              <ArrowRight className="w-4 h-4" strokeWidth={1.5} aria-hidden="true" />
             </Button>
 
             {whatsappUrl ? (
@@ -154,7 +152,7 @@ export function HeroSection() {
                 variant="outline"
                 size="lg"
                 asChild
-                className="h-12 px-5 rounded-xl font-semibold text-base w-full sm:w-auto"
+                className="h-12 px-5 rounded-xl font-medium text-base w-full sm:w-auto transition-colors"
               >
                 <a
                   href={whatsappUrl}
@@ -162,7 +160,7 @@ export function HeroSection() {
                   rel="noopener noreferrer"
                   onClick={() => trackEvent('whatsapp_clicked', { source: 'hero' })}
                 >
-                  <MessageCircle className="w-4 h-4 text-primary" aria-hidden="true" />
+                  <MessageCircle className="w-4 h-4 text-muted-foreground" strokeWidth={1.5} aria-hidden="true" />
                   Chat with us on WhatsApp
                 </a>
               </Button>
@@ -171,88 +169,86 @@ export function HeroSection() {
                 variant="outline"
                 size="lg"
                 onClick={handleContactFallback}
-                className="h-12 px-5 rounded-xl font-semibold text-base w-full sm:w-auto"
+                className="h-12 px-5 rounded-xl font-medium text-base w-full sm:w-auto transition-colors"
               >
-                <MessageCircle className="w-4 h-4 text-primary" aria-hidden="true" />
+                <MessageCircle className="w-4 h-4 text-muted-foreground" strokeWidth={1.5} aria-hidden="true" />
                 Contact us
               </Button>
             )}
           </div>
 
-          <p className="inline-flex items-center gap-2 text-xs sm:text-sm font-medium text-muted-foreground">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" aria-hidden="true" />
-            <span>Free plan. No card. Your guests need no app.</span>
+          <p className="text-xs sm:text-sm text-muted-foreground">
+            Free plan, no card, and no app for your guests
           </p>
         </div>
 
-        {/* Right: Live Product Example Built With Existing Menuzo UI Components */}
+        {/* Right: Calm, Unified Live Product Example Using Menuzo UI Components */}
         <Card
-          className="p-4 sm:p-5 rounded-2xl border border-border bg-card shadow-sm gap-4"
-          aria-label="Live Menuzo menu example using Menuzo UI components"
+          className="landing-demo-preview rounded-2xl border border-border bg-card shadow-xs overflow-hidden p-0 gap-0"
+          aria-label="Live Spice Garden Kitchen menu example"
         >
-          {/* Card Header with Live Menu Link */}
-          <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-border">
+          {/* Header with Real Restaurant QR & Live Menu Link */}
+          <div className="p-4 sm:px-5 sm:py-4 border-b border-border flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-3 min-w-0">
               <img
                 src="/Landing/spice-garden-qr.svg"
                 alt="QR code for Spice Garden Kitchen live Menuzo menu"
-                width={48}
-                height={48}
-                className="w-12 h-12 rounded-lg border border-border bg-white p-0.5 shrink-0"
+                width={44}
+                height={44}
+                className="w-11 h-11 rounded-lg border border-border bg-white p-0.5 shrink-0"
               />
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
-                  <p className="text-sm font-bold text-foreground truncate">
+                  <span className="text-sm font-medium text-foreground truncate">
                     Spice Garden Kitchen
-                  </p>
-                  <Badge className="bg-primary/10 text-primary border-primary/20 text-[10px]">
-                    Live example
-                  </Badge>
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[#1F8A4C] dark:text-emerald-400">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#1F8A4C] dark:bg-emerald-400" aria-hidden="true" />
+                    Live menu
+                  </span>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Scan QR or open the live Menuzo menu
+                  Scan QR or open the guest menu
                 </p>
               </div>
             </div>
 
-            <Button variant="outline" size="sm" asChild className="rounded-xl shrink-0">
-              <a
-                href={LIVE_MENU_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() =>
-                  trackEvent('demo_first_interaction', { source: 'hero_live_menu_link' })
-                }
-              >
-                Explore a live menu
-                <ExternalLink className="w-3.5 h-3.5" aria-hidden="true" />
-              </a>
-            </Button>
+            <a
+              href={LIVE_MENU_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() =>
+                trackEvent('demo_first_interaction', { source: 'hero_live_menu_link' })
+              }
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-background hover:bg-muted/60 text-xs font-medium text-foreground transition-colors shrink-0"
+            >
+              Explore a live menu
+              <ExternalLink className="w-3.5 h-3.5 text-muted-foreground" strokeWidth={1.5} aria-hidden="true" />
+            </a>
           </div>
 
-          {/* Owner Quick-Sync Controls */}
-          <div className="rounded-xl border border-border bg-muted/40 p-3 space-y-3">
+          {/* Owner Quick-Sync Control Strip (Single Hairline Band) */}
+          <div className="px-4 py-3 sm:px-5 bg-muted/30 border-b border-border space-y-2.5">
             <div className="flex items-center justify-between gap-2">
-              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Owner control · Chicken Kottu
-              </span>
-              <Button
+              <div className="flex items-center gap-2 text-xs">
+                <span className="font-medium text-foreground">Owner control: Chicken Kottu</span>
+                <span className="text-muted-foreground tabular-nums">· {formattedOwnerPrice}</span>
+              </div>
+              <button
                 type="button"
-                variant="ghost"
-                size="sm"
                 onClick={handleReset}
-                className="h-7 px-2 text-xs rounded-lg"
+                className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
               >
-                <RotateCcw className="w-3 h-3" aria-hidden="true" />
+                <RotateCcw className="w-3.5 h-3.5" strokeWidth={1.5} aria-hidden="true" />
                 Reset
-              </Button>
+              </button>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3 items-center">
+            <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2.5 items-center">
               <div className="flex items-center gap-2">
                 <label
                   htmlFor="hero-demo-price"
-                  className="text-xs font-medium text-muted-foreground shrink-0"
+                  className="text-xs text-muted-foreground shrink-0"
                 >
                   Price (LKR)
                 </label>
@@ -263,16 +259,32 @@ export function HeroSection() {
                   value={dishPrice === 0 ? '' : String(dishPrice)}
                   onChange={(e) => handlePriceChange(e.target.value)}
                   placeholder="1350"
-                  className="h-9 rounded-lg bg-background font-semibold tabular-nums"
+                  className="h-9 rounded-lg bg-background font-medium tabular-nums"
                 />
               </div>
 
-              <div className="flex items-center justify-between sm:justify-end gap-2.5 px-3 py-1.5 rounded-lg bg-background border border-border">
+              <div className="flex items-center justify-between sm:justify-end gap-2.5 px-3 h-9 rounded-lg bg-background border border-border">
                 <label
                   htmlFor="hero-demo-available"
-                  className="text-xs font-medium text-foreground cursor-pointer"
+                  className="inline-flex items-center gap-1.5 text-xs font-medium cursor-pointer"
                 >
-                  {dishAvailable ? 'Available' : 'Sold out'}
+                  <span
+                    className={`w-1.5 h-1.5 rounded-full ${
+                      dishAvailable
+                        ? 'bg-[#1F8A4C] dark:bg-emerald-400'
+                        : 'bg-[#C8372D] dark:bg-red-400'
+                    }`}
+                    aria-hidden="true"
+                  />
+                  <span
+                    className={
+                      dishAvailable
+                        ? 'text-[#1F8A4C] dark:text-emerald-400'
+                        : 'text-[#C8372D] dark:text-red-400'
+                    }
+                  >
+                    {dishAvailable ? 'Available' : 'Sold out'}
+                  </span>
                 </label>
                 <Switch
                   id="hero-demo-available"
@@ -284,8 +296,8 @@ export function HeroSection() {
             </div>
           </div>
 
-          {/* Real Customer Menu UI Components (CategoryTabs + FoodCard) */}
-          <div className="rounded-xl border border-border bg-background overflow-hidden">
+          {/* Guest Menu Preview Using Existing CategoryTabs + FoodCard */}
+          <div className="bg-background">
             <CategoryTabs
               categories={demoCategories}
               selectedCategory={selectedCategory}
@@ -293,15 +305,15 @@ export function HeroSection() {
                 recordFirstDemoInteraction();
                 setSelectedCategory(cat);
               }}
-              className="static py-2.5 px-3"
+              className="static py-2.5 px-4 border-b border-border"
             />
-            <div className="p-3 space-y-2.5" aria-live="polite">
+            <div className="p-4 space-y-3" aria-live="polite">
               {visibleDemoItems.map((item) => (
                 <FoodCard key={item.id} item={item} variant="list" />
               ))}
             </div>
-            <p className="px-3 py-2 border-t border-border bg-muted/30 text-[11px] text-muted-foreground text-center">
-              Customer browser view · Guests order directly with restaurant staff
+            <p className="px-4 py-2.5 border-t border-border bg-muted/20 text-xs text-muted-foreground text-center">
+              Guest browser preview · Customers browse here and order with staff
             </p>
           </div>
         </Card>

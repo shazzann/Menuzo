@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { ChevronDown } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
 import { FREE_PLAN_LIMITS } from '@/lib/subscription';
 import { FinalCTASection } from '@/components/landing/FinalCTASection';
 
@@ -39,13 +38,7 @@ export function FAQSection() {
       <div className="landing-section">
         <div className="landing-container max-w-3xl">
           <div className="mb-8 sm:mb-10">
-            <Badge
-              variant="outline"
-              className="mb-3 bg-primary/10 text-primary border-primary/20 text-xs font-semibold uppercase tracking-wider"
-            >
-              FAQ
-            </Badge>
-            <h2 className="text-2xl sm:text-4xl font-bold tracking-tight text-foreground">
+            <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground">
               Frequently asked questions
             </h2>
           </div>
@@ -65,13 +58,14 @@ export function FAQSection() {
                       aria-expanded={isOpen}
                       aria-controls={panelId}
                       onClick={() => setOpenIndex(isOpen ? null : index)}
-                      className="w-full py-4 flex items-center justify-between gap-4 text-left text-base sm:text-lg font-semibold text-foreground hover:text-primary transition-colors"
+                      className="w-full py-4 flex items-center justify-between gap-4 text-left text-base font-medium text-foreground hover:text-primary transition-colors"
                     >
                       <span>{faq.q}</span>
                       <ChevronDown
                         className={`w-4 h-4 shrink-0 text-muted-foreground transition-transform duration-150 ${
                           isOpen ? 'rotate-180' : ''
                         }`}
+                        strokeWidth={1.5}
                         aria-hidden="true"
                       />
                     </button>
