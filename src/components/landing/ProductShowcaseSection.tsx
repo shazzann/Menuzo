@@ -63,7 +63,7 @@ export function ProductShowcaseSection() {
 
           <Card className="landing-demo-preview rounded-2xl border-border bg-muted/30 p-5 sm:p-6">
             <div className="flex items-center gap-4 p-3 rounded-2xl bg-card border border-border">
-              <div className="relative w-20 h-20 shrink-0">
+              <div className="w-20 h-20 shrink-0">
                 <img
                   src="/Landing/demo-cheese-kottu.webp"
                   alt="Cheese Chicken Kottu"
@@ -72,12 +72,14 @@ export function ProductShowcaseSection() {
                   loading="lazy"
                   className="w-full h-full object-cover rounded-xl"
                 />
-                <span className="absolute -top-1 -left-1 px-2 py-0.5 text-[10px] font-medium bg-primary text-[#12261F] rounded-full">
-                  Our Special
-                </span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-semibold text-sm text-foreground truncate">Cheese Chicken Kottu</p>
+                <div className="flex items-center gap-2 min-w-0">
+                  <p className="font-semibold text-sm text-foreground truncate">Cheese Chicken Kottu</p>
+                  <span className="shrink-0 px-2 py-0.5 text-[10px] font-medium bg-primary/15 text-[#9A3D06] dark:text-primary border border-primary/25 rounded-full leading-tight">
+                    Our Special
+                  </span>
+                </div>
                 <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">
                   Extra cheesy delight with house-roasted spices.
                 </p>

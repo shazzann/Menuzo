@@ -29,20 +29,22 @@ export function FoodCard({ item, onClick, variant = 'grid' }: FoodCardProps) {
           !item.isAvailable && 'opacity-60'
         )}
       >
-        <div className="relative w-20 h-20 flex-shrink-0">
+        <div className="w-20 h-20 flex-shrink-0">
           <img
             src={item.image}
             alt={item.name}
             className="w-full h-full object-cover rounded-xl"
           />
-          {item.isSpecialOffer && (
-            <span className="absolute -top-1 -left-1 px-2 py-0.5 text-[9px] font-mono uppercase tracking-wider bg-primary text-primary-foreground rounded-full">
-              Our Special
-            </span>
-          )}
         </div>
         <div className="flex-1 min-w-0">
-          <h4 className="font-semibold text-sm truncate">{item.name}</h4>
+          <div className="flex items-center gap-2 min-w-0">
+            <h4 className="font-semibold text-sm truncate">{item.name}</h4>
+            {item.isSpecialOffer && (
+              <span className="shrink-0 px-2 py-0.5 text-[10px] font-medium bg-primary/10 text-primary border border-primary/25 rounded-full leading-tight">
+                Our Special
+              </span>
+            )}
+          </div>
           <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">
             {item.description}
           </p>
