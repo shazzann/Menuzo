@@ -10,6 +10,7 @@ import { BottomNav } from '@/components/shared/BottomNav';
 import { ShopLogoAvatar } from '@/components/shared/ShopLogoAvatar';
 import type { AdminTab, FoodItem } from '@/types';
 import { PlanStatusBanner } from '@/components/subscription/PlanStatusBanner';
+import { isPaidActive } from '@/lib/subscription';
 import { motion, AnimatePresence, useMotionValue, useTransform, type Variants } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
@@ -806,7 +807,7 @@ export function AdminPreviewPage() {
                       categoryName={categoryName}
                       shop={shop}
                       discountPercent={discountPercent}
-                      isFreePlan={true}
+                      isFreePlan={!isPaidActive(state.user?.subscription)}
                       onNext={goToNext}
                       onPrev={goToPrev}
                     />
