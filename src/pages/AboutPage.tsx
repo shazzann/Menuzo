@@ -1,15 +1,20 @@
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, ArrowUpRight, Globe, Instagram, Linkedin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/shared/ThemeToggle';
 import { Footer } from '@/components/landing/Footer';
 import { useApp } from '@/store';
 
+interface FounderLink {
+  label: string;
+  href: string;
+  kind: 'linkedin' | 'website' | 'instagram';
+}
+
 interface Founder {
   name: string;
   role: string;
   initials: string;
-  photo?: string;
-  bio?: string;
+  links: FounderLink[];
 }
 
 const founders: Founder[] = [
@@ -17,25 +22,41 @@ const founders: Founder[] = [
     name: 'Hasni Zihar',
     role: 'Co-Founder',
     initials: 'HZ',
-    // Biography can be updated here when provided
-    bio: '',
+    links: [
+      { label: 'LinkedIn', href: 'https://www.linkedin.com/in/kr-hasni-zihar/', kind: 'linkedin' },
+      { label: 'hasnizihar.vercel.app', href: 'https://hasnizihar.vercel.app/', kind: 'website' },
+      { label: '@ziharhasni', href: 'https://www.instagram.com/ziharhasni/', kind: 'instagram' },
+    ],
   },
   {
     name: 'Shazan',
     role: 'Co-Founder',
     initials: 'S',
-    // Biography can be updated here when provided
-    bio: '',
+    links: [
+      { label: 'LinkedIn', href: 'https://www.linkedin.com/in/shazanshaheed/', kind: 'linkedin' },
+      { label: 'shazion.com', href: 'https://www.shazion.com/', kind: 'website' },
+      { label: '@shaza__n', href: 'https://www.instagram.com/shaza__n/', kind: 'instagram' },
+    ],
   },
 ];
+
+function FounderLinkIcon({ kind }: { kind: FounderLink['kind'] }) {
+  if (kind === 'linkedin') {
+    return <Linkedin className="w-4 h-4 text-muted-foreground shrink-0" strokeWidth={1.5} aria-hidden="true" />;
+  }
+  if (kind === 'instagram') {
+    return <Instagram className="w-4 h-4 text-muted-foreground shrink-0" strokeWidth={1.5} aria-hidden="true" />;
+  }
+  return <Globe className="w-4 h-4 text-muted-foreground shrink-0" strokeWidth={1.5} aria-hidden="true" />;
+}
 
 export function AboutPage() {
   const { state, dispatch } = useApp();
 
   return (
-    <div className="min-h-screen bg-background dark:bg-[#090A0C] text-foreground flex flex-col selection:bg-primary/20">
+    <div className="min-h-screen bg-background text-foreground flex flex-col selection:bg-primary/20">
       {/* Sticky Header */}
-      <header className="h-16 bg-background/95 dark:bg-[#090A0C]/95 backdrop-blur-md border-b border-border/80 dark:border-neutral-800/80 px-4 sm:px-6 flex items-center justify-between sticky top-0 z-50">
+      <header className="h-16 bg-background/95 backdrop-blur-md border-b border-border px-4 sm:px-6 flex items-center justify-between sticky top-0 z-50">
         <Button
           variant="ghost"
           size="sm"
@@ -45,13 +66,14 @@ export function AboutPage() {
           }}
           className="gap-2 text-muted-foreground hover:text-foreground"
         >
-          <ArrowLeft className="w-4 h-4" />
+          <ArrowLeft className="w-4 h-4" strokeWidth={1.5} aria-hidden="true" />
           <span className="hidden sm:inline">Back to Home</span>
           <span className="sm:hidden">Home</span>
         </Button>
 
         {/* Brand Logo */}
-        <div
+        <button
+          type="button"
           className="flex items-center gap-2 cursor-pointer"
           onClick={() => {
             dispatch({ type: 'SET_VIEW', payload: 'landing' });
@@ -61,7 +83,7 @@ export function AboutPage() {
         >
           <img src="/logo/Logo main4tight.png" alt="Menuzo" className="h-7 w-auto dark:hidden" />
           <img src="/logo/Logo main4dark.png" alt="Menuzo" className="h-7 w-auto hidden dark:block" />
-        </div>
+        </button>
 
         {/* Right Actions */}
         <div className="flex items-center gap-3">
@@ -70,7 +92,7 @@ export function AboutPage() {
             <Button
               size="sm"
               onClick={() => dispatch({ type: 'SET_VIEW', payload: 'user-dashboard' })}
-              className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl font-semibold shadow-xs"
+              className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl font-medium"
             >
               Dashboard
             </Button>
@@ -81,7 +103,7 @@ export function AboutPage() {
                 dispatch({ type: 'SET_VIEW', payload: 'signup' });
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
-              className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl font-semibold shadow-xs"
+              className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl font-medium"
             >
               Start Free
             </Button>
@@ -91,63 +113,65 @@ export function AboutPage() {
 
       {/* Main Content */}
       <main className="flex-1 py-16 sm:py-24 px-4 sm:px-6">
-        <div className="max-w-4xl mx-auto">
-          
+        <div className="max-w-4xl mx-auto space-y-16 sm:space-y-20">
           {/* Section 1: About Menuzo */}
-          <section className="text-center max-w-2xl mx-auto mb-16 sm:mb-20">
-            <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-foreground mb-6">
+          <section className="max-w-2xl">
+            <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight text-foreground mb-4">
               About Menuzo
             </h1>
-            <p className="text-lg sm:text-xl text-muted-foreground leading-relaxed">
+            <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
               Menuzo is a digital menu platform that helps restaurants create, customize, and share their menus through QR codes and simple web links. Built with simplicity and accessibility in mind, Menuzo makes digital menu management easier for restaurants of all sizes.
             </p>
           </section>
 
           {/* Section 2: Meet the Co-Founders */}
-          <section className="max-w-3xl mx-auto">
-            <div className="text-center mb-10">
-              <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
-                Meet the Co-Founders
-              </h2>
-            </div>
+          <section className="pt-12 border-t border-border">
+            <h2 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground mb-6">
+              Meet the Co-Founders
+            </h2>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {founders.map((founder) => (
-                <div
+                <article
                   key={founder.name}
-                  className="p-8 sm:p-10 rounded-3xl bg-card dark:bg-[#1C1E22] border border-border/60 dark:border-neutral-800/80 hover:border-border dark:hover:border-neutral-700 transition-all duration-300 shadow-sm flex flex-col items-center text-center group"
+                  className="p-6 rounded-2xl bg-card border border-border flex flex-col justify-between gap-6"
                 >
-                  {/* Photo or Tasteful Initials Avatar */}
-                  <div className="w-24 h-24 rounded-full sm:rounded-2xl bg-gradient-to-br from-primary/20 via-primary/10 to-transparent border border-primary/30 flex items-center justify-center text-primary font-bold text-2xl tracking-wider shadow-inner mb-6 transition-transform duration-300 group-hover:scale-105">
-                    {founder.photo ? (
-                      <img
-                        src={founder.photo}
-                        alt={founder.name}
-                        className="w-full h-full object-cover rounded-full sm:rounded-2xl"
-                      />
-                    ) : (
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-muted border border-border flex items-center justify-center text-foreground font-semibold text-base shrink-0">
                       <span>{founder.initials}</span>
-                    )}
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="text-lg font-semibold text-foreground truncate">
+                        {founder.name}
+                      </h3>
+                      <p className="text-sm font-medium text-[#C2530A] dark:text-primary">
+                        {founder.role}
+                      </p>
+                    </div>
                   </div>
 
-                  <h3 className="text-xl sm:text-2xl font-bold text-foreground mb-1">
-                    {founder.name}
-                  </h3>
-                  <p className="text-sm font-semibold uppercase tracking-wider text-primary mb-2">
-                    {founder.role}
-                  </p>
-
-                  {/* Short Introduction (editable placeholder) */}
-                  {founder.bio && (
-                    <p className="text-muted-foreground text-sm leading-relaxed mt-2">
-                      {founder.bio}
-                    </p>
-                  )}
-                </div>
+                  <div className="pt-4 border-t border-border space-y-1.5">
+                    {founder.links.map((link) => (
+                      <a
+                        key={link.href}
+                        href={link.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={`${founder.name} on ${link.label}`}
+                        className="flex items-center justify-between gap-3 px-3 py-2 rounded-lg text-sm text-foreground hover:bg-muted/60 transition-colors min-h-[44px]"
+                      >
+                        <span className="inline-flex items-center gap-2.5 min-w-0">
+                          <FounderLinkIcon kind={link.kind} />
+                          <span className="truncate">{link.label}</span>
+                        </span>
+                        <ArrowUpRight className="w-4 h-4 text-muted-foreground shrink-0" strokeWidth={1.5} aria-hidden="true" />
+                      </a>
+                    ))}
+                  </div>
+                </article>
               ))}
             </div>
           </section>
-
         </div>
       </main>
 
