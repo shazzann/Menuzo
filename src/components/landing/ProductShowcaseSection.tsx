@@ -75,7 +75,7 @@ const showcaseItems: FoodItem[] = [
     name: 'Chocolate Fudge Sundae',
     description: 'Velvety vanilla scoops topped with warm chocolate fudge.',
     tagline: 'Rich hot fudge topping',
-    image: '/Landing/audience-dessert.webp',
+    image: '/Landing/food-chocolate-sundae.webp',
     category: 'desserts',
     originalPrice: 750,
     finalPrice: 750,
