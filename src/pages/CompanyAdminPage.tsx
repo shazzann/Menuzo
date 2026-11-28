@@ -46,8 +46,6 @@ const navGroups: NavGroup[] = [
     icon: <Store className="w-4 h-4" />,
     items: [
       { label: 'Shops', section: 'shops', icon: <Store className="w-4 h-4" /> },
-      { label: 'Verification', section: 'shop-verification', icon: <ShieldCheck className="w-4 h-4" /> },
-      { label: 'Requests', section: 'shop-requests', icon: <FileText className="w-4 h-4" /> },
     ],
   },
   {
