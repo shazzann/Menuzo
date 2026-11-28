@@ -82,12 +82,8 @@
 }
 
 /* Keep custom shop theme text legible across light and dark curated palettes in AudienceSection */
-.landing-theme-preview[data-shop-theme="custom"] .bg-card .text-primary {
-  color: hsl(var(--shop-surface-primary-text));
-}
-
-.landing-theme-preview[data-shop-theme="custom"] .bg-background .text-primary {
-  color: hsl(var(--shop-page-primary-text));
+.landing-theme-preview[data-shop-theme="custom"] .text-primary {
+  color: hsl(var(--shop-primary-text));
 }
 
 .landing-theme-preview .food-card:hover {
