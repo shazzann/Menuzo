@@ -7,49 +7,65 @@ import { useApp } from '@/store';
 import { trackEvent } from '@/lib/analytics';
 
 const navLinks = [
-  { name: 'Home', href: '#home' },
-  { name: 'How it works', href: '#how-it-works' },
-  { name: 'Features', href: '#features' },
-  { name: 'Pricing', href: '#pricing' },
-  { name: 'FAQ', href: '#faq' },
+  { name: 'Product', href: '#product', id: 'product' },
+  { name: 'Features', href: '#features', id: 'features' },
+  { name: 'Pricing', href: '#pricing', id: 'pricing' },
+  { name: 'For Partners', href: '#partners', id: 'partners' },
 ];
 
 export function Navbar() {
   const { state, dispatch } = useApp();
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState<string>('');
 
   useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 12);
-    handleScroll();
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    const onScroll = () => setIsScrolled(window.scrollY > 12);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  useEffect(() => {
+    if (typeof IntersectionObserver === 'undefined') return;
+    const sectionIds = navLinks.map((link) => link.id);
+    const elements = sectionIds
+      .map((id) => document.getElementById(id))
+      .filter((el): el is HTMLElement => Boolean(el));
+    if (elements.length === 0) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+        if (visible[0]?.target.id) {
+          setActiveSection(visible[0].target.id);
+        }
+      },
+      { rootMargin: '-20% 0px -55% 0px', threshold: [0.1, 0.4] }
+    );
+
+    elements.forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
   }, []);
 
   const scrollToTarget = (href: string) => {
     setMobileMenuOpen(false);
-    const scrollNow = () => {
-      if (href === '#home') {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        return;
-      }
-      const element = document.querySelector(href);
-      if (element) {
-        const top = element.getBoundingClientRect().top + window.scrollY - 72;
-        window.scrollTo({ top, behavior: 'smooth' });
-      }
-    };
-
-    if (state.currentView !== 'landing' && href.startsWith('#')) {
-      dispatch({ type: 'SET_VIEW', payload: 'landing' });
-      window.setTimeout(scrollNow, 40);
+    if (href === '#home') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setActiveSection('');
       return;
     }
-    scrollNow();
+    const target = document.querySelector(href);
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   };
 
   const handlePrimaryClick = (source: string) => {
     setMobileMenuOpen(false);
+    trackEvent('hero_cta_clicked', { source });
     if (state.user) {
       dispatch({ type: 'SET_VIEW', payload: 'user-dashboard' });
       return;
@@ -66,6 +82,13 @@ export function Navbar() {
           : 'bg-background border-b border-transparent'
       }`}
     >
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-4 focus:z-50 focus:px-4 focus:py-2.5 focus:rounded-xl focus:bg-primary focus:text-[#12261F] focus:font-medium focus:shadow-md"
+      >
+        Skip to main content
+      </a>
+
       <div className="landing-container h-16 flex items-center justify-between gap-4">
         <a
           href="#home"
@@ -73,7 +96,7 @@ export function Navbar() {
             e.preventDefault();
             scrollToTarget('#home');
           }}
-          className="inline-flex items-center shrink-0 rounded-md"
+          className="inline-flex items-center shrink-0 min-h-[44px] py-1.5 rounded-md"
           aria-label="Menuzo home"
         >
           <img
@@ -93,19 +116,26 @@ export function Navbar() {
         </a>
 
         <nav className="hidden md:flex items-center gap-6 lg:gap-7" aria-label="Main navigation">
-          {navLinks.map((link) => (
-            <a
-              key={link.name}
-              href={link.href}
-              onClick={(e) => {
-                e.preventDefault();
-                scrollToTarget(link.href);
-              }}
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap"
-            >
-              {link.name}
-            </a>
-          ))}
+          {navLinks.map((link) => {
+            const isActive = activeSection === link.id;
+            return (
+              <a
+                key={link.name}
+                href={link.href}
+                onClick={(e) => {
+                  e.preventDefault();
+                  scrollToTarget(link.href);
+                }}
+                className={`text-sm font-medium transition-colors whitespace-nowrap py-2 ${
+                  isActive
+                    ? 'text-foreground underline decoration-primary decoration-2 underline-offset-8'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                {link.name}
+              </a>
+            );
+          })}
         </nav>
 
         <div className="hidden md:flex items-center gap-3 shrink-0">
@@ -122,7 +152,7 @@ export function Navbar() {
               <Button
                 size="sm"
                 onClick={() => handlePrimaryClick('navbar')}
-                className="rounded-xl bg-primary text-[#12261F] hover:bg-primary/90 font-medium px-4 gap-2"
+                className="rounded-xl bg-primary text-[#12261F] hover:bg-primary/90 font-medium px-4 gap-2 h-10"
               >
                 <LayoutDashboard className="w-4 h-4" strokeWidth={1.5} aria-hidden="true" />
                 Dashboard
@@ -133,14 +163,14 @@ export function Navbar() {
               <button
                 type="button"
                 onClick={() => dispatch({ type: 'SET_VIEW', payload: 'login' })}
-                className="px-2 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors rounded-md"
+                className="px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors rounded-lg"
               >
                 Log in
               </button>
               <Button
                 size="sm"
                 onClick={() => handlePrimaryClick('navbar')}
-                className="rounded-xl bg-primary text-[#12261F] hover:bg-primary/90 font-medium px-4"
+                className="rounded-xl bg-primary text-[#12261F] hover:bg-primary/90 font-medium px-4 h-10 transition-[color,background-color,transform] active:scale-[0.98]"
               >
                 Build my free menu
               </Button>
@@ -148,15 +178,17 @@ export function Navbar() {
           )}
         </div>
 
-        <div className="flex md:hidden items-center gap-2">
-          <ThemeToggle />
+        <div className="flex md:hidden items-center gap-1.5">
+          <div className="inline-flex items-center justify-center [&_button]:min-h-[44px] [&_button]:min-w-[44px]">
+            <ThemeToggle />
+          </div>
           {state.authChecking && !state.user ? (
-            <div className="h-9 w-24 rounded-xl bg-muted/70" aria-hidden="true" />
+            <div className="h-11 w-24 rounded-xl bg-muted/70" aria-hidden="true" />
           ) : (
             <Button
               size="sm"
               onClick={() => handlePrimaryClick('navbar_mobile')}
-              className="rounded-xl bg-primary text-[#12261F] hover:bg-primary/90 font-medium px-3 text-xs sm:text-sm"
+              className="rounded-xl bg-primary text-[#12261F] hover:bg-primary/90 font-medium px-3.5 min-h-[44px] text-xs sm:text-sm"
             >
               {state.user ? 'Dashboard' : 'Start free'}
             </Button>
@@ -168,7 +200,7 @@ export function Navbar() {
             aria-expanded={mobileMenuOpen}
             aria-controls="landing-mobile-nav"
             aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
-            className="rounded-xl"
+            className="rounded-xl min-h-[44px] min-w-[44px]"
           >
             {mobileMenuOpen ? (
               <X className="w-5 h-5" strokeWidth={1.5} aria-hidden="true" />
@@ -184,7 +216,7 @@ export function Navbar() {
           id="landing-mobile-nav"
           className="md:hidden border-t border-border bg-card px-4 py-4"
         >
-          <nav className="flex flex-col gap-1" aria-label="Mobile navigation">
+          <nav className="flex flex-col" aria-label="Mobile navigation">
             {navLinks.map((link) => (
               <a
                 key={link.name}
@@ -193,7 +225,7 @@ export function Navbar() {
                   e.preventDefault();
                   scrollToTarget(link.href);
                 }}
-                className="py-2.5 px-2 text-base font-medium text-foreground hover:text-primary transition-colors border-b border-border/60 last:border-b-0"
+                className="min-h-[44px] flex items-center px-2 text-base font-medium text-foreground hover:text-primary transition-colors border-b border-border/60 last:border-b-0"
               >
                 {link.name}
               </a>
@@ -202,7 +234,7 @@ export function Navbar() {
 
           <div className="mt-4 pt-3 border-t border-border flex flex-col gap-2.5">
             {state.authChecking && !state.user ? (
-              <div className="h-10 w-full rounded-xl bg-muted/70" aria-label="Checking account status" />
+              <div className="h-11 w-full rounded-xl bg-muted/70" aria-label="Checking account status" />
             ) : state.user ? (
               <>
                 <p className="text-xs text-muted-foreground break-all">{state.user.email}</p>
@@ -210,7 +242,7 @@ export function Navbar() {
                   <SwitchAccountButton />
                   <Button
                     onClick={() => handlePrimaryClick('navbar_mobile_drawer')}
-                    className="rounded-xl bg-primary text-[#12261F] hover:bg-primary/90 font-medium flex-1 gap-2"
+                    className="rounded-xl bg-primary text-[#12261F] hover:bg-primary/90 font-medium flex-1 min-h-[44px] gap-2"
                   >
                     <LayoutDashboard className="w-4 h-4" strokeWidth={1.5} aria-hidden="true" />
                     Dashboard
@@ -225,13 +257,13 @@ export function Navbar() {
                     setMobileMenuOpen(false);
                     dispatch({ type: 'SET_VIEW', payload: 'login' });
                   }}
-                  className="px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                  className="min-h-[44px] px-4 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors rounded-xl"
                 >
                   Log in
                 </button>
                 <Button
                   onClick={() => handlePrimaryClick('navbar_mobile_drawer')}
-                  className="rounded-xl bg-primary text-[#12261F] hover:bg-primary/90 font-medium flex-1"
+                  className="rounded-xl bg-primary text-[#12261F] hover:bg-primary/90 font-medium flex-1 min-h-[44px]"
                 >
                   Build my free menu
                 </Button>

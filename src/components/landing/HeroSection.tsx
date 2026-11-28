@@ -1,69 +1,36 @@
 import { useMemo, useRef, useState } from 'react';
-import { ArrowRight, ExternalLink, MessageCircle, RotateCcw } from 'lucide-react';
+import { ArrowDownRight, ArrowRight, Check, ExternalLink, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { CategoryTabs } from '@/components/shared/CategoryTabs';
 import { FoodCard } from '@/components/shared/FoodCard';
 import { useApp } from '@/store';
 import { trackEvent } from '@/lib/analytics';
-import { getPublicWhatsAppUrl } from '@/lib/contact';
 import type { Category, FoodItem } from '@/types';
 
 const LIVE_MENU_URL = 'https://menuzo.lk/spicegardenkitchen';
-const DEFAULT_DISH_PRICE = 1350;
+const INITIAL_DISH_PRICE = 1350;
 
 const demoCategories: Category[] = [
   { id: 'all', name: 'All' },
   { id: 'kottu', name: 'Kottu' },
-  { id: 'specials', name: 'Our Special' },
+  { id: 'rice', name: 'Portions' },
+  { id: 'special', name: 'Our Special' },
 ];
 
 export function HeroSection() {
   const { state, dispatch } = useApp();
-  const [dishAvailable, setDishAvailable] = useState(true);
-  const [dishPrice, setDishPrice] = useState(DEFAULT_DISH_PRICE);
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const hasInteractedRef = useRef(false);
 
-  const whatsappUrl = getPublicWhatsAppUrl(
-    'Hello Menuzo, I would like to learn more about setting up a digital QR menu.'
-  );
+  const [dishPrice, setDishPrice] = useState(INITIAL_DISH_PRICE);
+  const [dishAvailable, setDishAvailable] = useState(true);
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const firstInteractionSent = useRef(false);
 
   const recordFirstDemoInteraction = () => {
-    if (!hasInteractedRef.current) {
-      hasInteractedRef.current = true;
-      trackEvent('demo_first_interaction', { source: 'hero_demo' });
-    }
-  };
-
-  const handleAvailabilityToggle = (checked: boolean) => {
-    recordFirstDemoInteraction();
-    setDishAvailable(checked);
-    trackEvent('demo_toggled', {
-      control: 'availability',
-      value: checked ? 'available' : 'sold_out',
-    });
-  };
-
-  const handlePriceChange = (raw: string) => {
-    recordFirstDemoInteraction();
-    const digits = raw.replace(/\D/g, '').slice(0, 5);
-    const parsed = digits ? Number(digits) : 0;
-    setDishPrice(parsed);
-    trackEvent('demo_toggled', {
-      control: 'price',
-      value: parsed,
-    });
-  };
-
-  const handleReset = () => {
-    recordFirstDemoInteraction();
-    setDishAvailable(true);
-    setDishPrice(DEFAULT_DISH_PRICE);
-    setSelectedCategory('all');
-    trackEvent('demo_toggled', { control: 'reset', value: 'default' });
+    if (firstInteractionSent.current) return;
+    firstInteractionSent.current = true;
+    trackEvent('demo_first_interaction', { source: 'hero_live_demo' });
   };
 
   const handlePrimaryCTA = () => {
@@ -76,9 +43,22 @@ export function HeroSection() {
     dispatch({ type: 'SET_VIEW', payload: 'signup' });
   };
 
-  const handleContactFallback = () => {
-    trackEvent('whatsapp_clicked', { source: 'hero_contact_fallback' });
-    dispatch({ type: 'SET_VIEW', payload: 'contact' });
+  const handlePriceChange = (raw: string) => {
+    recordFirstDemoInteraction();
+    const digitsOnly = raw.replace(/[^\d]/g, '').slice(0, 6);
+    setDishPrice(digitsOnly ? Number(digitsOnly) : 0);
+  };
+
+  const handleAvailabilityToggle = (checked: boolean) => {
+    recordFirstDemoInteraction();
+    setDishAvailable(checked);
+  };
+
+  const handleReset = () => {
+    recordFirstDemoInteraction();
+    setDishPrice(INITIAL_DISH_PRICE);
+    setDishAvailable(true);
+    setSelectedCategory('all');
   };
 
   const demoItems: FoodItem[] = useMemo(
@@ -87,57 +67,75 @@ export function HeroSection() {
         id: 'demo-chicken-kottu',
         name: 'Chicken Kottu',
         description: "Sri Lanka's favorite street food, made fresh to order.",
-        tagline: "Sri Lanka's Favorite",
-        category: 'kottu',
         image: '/Landing/demo-chicken-kottu.webp',
-        originalPrice: dishPrice,
-        finalPrice: dishPrice,
-        isSpecialOffer: false,
+        originalPrice: dishPrice || 0,
+        finalPrice: dishPrice || 0,
+        discount: 0,
+        category: 'kottu',
+        tagline: 'Spice Garden Kitchen',
         isAvailable: dishAvailable,
+        isSpecialOffer: false,
       },
       {
         id: 'demo-cheese-kottu',
         name: 'Cheese Chicken Kottu',
         description: 'Extra cheesy delight with house-roasted spices.',
-        tagline: 'Extra Cheesy Delight',
-        category: 'specials',
         image: '/Landing/demo-cheese-kottu.webp',
         originalPrice: 1850,
-        discount: 200,
-        discountedPrice: 1650,
         finalPrice: 1650,
-        isSpecialOffer: true,
+        discount: 11,
+        category: 'special',
+        tagline: 'Chef recommendation',
         isAvailable: true,
+        isSpecialOffer: true,
+      },
+      {
+        id: 'demo-seafood-rice',
+        name: 'Seafood Fried Rice',
+        description: 'Prawns, cuttlefish, and wok-tossed basmati rice.',
+        image: '/Landing/demo-seafood-rice.webp',
+        originalPrice: 1250,
+        finalPrice: 1250,
+        discount: 0,
+        category: 'rice',
+        tagline: 'Portion options',
+        isAvailable: true,
+        isSpecialOffer: false,
+        pricingType: 'variants',
+        options: [
+          { id: 'reg', name: 'Regular', price: 1250, isAvailable: true },
+          { id: 'lg', name: 'Large', price: 1650, isAvailable: true },
+        ],
       },
     ],
-    [dishAvailable, dishPrice]
+    [dishPrice, dishAvailable]
   );
 
   const visibleDemoItems = useMemo(() => {
-    if (selectedCategory === 'all') return demoItems;
+    if (selectedCategory === 'all') return demoItems.slice(0, 2);
     return demoItems.filter((item) => item.category === selectedCategory);
   }, [demoItems, selectedCategory]);
 
   const formattedOwnerPrice = `LKR ${(dishPrice || 0).toLocaleString('en-US')}`;
 
   return (
-    <section id="home" className="pt-10 pb-16 sm:pt-16 sm:pb-24 border-b border-border bg-background">
+    <section id="home" className="pt-8 pb-14 sm:pt-12 sm:pb-20 border-b border-border bg-background">
       <div className="landing-container grid grid-cols-1 lg:grid-cols-[0.95fr_1.05fr] gap-10 lg:gap-12 items-center">
-        {/* Left: Core Product Message & Conversion CTAs */}
+        {/* Left: Core Product Message & Primary Owner Conversion */}
         <div className="max-w-xl landing-hero-enter">
           <p className="text-sm font-medium text-muted-foreground mb-3">
-            Your menu, online
+            A smarter menu for every table
           </p>
 
           <h1 className="text-4xl sm:text-5xl font-semibold leading-[1.08] tracking-tight text-foreground mb-5">
-            Update your menu once. Every table sees it instantly.
+            Your restaurant menu, made smarter.
           </h1>
 
-          <p className="text-base sm:text-lg leading-relaxed text-muted-foreground mb-8">
-            Menuzo gives Sri Lankan cafés and restaurants a QR menu you can change any time, so prices and sold-out dishes are always right.
+          <p className="text-base sm:text-lg leading-relaxed text-muted-foreground mb-7">
+            Create a digital menu, share it through a QR code and update your dishes, prices and availability whenever you need.
           </p>
 
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mb-4">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mb-6">
             <Button
               size="lg"
               onClick={handlePrimaryCTA}
@@ -147,97 +145,51 @@ export function HeroSection() {
               <ArrowRight className="w-4 h-4" strokeWidth={1.5} aria-hidden="true" />
             </Button>
 
-            {whatsappUrl ? (
-              <Button
-                variant="outline"
-                size="lg"
-                asChild
-                className="h-12 px-5 rounded-xl font-medium text-base w-full sm:w-auto transition-[color,background-color,transform] active:scale-[0.98]"
+            <Button
+              variant="outline"
+              size="lg"
+              asChild
+              className="h-12 px-5 rounded-xl font-medium text-base w-full sm:w-auto transition-[color,background-color,transform] active:scale-[0.98]"
+            >
+              <a
+                href={LIVE_MENU_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() =>
+                  trackEvent('demo_first_interaction', { source: 'hero_secondary_live_menu' })
+                }
               >
-                <a
-                  href={whatsappUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={() => trackEvent('whatsapp_clicked', { source: 'hero' })}
-                >
-                  <MessageCircle className="w-4 h-4 text-muted-foreground" strokeWidth={1.5} aria-hidden="true" />
-                  Chat with us on WhatsApp
-                </a>
-              </Button>
-            ) : (
-              <Button
-                variant="outline"
-                size="lg"
-                onClick={handleContactFallback}
-                className="h-12 px-5 rounded-xl font-medium text-base w-full sm:w-auto transition-[color,background-color,transform] active:scale-[0.98]"
-              >
-                <MessageCircle className="w-4 h-4 text-muted-foreground" strokeWidth={1.5} aria-hidden="true" />
-                Contact us
-              </Button>
-            )}
+                Explore live menu
+                <ExternalLink className="w-4 h-4 text-muted-foreground" strokeWidth={1.5} aria-hidden="true" />
+              </a>
+            </Button>
           </div>
 
-          <p className="text-xs sm:text-sm text-muted-foreground">
-            Free plan, no card, and no app for your guests
-          </p>
+          <ul className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs sm:text-sm text-muted-foreground">
+            {['Free plan available', 'No customer app required', 'Update anytime'].map((item) => (
+              <li key={item} className="inline-flex items-center gap-1.5">
+                <Check className="w-4 h-4 text-[#18753F] dark:text-emerald-400 shrink-0" strokeWidth={1.75} aria-hidden="true" />
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
         </div>
 
-        {/* Right: Calm, Unified Live Product Example Using Menuzo UI Components */}
-        <Card
-          className="landing-demo-preview landing-hero-enter-delayed rounded-2xl border border-border bg-card shadow-xs overflow-hidden p-0 gap-0"
-          aria-label="Live Spice Garden Kitchen menu example"
-        >
-          {/* Header with Real Restaurant QR & Live Menu Link */}
-          <div className="p-4 sm:px-5 sm:py-4 border-b border-border flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-3 min-w-0">
-              <img
-                src="/Landing/spice-garden-qr.svg"
-                alt="QR code for Spice Garden Kitchen live Menuzo menu"
-                width={44}
-                height={44}
-                className="w-11 h-11 rounded-lg border border-border bg-white p-0.5 shrink-0"
-              />
-              <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-foreground truncate">
-                    Spice Garden Kitchen
-                  </span>
-                  <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[#1F8A4C] dark:text-emerald-400">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#1F8A4C] dark:bg-emerald-400" aria-hidden="true" />
-                    Live menu
-                  </span>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Scan QR or open the guest menu
-                </p>
-              </div>
-            </div>
+        {/* Right: Synced Owner Control + Realistic Smartphone Menu Preview */}
+        <div className="landing-demo-preview landing-hero-enter-delayed space-y-3">
+          <h2 className="sr-only">Live Spice Garden Kitchen interactive menu demonstration</h2>
 
-            <a
-              href={LIVE_MENU_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() =>
-                trackEvent('demo_first_interaction', { source: 'hero_live_menu_link' })
-              }
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-background hover:bg-muted/60 text-xs font-medium text-foreground transition-colors shrink-0"
-            >
-              Explore a live menu
-              <ExternalLink className="w-3.5 h-3.5 text-muted-foreground" strokeWidth={1.5} aria-hidden="true" />
-            </a>
-          </div>
-
-          {/* Owner Quick-Sync Control Strip (Single Hairline Band) */}
-          <div className="px-4 py-3 sm:px-5 bg-muted/30 border-b border-border space-y-2.5">
+          {/* Supporting Visual: Owner Management Bar */}
+          <div className="rounded-2xl border border-border bg-muted/40 p-3.5 sm:p-4 space-y-2.5">
             <div className="flex items-center justify-between gap-2">
-              <div className="flex items-baseline gap-2.5 text-xs">
+              <div className="flex items-center gap-2 text-xs">
                 <span className="font-medium text-foreground">Owner control: Chicken Kottu</span>
                 <span className="text-muted-foreground tabular-nums">{formattedOwnerPrice}</span>
               </div>
               <button
                 type="button"
                 onClick={handleReset}
-                className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+                className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors min-h-[44px] sm:min-h-0 px-2 -my-2 sm:my-0 rounded-md"
               >
                 <RotateCcw className="w-3.5 h-3.5" strokeWidth={1.5} aria-hidden="true" />
                 Reset
@@ -248,7 +200,7 @@ export function HeroSection() {
               <div className="flex items-center gap-2">
                 <label
                   htmlFor="hero-demo-price"
-                  className="text-xs text-muted-foreground shrink-0"
+                  className="text-xs font-medium text-muted-foreground shrink-0"
                 >
                   Price (LKR)
                 </label>
@@ -259,19 +211,19 @@ export function HeroSection() {
                   value={dishPrice === 0 ? '' : String(dishPrice)}
                   onChange={(e) => handlePriceChange(e.target.value)}
                   placeholder="1350"
-                  className="h-9 rounded-lg bg-background font-medium tabular-nums"
+                  className="h-11 sm:h-9 rounded-lg bg-background font-medium tabular-nums"
                 />
               </div>
 
-              <div className="flex items-center justify-between sm:justify-end gap-2.5 px-3 h-9 rounded-lg bg-background border border-border">
+              <div className="flex items-center justify-between sm:justify-end gap-3 px-3 h-11 sm:h-9 rounded-lg bg-background border border-border">
                 <label
                   htmlFor="hero-demo-available"
                   className="inline-flex items-center gap-1.5 text-xs font-medium cursor-pointer"
                 >
                   <span
-                    className={`w-1.5 h-1.5 rounded-full ${
+                    className={`w-2 h-2 rounded-full ${
                       dishAvailable
-                        ? 'bg-[#1F8A4C] dark:bg-emerald-400'
+                        ? 'bg-[#18753F] dark:bg-emerald-400'
                         : 'bg-[#C8372D] dark:bg-red-400'
                     }`}
                     aria-hidden="true"
@@ -279,7 +231,7 @@ export function HeroSection() {
                   <span
                     className={
                       dishAvailable
-                        ? 'text-[#1F8A4C] dark:text-emerald-400'
+                        ? 'text-[#18753F] dark:text-emerald-400'
                         : 'text-[#C8372D] dark:text-red-400'
                     }
                   >
@@ -296,27 +248,82 @@ export function HeroSection() {
             </div>
           </div>
 
-          {/* Guest Menu Preview Using Existing CategoryTabs + FoodCard */}
-          <div className="bg-background">
-            <CategoryTabs
-              categories={demoCategories}
-              selectedCategory={selectedCategory}
-              onSelectCategory={(cat) => {
-                recordFirstDemoInteraction();
-                setSelectedCategory(cat);
-              }}
-              className="static py-2.5 px-4 border-b border-border"
-            />
-            <div className="p-4 space-y-3" aria-live="polite">
-              {visibleDemoItems.map((item) => (
-                <FoodCard key={item.id} item={item} variant="list" />
-              ))}
-            </div>
-            <p className="px-4 py-2.5 border-t border-border bg-muted/20 text-xs text-muted-foreground text-center">
-              Guest browser preview — customers browse on their phone and order with staff
-            </p>
+          {/* Subtle Visual Connection Indicator */}
+          <div className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
+            <ArrowDownRight className="w-3.5 h-3.5 text-primary" strokeWidth={1.75} aria-hidden="true" />
+            <span>Updates reflect immediately on the guest phone menu</span>
           </div>
-        </Card>
+
+          {/* Main Visual: Smartphone Frame Displaying Spice Garden Kitchen */}
+          <div
+            className="landing-phone-frame overflow-hidden max-w-[460px] mx-auto lg:max-w-none"
+            aria-label="Smartphone view of Spice Garden Kitchen live Menuzo menu"
+          >
+            {/* Subtle Phone Top Chrome */}
+            <div className="px-4 py-2 border-b border-border bg-muted/30 flex items-center justify-between gap-2 text-xs text-muted-foreground">
+              <span className="truncate font-medium">menuzo.lk/spicegardenkitchen</span>
+              <span className="inline-flex items-center gap-1.5 text-[#18753F] dark:text-emerald-400 font-medium shrink-0">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#18753F] dark:bg-emerald-400" aria-hidden="true" />
+                Live menu
+              </span>
+            </div>
+
+            {/* Real Shop Header Inside Smartphone */}
+            <div className="p-3.5 sm:px-4 border-b border-border flex flex-wrap items-center justify-between gap-3 bg-card">
+              <div className="flex items-center gap-3 min-w-0">
+                <img
+                  src="/Landing/spice-garden-qr.svg"
+                  alt="QR code for Spice Garden Kitchen live Menuzo menu"
+                  width={44}
+                  height={44}
+                  className="w-11 h-11 rounded-lg border border-border bg-white p-0.5 shrink-0"
+                />
+                <div className="min-w-0">
+                  <h3 className="text-sm font-medium text-foreground truncate">
+                    Spice Garden Kitchen
+                  </h3>
+                  <p className="text-xs text-muted-foreground">
+                    Scan QR or open in browser
+                  </p>
+                </div>
+              </div>
+
+              <a
+                href={LIVE_MENU_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() =>
+                  trackEvent('demo_first_interaction', { source: 'hero_live_menu_link' })
+                }
+                className="inline-flex items-center gap-1.5 px-3 min-h-[44px] sm:min-h-0 sm:py-1.5 rounded-lg border border-border bg-background hover:bg-muted/60 text-xs font-medium text-foreground transition-colors shrink-0"
+              >
+                Open live menu
+                <ExternalLink className="w-3.5 h-3.5 text-muted-foreground" strokeWidth={1.5} aria-hidden="true" />
+              </a>
+            </div>
+
+            {/* Real Menuzo CategoryTabs + FoodCard */}
+            <div className="bg-background">
+              <CategoryTabs
+                categories={demoCategories}
+                selectedCategory={selectedCategory}
+                onSelectCategory={(cat) => {
+                  recordFirstDemoInteraction();
+                  setSelectedCategory(cat);
+                }}
+                className="static py-2.5 px-4 border-b border-border"
+              />
+              <div className="p-3.5 sm:p-4 space-y-3" aria-live="polite">
+                {visibleDemoItems.map((item) => (
+                  <FoodCard key={item.id} item={item} variant="list" />
+                ))}
+              </div>
+              <p className="px-4 py-2 border-t border-border bg-muted/20 text-xs text-muted-foreground text-center">
+                Tap Portions to see size options, or edit Chicken Kottu above
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
   );

@@ -1,49 +1,64 @@
-import { AlertCircle, BookOpen, Printer } from 'lucide-react';
+import { Check, X } from 'lucide-react';
 
-const problems = [
-  {
-    title: 'Constant reprinting',
-    description: 'A simple price change means editing and printing menus again.',
-    icon: Printer,
-  },
-  {
-    title: 'Sold-out confusion',
-    description: 'Customers may select dishes that are no longer available.',
-    icon: AlertCircle,
-  },
-  {
-    title: 'Limited menu copies',
-    description: 'Customers may have to wait for a physical menu to become available.',
-    icon: BookOpen,
-  },
+const printedBefore = [
+  'Paying to reprint menus every time ingredient costs or LKR prices shift.',
+  'Guests ordering dishes that just sold out in the kitchen.',
+  'Waiting for shared paper menus to free up during busy service hours.',
+  'Crossing out items by hand or managing outdated static PDF links.',
+];
+
+const menuzoAfter = [
+  'Change prices and descriptions once and every table QR stays current.',
+  'Flip a dish to Sold out so unavailable items are clearly marked for guests.',
+  'Every customer scans with their own phone browser with zero waiting.',
+  'Organize clean categories, daily specials, and multiple portion prices.',
 ];
 
 export function ProblemSolutionSection() {
   return (
-    <section id="problem" className="landing-section bg-muted/30 border-b border-border">
+    <section id="problem" className="landing-section bg-background border-b border-border">
       <div className="landing-container">
         <div className="max-w-2xl mb-10 sm:mb-12">
           <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground mb-3">
-            Still managing your menu with printed copies?
+            Stop reprinting menus for small daily changes
           </h2>
           <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
-            Small menu changes can create unnecessary work for restaurant owners.
+            Replace static paper menus and crossed-out price sheets with one live menu your staff and guests can rely on.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 border-y border-border divide-y md:divide-y-0 md:divide-x divide-border">
-          {problems.map((item) => {
-            const Icon = item.icon;
-            return (
-              <div key={item.title} className="py-6 md:py-8 md:px-6 first:md:pl-0 last:md:pr-0">
-                <Icon className="w-5 h-5 text-muted-foreground mb-4" strokeWidth={1.5} aria-hidden="true" />
-                <h3 className="text-lg font-medium text-foreground mb-2">{item.title}</h3>
-                <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
-                  {item.description}
-                </p>
-              </div>
-            );
-          })}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
+          {/* Before: Printed Menus */}
+          <div className="rounded-2xl border border-border bg-card p-6 sm:p-8 flex flex-col">
+            <div className="pb-4 mb-5 border-b border-border flex items-center justify-between gap-3">
+              <h3 className="text-lg font-medium text-foreground">Printed & static menus</h3>
+              <span className="text-xs font-medium text-[#C8372D] dark:text-red-400">Before Menuzo</span>
+            </div>
+            <ul className="space-y-4">
+              {printedBefore.map((point) => (
+                <li key={point} className="flex items-start gap-3 text-sm sm:text-base text-muted-foreground leading-relaxed">
+                  <X className="w-4 h-4 mt-1 shrink-0 text-[#C8372D] dark:text-red-400" strokeWidth={1.75} aria-hidden="true" />
+                  <span>{point}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* After: Menuzo Digital Menu (Company Chalkboard #12261F) */}
+          <div className="rounded-2xl border border-[#243E35] bg-[#12261F] text-[#F3F5F0] p-6 sm:p-8 flex flex-col">
+            <div className="pb-4 mb-5 border-b border-[#243E35] flex items-center justify-between gap-3">
+              <h3 className="text-lg font-medium text-white">With Menuzo</h3>
+              <span className="text-xs font-medium text-primary">One source of truth</span>
+            </div>
+            <ul className="space-y-4">
+              {menuzoAfter.map((point) => (
+                <li key={point} className="flex items-start gap-3 text-sm sm:text-base text-[#D2D8CF] leading-relaxed">
+                  <Check className="w-4 h-4 mt-1 shrink-0 text-primary" strokeWidth={2} aria-hidden="true" />
+                  <span>{point}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       </div>
     </section>

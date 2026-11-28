@@ -1,50 +1,65 @@
+import { Globe, QrCode, UtensilsCrossed } from 'lucide-react';
+
 const steps = [
   {
     number: '01',
-    title: 'Create your account',
-    description: 'Set up your restaurant profile',
+    title: 'Create your digital menu',
+    description:
+      'Add your restaurant profile, menu categories, dish photos, prices, and portion options from one dashboard.',
+    icon: UtensilsCrossed,
   },
   {
     number: '02',
-    title: 'Add your dishes',
-    description: 'Add food names, prices, categories, and images',
+    title: 'Generate your QR code',
+    description:
+      'Pick a preset or custom theme and download a table-ready QR code as PNG or SVG.',
+    icon: QrCode,
   },
   {
     number: '03',
-    title: 'Customize your menu',
-    description: 'Choose an available theme and prepare your QR code',
-  },
-  {
-    number: '04',
-    title: 'Share your QR code',
-    description: 'Download your QR code and place it on restaurant tables',
+    title: 'Let customers scan and browse',
+    description:
+      'Guests scan the QR code using their mobile browser with no app download needed, and order directly with your staff.',
+    icon: Globe,
   },
 ];
 
 export function HowItWorksSection() {
   return (
-    <section id="how-it-works" className="landing-section bg-background border-b border-border">
+    <section id="how-it-works" className="landing-section bg-muted/30 border-b border-border">
       <div className="landing-container">
         <div className="max-w-2xl mb-10 sm:mb-12">
-          <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground">
-            Your digital menu, ready in a few simple steps
+          <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground mb-2">
+            From setup to restaurant tables in three steps
           </h2>
+          <p className="text-base text-muted-foreground">
+            Publish once, print your QR code once, and keep every dish up to date without reprinting.
+          </p>
         </div>
 
-        <ol className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-          {steps.map((step) => (
-            <li key={step.number} className="pt-4 border-t border-border">
-              <span className="block text-xs font-medium text-primary tabular-nums mb-3">
-                {step.number}
-              </span>
-              <h3 className="text-base sm:text-lg font-medium text-foreground mb-1.5">
-                {step.title}
-              </h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                {step.description}
-              </p>
-            </li>
-          ))}
+        <ol className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
+          {steps.map((step) => {
+            const Icon = step.icon;
+            return (
+              <li
+                key={step.number}
+                className="rounded-2xl border border-border bg-card p-6 flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex items-center justify-between gap-3 mb-4">
+                    <span className="text-xs font-medium text-[#C2530A] dark:text-primary tabular-nums">
+                      Step {step.number}
+                    </span>
+                    <Icon className="w-4 h-4 text-muted-foreground" strokeWidth={1.5} aria-hidden="true" />
+                  </div>
+                  <h3 className="text-lg font-medium text-foreground mb-2">{step.title}</h3>
+                  <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
+                    {step.description}
+                  </p>
+                </div>
+              </li>
+            );
+          })}
         </ol>
       </div>
     </section>

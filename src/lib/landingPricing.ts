@@ -132,7 +132,7 @@ export function buildLandingPricingModel(
     PLAN_FEATURES.plus.customThemes ? 'Custom brand themes' : '',
     PLAN_FEATURES.plus.qrBranding ? 'Branded QR export' : '',
     PLAN_FEATURES.plus.customUrl ? 'Custom menu URL' : '',
-    PLAN_FEATURES.plus.analytics === 'advanced' ? '30-day menu & scan insights' : '',
+    PLAN_FEATURES.plus.analytics === 'advanced' ? '7 & 30-day view & scan insights' : '',
   ].filter(Boolean);
 
   const businessFeatures = [
@@ -146,18 +146,18 @@ export function buildLandingPricingModel(
     {
       id: 'free',
       name: 'Free',
-      tagline: 'For cafés and small restaurants putting their first QR menu on tables.',
+      tagline: 'Start using Menuzo on tables with zero upfront commitment.',
       priceText: formatLkr(0, currency),
       periodText: 'forever',
       billingNote: 'No card required.',
       limitsSummary: `${FREE_PLAN_LIMITS.items} dishes, ${FREE_PLAN_LIMITS.categories} categories`,
       features: freeFeatures,
-      ctaLabel: 'Build my free menu',
+      ctaLabel: 'Get started free',
     },
     {
       id: 'plus',
       name: 'Plus',
-      tagline: 'For growing menus that need more dishes, custom branding, and insights.',
+      tagline: 'Grow your restaurant with more dishes, custom branding, and insights.',
       priceText: plusPriceText,
       periodText: plusPeriodText,
       billingNote: plusBillingNote,
@@ -173,13 +173,13 @@ export function buildLandingPricingModel(
     {
       id: 'business',
       name: 'Business',
-      tagline: 'For high-volume venues and hospitality teams with specific needs.',
+      tagline: 'Larger operations and hospitality venues with expanded requirements.',
       priceText: 'Custom',
       periodText: '',
-      billingNote: 'Contact us to discuss your venue.',
+      billingNote: 'Discuss tailored setup with our team.',
       limitsSummary: 'Tailored menu capacity',
       features: businessFeatures,
-      ctaLabel: 'Talk to us',
+      ctaLabel: 'Contact sales',
     },
   ];
 
@@ -203,22 +203,28 @@ export function buildLandingPricingModel(
       business: true,
     },
     {
-      feature: 'Downloadable QR code',
+      feature: 'Portion options & discounts',
+      free: true,
+      plus: true,
+      business: true,
+    },
+    {
+      feature: 'Downloadable QR (PNG/SVG)',
       free: PLAN_FEATURES.free.qrCode,
       plus: PLAN_FEATURES.plus.qrCode,
       business: true,
     },
     {
-      feature: 'Custom menu themes',
-      free: 'Preset themes',
-      plus: PLAN_FEATURES.plus.customThemes,
-      business: true,
+      feature: 'Menu themes',
+      free: '5 preset themes',
+      plus: 'Custom brand',
+      business: 'Custom brand',
     },
     {
-      feature: 'QR branding',
-      free: 'Basic',
-      plus: PLAN_FEATURES.plus.qrBranding,
-      business: true,
+      feature: 'QR styling & logo',
+      free: 'Standard',
+      plus: 'Branded',
+      business: 'Branded',
     },
     {
       feature: 'Custom menu URL',
@@ -228,9 +234,9 @@ export function buildLandingPricingModel(
     },
     {
       feature: 'Menu insights',
-      free: 'Basic',
-      plus: 'Advanced',
-      business: 'Advanced',
+      free: 'Basic views',
+      plus: '30-day charts',
+      business: '30-day charts',
     },
     {
       feature: 'Dedicated onboarding',

@@ -1,4 +1,4 @@
-/* Scoped layout, motion curve, and preview refinements for the Menuzo landing page.
+/* Scoped layout, motion curve, accessibility, and preview refinements for the Menuzo landing page.
  * Colors, light/dark surfaces, and typography inherit from Menuzo's theme tokens in src/index.css.
  */
 
@@ -32,11 +32,20 @@
 
 @media (min-width: 768px) {
   .landing-section {
-    padding-block: 5.5rem;
+    padding-block: 5.25rem;
   }
 }
 
-/* Keep the live hero FoodCard preview calm without hover scaling or backdrop blur */
+/* High-contrast keyboard focus ring across light and dark landing surfaces */
+.landing a:focus-visible,
+.landing button:focus-visible,
+.landing input:focus-visible,
+.landing summary:focus-visible {
+  outline: 2px solid hsl(var(--foreground));
+  outline-offset: 2px;
+}
+
+/* Keep the live hero & showcase FoodCard preview calm without hover scaling, blur, or tight line collisions */
 .landing-demo-preview [data-slot='card'],
 .landing-demo-preview .food-card,
 .landing-demo-preview .rounded-2xl {
@@ -52,6 +61,35 @@
 
 .landing-demo-preview .rounded-2xl:hover {
   transform: none;
+}
+
+.landing-demo-preview .shop-price-row {
+  margin-top: 0.5rem;
+}
+
+/* Improve contrast on shared CategoryTabs & FoodCard price tokens inside light landing previews */
+.landing-demo-preview button.bg-primary {
+  color: #12261F;
+}
+
+.landing-demo-preview .text-primary {
+  color: #C2530A;
+}
+
+.dark .landing-demo-preview .text-primary {
+  color: hsl(var(--primary));
+}
+
+/* Realistic restrained phone frame without glows or decorative shadows */
+.landing-phone-frame {
+  border-radius: 1.75rem;
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--card));
+  box-shadow: 0 10px 30px -14px rgba(15, 23, 42, 0.12);
+}
+
+.dark .landing-phone-frame {
+  box-shadow: 0 12px 32px -14px rgba(0, 0, 0, 0.55);
 }
 
 @keyframes landingHeroEnter {

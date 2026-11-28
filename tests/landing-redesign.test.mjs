@@ -60,7 +60,7 @@ test('landing pricing adapter produces unified Free, Plus, and Business plans fr
   assert.equal(plus.priceText, 'LKR 1,500');
   assert.match(plus.limitsSummary, /100 dishes, 20 categories/);
   assert.equal(business.priceText, 'Custom');
-  assert.equal(business.ctaLabel, 'Talk to us');
+  assert.equal(business.ctaLabel, 'Contact sales');
 
   // Comparison table uses the exact same verified limits
   const itemRow = monthlyModel.comparisonRows.find((r) => r.feature === 'Food items');
@@ -86,15 +86,18 @@ test('landing pricing adapter computes annual monthly equivalent and savings onl
   assert.equal(failedModel.pricingUnavailable, true);
 });
 
-test('landing page keeps 7-section structure, zero framer-motion, zero iframes, and no fake proof', () => {
+test('landing page keeps V2 10-section main structure, zero framer-motion, zero iframes, and verified proof/partner links', () => {
   const landingPageSource = readFileSync(new URL('../src/pages/LandingPage.tsx', import.meta.url), 'utf8');
   const expectedOrder = [
     '<HeroSection />',
+    '<ProofSection />',
     '<ProblemSolutionSection />',
     '<HowItWorksSection />',
+    '<ProductShowcaseSection />',
     '<FeaturesSection />',
-    '<ProofSection />',
+    '<AudienceSection />',
     '<PricingSection />',
+    '<PartnersSection />',
     '<FAQSection />',
   ];
   let lastIndex = -1;
@@ -108,11 +111,14 @@ test('landing page keeps 7-section structure, zero framer-motion, zero iframes, 
     'src/pages/LandingPage.tsx',
     'src/components/landing/Navbar.tsx',
     'src/components/landing/HeroSection.tsx',
+    'src/components/landing/ProofSection.tsx',
     'src/components/landing/ProblemSolutionSection.tsx',
     'src/components/landing/HowItWorksSection.tsx',
+    'src/components/landing/ProductShowcaseSection.tsx',
     'src/components/landing/FeaturesSection.tsx',
-    'src/components/landing/ProofSection.tsx',
+    'src/components/landing/AudienceSection.tsx',
     'src/components/landing/PricingSection.tsx',
+    'src/components/landing/PartnersSection.tsx',
     'src/components/landing/FAQSection.tsx',
     'src/components/landing/FinalCTASection.tsx',
     'src/components/landing/Footer.tsx',
@@ -131,12 +137,16 @@ test('landing page keeps 7-section structure, zero framer-motion, zero iframes, 
 
   const heroSource = readFileSync(new URL('../src/components/landing/HeroSection.tsx', import.meta.url), 'utf8');
   assert.ok(heroSource.includes('https://menuzo.lk/spicegardenkitchen'));
-  assert.ok(heroSource.includes('Explore a live menu'));
-  assert.ok(heroSource.includes('Contact us'));
+  assert.ok(heroSource.includes('Explore live menu'));
+  assert.ok(heroSource.includes('Open live menu'));
   assert.ok(heroSource.includes('FoodCard'));
   assert.ok(heroSource.includes('CategoryTabs'));
   assert.ok(heroSource.includes('/Landing/spice-garden-qr.svg'));
 
+  const partnersSource = readFileSync(new URL('../src/components/landing/PartnersSection.tsx', import.meta.url), 'utf8');
+  assert.ok(partnersSource.includes('Become a partner'));
+  assert.ok(!partnersSource.includes("SET_VIEW', payload: 'contact'"));
+
   const finalCtaSource = readFileSync(new URL('../src/components/landing/FinalCTASection.tsx', import.meta.url), 'utf8');
-  assert.ok(finalCtaSource.includes('Contact us'));
+  assert.ok(finalCtaSource.includes('Explore Menuzo'));
 });

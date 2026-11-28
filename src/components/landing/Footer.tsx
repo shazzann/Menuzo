@@ -1,38 +1,38 @@
+import type { MouseEvent } from 'react';
 import { useApp } from '@/store';
+import type { View } from '@/types';
+import { getPublicEmailUrl, getPublicWhatsAppUrl } from '@/lib/contact';
 
 export function Footer() {
-  const { state, dispatch } = useApp();
+  const { dispatch } = useApp();
 
-  const handleNavigate = (view: 'terms' | 'privacy' | 'contact' | 'about') => {
+  const partnerHref =
+    getPublicWhatsAppUrl('Hello Menuzo, I would like to get in touch regarding Menuzo.') ||
+    getPublicEmailUrl('Menuzo Support / Partnership Enquiry');
+
+  const handleNavigate = (view: View) => {
     dispatch({ type: 'SET_VIEW', payload: view });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleSectionLink = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+  const handleSectionLink = (e: MouseEvent<HTMLAnchorElement>, selector: string) => {
     e.preventDefault();
     const scrollToSection = () => {
-      if (href === '#home') {
+      if (selector === '#home') {
         window.scrollTo({ top: 0, behavior: 'smooth' });
         return;
       }
-      const el = document.querySelector(href);
+      const el = document.querySelector(selector);
       if (el) {
-        const top = el.getBoundingClientRect().top + window.scrollY - 72;
-        window.scrollTo({ top, behavior: 'smooth' });
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
     };
-
-    if (state.currentView !== 'landing') {
-      dispatch({ type: 'SET_VIEW', payload: 'landing' });
-      window.setTimeout(scrollToSection, 40);
-      return;
-    }
     scrollToSection();
   };
 
   return (
     <footer className="bg-card border-t border-border py-12 text-foreground">
-      <div className="w-full max-w-[1200px] mx-auto px-4 sm:px-6">
+      <div className="landing-container">
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-8 pb-8 border-b border-border">
           <div className="max-w-sm">
             <img
@@ -52,60 +52,61 @@ export function Footer() {
               loading="lazy"
             />
             <p className="text-sm text-muted-foreground leading-relaxed">
-              QR-based digital menus for Sri Lankan cafés and restaurants. Update prices and sold-out dishes any time.
+              Digital QR menu management for cafés, restaurants, and food businesses. Update prices and sold-out dishes anytime.
             </p>
           </div>
 
           <nav
             aria-label="Footer navigation"
-            className="flex flex-wrap gap-x-8 gap-y-3 text-sm font-medium text-muted-foreground"
+            className="flex flex-wrap gap-x-6 gap-y-1 text-sm font-medium text-muted-foreground"
           >
             <a
-              href="#home"
-              onClick={(e) => handleSectionLink(e, '#home')}
-              className="hover:text-primary transition-colors"
+              href="#product"
+              onClick={(e) => handleSectionLink(e, '#product')}
+              className="inline-flex items-center min-h-[44px] sm:min-h-0 hover:text-primary transition-colors"
             >
-              Home
-            </a>
-            <a
-              href="#how-it-works"
-              onClick={(e) => handleSectionLink(e, '#how-it-works')}
-              className="hover:text-primary transition-colors"
-            >
-              How it works
+              Product
             </a>
             <a
               href="#features"
               onClick={(e) => handleSectionLink(e, '#features')}
-              className="hover:text-primary transition-colors"
+              className="inline-flex items-center min-h-[44px] sm:min-h-0 hover:text-primary transition-colors"
             >
               Features
             </a>
             <a
               href="#pricing"
               onClick={(e) => handleSectionLink(e, '#pricing')}
-              className="hover:text-primary transition-colors"
+              className="inline-flex items-center min-h-[44px] sm:min-h-0 hover:text-primary transition-colors"
             >
               Pricing
             </a>
             <a
+              href="#partners"
+              onClick={(e) => handleSectionLink(e, '#partners')}
+              className="inline-flex items-center min-h-[44px] sm:min-h-0 hover:text-primary transition-colors"
+            >
+              For Partners
+            </a>
+            <a
               href="#faq"
               onClick={(e) => handleSectionLink(e, '#faq')}
-              className="hover:text-primary transition-colors"
+              className="inline-flex items-center min-h-[44px] sm:min-h-0 hover:text-primary transition-colors"
             >
               FAQ
             </a>
-            <button
-              type="button"
-              onClick={() => handleNavigate('contact')}
-              className="hover:text-primary transition-colors text-left"
+            <a
+              href={partnerHref}
+              target={partnerHref.startsWith('http') ? '_blank' : undefined}
+              rel={partnerHref.startsWith('http') ? 'noopener noreferrer' : undefined}
+              className="inline-flex items-center min-h-[44px] sm:min-h-0 hover:text-primary transition-colors text-left"
             >
-              Contact
-            </button>
+              Support
+            </a>
             <button
               type="button"
               onClick={() => handleNavigate('about')}
-              className="hover:text-primary transition-colors text-left"
+              className="inline-flex items-center min-h-[44px] sm:min-h-0 hover:text-primary transition-colors text-left"
             >
               About Us
             </button>
@@ -118,14 +119,14 @@ export function Footer() {
             <button
               type="button"
               onClick={() => handleNavigate('privacy')}
-              className="hover:text-primary transition-colors"
+              className="inline-flex items-center min-h-[44px] sm:min-h-0 hover:text-primary transition-colors"
             >
               Privacy Policy
             </button>
             <button
               type="button"
               onClick={() => handleNavigate('terms')}
-              className="hover:text-primary transition-colors"
+              className="inline-flex items-center min-h-[44px] sm:min-h-0 hover:text-primary transition-colors"
             >
               Terms & Conditions
             </button>
