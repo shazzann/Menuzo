@@ -217,7 +217,7 @@ export function buildLandingPricingModel(
     {
       feature: 'Menu themes',
       free: '5 preset themes',
-      plus: 'Custom brand',
+      plus: 'Plus themes',
       business: 'Custom brand',
     },
     {
