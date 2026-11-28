@@ -103,32 +103,32 @@ const portionOptions = [
   { label: 'Large', serve: 'Sharing portion', price: 'Rs. 1650.00' },
 ];
 
-const qrTiers = [
+const qrStyles = [
   {
-    id: 'free',
-    label: 'Free',
+    id: 'square',
+    label: 'Square',
     url: 'menuzo.lk/spicegarden',
-    urlNote: 'Standard URL',
-    shape: 'Square QR',
+    urlNote: 'Standard link',
+    shape: 'Square modules',
     logo: false,
     colors: false,
-    description: 'Download a clean square QR that links to your menu instantly.',
+    description: 'Clean, high-contrast square QR code ready for instant printing.',
   },
   {
-    id: 'plus',
-    label: 'Plus',
+    id: 'branded',
+    label: 'Branded',
     url: 'menuzo.lk/spicegardenkitchen',
-    urlNote: 'Custom URL',
+    urlNote: 'Custom link',
     shape: 'Rounded pattern',
     logo: true,
     colors: true,
-    description: 'Custom URL, rounded dot pattern, brand colours, and your shop logo in the centre.',
+    description: 'Custom link, rounded dot pattern, brand colours, and your shop logo in the centre.',
   },
 ] as const;
 
 function QRExportBeat() {
-  const [tier, setTier] = useState<'free' | 'plus'>('free');
-  const active = qrTiers.find((t) => t.id === tier)!;
+  const [style, setStyle] = useState<'square' | 'branded'>('branded');
+  const active = qrStyles.find((s) => s.id === style)!;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
@@ -142,29 +142,24 @@ function QRExportBeat() {
           sized for table tents, countertop stands, or signage.
         </p>
 
-        {/* Free / Plus toggle */}
+        {/* QR style toggle */}
         <div
           className="inline-flex rounded-xl border border-border bg-muted/40 p-1 gap-1"
           role="group"
-          aria-label="QR tier"
+          aria-label="QR style"
         >
-          {qrTiers.map((t) => (
+          {qrStyles.map((s) => (
             <button
-              key={t.id}
+              key={s.id}
               type="button"
-              onClick={() => setTier(t.id)}
+              onClick={() => setStyle(s.id)}
               className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
-                tier === t.id
+                style === s.id
                   ? 'bg-background text-foreground shadow-sm border border-border'
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
-              {t.label}
-              {t.id === 'plus' && (
-                <span className="ml-1.5 text-[10px] font-semibold text-[#C2530A] dark:text-primary uppercase tracking-wide">
-                  Plus
-                </span>
-              )}
+              {s.label}
             </button>
           ))}
         </div>
@@ -192,7 +187,7 @@ function QRExportBeat() {
         {/* Print card mock */}
         <div
           className={`relative rounded-xl border-2 p-6 flex flex-col items-center gap-4 transition-colors ${
-            tier === 'plus'
+            style === 'branded'
               ? 'border-[#C2530A]/30 dark:border-primary/30 bg-[#FFF8F5] dark:bg-[#1A100A]'
               : 'border-border bg-muted/20'
           }`}
@@ -201,7 +196,7 @@ function QRExportBeat() {
           <div className="text-center">
             <p
               className={`text-sm font-semibold tracking-tight ${
-                tier === 'plus' ? 'text-[#C2530A] dark:text-primary' : 'text-foreground'
+                style === 'branded' ? 'text-[#C2530A] dark:text-primary' : 'text-foreground'
               }`}
             >
               Spice Garden Kitchen
@@ -212,21 +207,21 @@ function QRExportBeat() {
           {/* QR image */}
           <div
             className={`relative rounded-xl overflow-hidden ${
-              tier === 'plus'
+              style === 'branded'
                 ? 'ring-2 ring-[#C2530A]/20 dark:ring-primary/20'
                 : 'ring-1 ring-border'
             }`}
           >
             <img
               src={
-                tier === 'plus'
+                style === 'branded'
                   ? '/Landing/spice-garden-kitchen-qr-code.png'
                   : '/Landing/spice-garden-qr.svg'
               }
               alt={
-                tier === 'plus'
-                  ? 'Branded Menuzo Plus QR code with Spice Garden Kitchen logo'
-                  : 'Menuzo Free QR code for Spice Garden Kitchen'
+                style === 'branded'
+                  ? 'Branded QR code with Spice Garden Kitchen logo'
+                  : 'Square QR code for Spice Garden Kitchen'
               }
               width={160}
               height={160}
@@ -239,7 +234,7 @@ function QRExportBeat() {
           <div className="flex items-center gap-1.5">
             <span
               className={`font-mono text-xs px-3 py-1 rounded-full border ${
-                tier === 'plus'
+                style === 'branded'
                   ? 'border-[#C2530A]/30 dark:border-primary/30 text-[#C2530A] dark:text-primary bg-[#C2530A]/5 dark:bg-primary/5'
                   : 'border-border text-muted-foreground bg-muted/40'
               }`}
@@ -247,13 +242,6 @@ function QRExportBeat() {
               {active.url}
             </span>
           </div>
-
-          {/* Plus badge */}
-          {tier === 'plus' && (
-            <span className="absolute top-3 right-3 text-[10px] font-semibold text-[#C2530A] dark:text-primary uppercase tracking-wide px-2 py-0.5 rounded-full border border-[#C2530A]/30 dark:border-primary/30 bg-[#C2530A]/5 dark:bg-primary/5">
-              Plus
-            </span>
-          )}
         </div>
 
         {/* Download badges */}
