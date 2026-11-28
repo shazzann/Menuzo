@@ -1,30 +1,33 @@
 import { AppProvider, useApp } from '@/store';
 import { ThemeProvider } from '@/components/shared/ThemeProvider';
 import { LandingPage } from '@/pages/LandingPage';
-import { LoginPage } from '@/pages/LoginPage';
-import { SignupPage } from '@/pages/SignupPage';
-import { OnboardingPage } from '@/pages/OnboardingPage';
-import { DemoPage } from '@/pages/DemoPage';
 import { SeoLandingPage } from '@/pages/SeoLandingPage';
-import { ContactPage } from '@/pages/ContactPage';
-import { LegalPage } from '@/pages/LegalPage';
-import { AboutPage } from '@/pages/AboutPage';
-import { CustomerMenuPage } from '@/pages/CustomerMenuPage';
-import { FoodDetailPage } from '@/pages/FoodDetailPage';
-import { ShopDetailPage } from '@/pages/ShopDetailPage';
-import { AdminPreviewPage } from '@/pages/AdminPreviewPage';
-import { AdminAddFoodPage } from '@/pages/AdminAddFoodPage';
-import { AdminAnalyticsPage } from '@/pages/AdminAnalyticsPage';
-import { AdminSettingsPage } from '@/pages/AdminSettingsPage';
 import { AdminShopDetailsPage } from '@/pages/AdminShopDetailsPage';
-import { AdminThemePage } from '@/pages/AdminThemePage';
-import { AdminQrPage } from '@/pages/AdminQrPage';
-import { AdminSecurityPage } from '@/pages/AdminSecurityPage';
-import { UserDashboardPage } from '@/pages/UserDashboardPage';
-import { CompanyAdminPage } from '@/pages/CompanyAdminPage';
-import { CompanyAdminLoginPage } from '@/pages/CompanyAdminLoginPage';
-import { ShopNotFoundPage } from '@/pages/ShopNotFoundPage';
-import { BrandBookPage } from '@/pages/BrandBookPage';
+import {
+  LoginPage,
+  SignupPage,
+  OnboardingPage,
+  DemoPage,
+  ContactPage,
+  LegalPage,
+  AboutPage,
+  CustomerMenuPage,
+  FoodDetailPage,
+  ShopDetailPage,
+  AdminPreviewPage,
+  AdminAddFoodPage,
+  AdminAnalyticsPage,
+  AdminSettingsPage,
+  AdminThemePage,
+  AdminQrPage,
+  AdminSecurityPage,
+  UserDashboardPage,
+  CompanyAdminPage,
+  CompanyAdminLoginPage,
+  BrandBookPage,
+  SubscriptionPage,
+  ShopNotFoundPage,
+} from '@/routes/LazyPages';
 import { Toaster } from '@/components/ui/sonner';
 
 import { useEffect, useState } from 'react';
@@ -38,9 +41,21 @@ import { ShopAnalyticsDataLoader } from '@/components/shared/ShopAnalyticsDataLo
 import { ShopThemeApplier } from '@/components/shared/ShopThemeApplier';
 import { SubscriptionDataLoader } from '@/components/shared/SubscriptionDataLoader';
 import { PlanVisibilityLoader } from '@/components/shared/PlanVisibilityLoader';
-import { SubscriptionPage } from '@/pages/SubscriptionPage';
 import { freeSubscription } from '@/lib/subscription';
 import { isOwnerShopView, isPublicShopView, parseShopRoute } from '@/lib/shopRoutes';
+
+const PUBLIC_IMMEDIATE_VIEWS = [
+  'landing',
+  'seo-qr-menu',
+  'seo-digital-menu',
+  'seo-restaurant-menu',
+  'contact',
+  'privacy',
+  'terms',
+  'about',
+  'demo',
+  'brand-book',
+];
 
 function AppContent() {
   const { state, dispatch } = useApp();
@@ -65,6 +80,7 @@ function AppContent() {
   }), [dispatch, authAttempt]);
 
   const isPrivateView = currentView.startsWith('admin-') || currentView === 'user-dashboard' || currentView === 'onboarding';
+  const isPublicImmediateView = PUBLIC_IMMEDIATE_VIEWS.includes(currentView);
 
   useEffect(() => {
     if (!isAuthLoading && !authError && isPrivateView && !state.user) {
@@ -89,14 +105,14 @@ function AppContent() {
     }
   }, [state.user?.id, state.shop.id, state.shopDataContext, state.shopDataStatus, currentView, dispatch]);
 
-  if (authError) {
+  if (authError && !isPublicImmediateView) {
     return <div className="min-h-screen flex flex-col items-center justify-center gap-4 p-6">
       <p role="alert">{authError}</p>
       <button className="rounded-xl bg-primary px-5 py-2 text-primary-foreground" onClick={() => setAuthAttempt(value => value + 1)}>Try again</button>
     </div>;
   }
 
-  if (isAuthLoading) {
+  if (isAuthLoading && !isPublicImmediateView) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
