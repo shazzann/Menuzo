@@ -129,7 +129,7 @@ export function buildLandingPricingModel(
     `${PLUS_PLAN_LIMITS.items} food items`,
     `${PLUS_PLAN_LIMITS.categories} menu categories`,
     'Everything in Free',
-    PLAN_FEATURES.plus.customThemes ? 'Custom brand themes' : '',
+    PLAN_FEATURES.plus.customThemes ? 'Plus themes' : '',
     PLAN_FEATURES.plus.qrBranding ? 'Branded QR export' : '',
     PLAN_FEATURES.plus.customUrl ? 'Custom menu URL' : '',
     PLAN_FEATURES.plus.analytics === 'advanced' ? '7 & 30-day view & scan insights' : '',
