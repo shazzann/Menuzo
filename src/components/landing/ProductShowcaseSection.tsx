@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { QrCode } from 'lucide-react';
+import { Download } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { CategoryTabs } from '@/components/shared/CategoryTabs';
 import { FoodCard } from '@/components/shared/FoodCard';
@@ -102,6 +102,177 @@ const portionOptions = [
   { label: 'Regular', serve: 'Standard plate', price: 'Rs. 1250.00' },
   { label: 'Large', serve: 'Sharing portion', price: 'Rs. 1650.00' },
 ];
+
+const qrTiers = [
+  {
+    id: 'free',
+    label: 'Free',
+    url: 'menuzo.lk/spicegarden',
+    urlNote: 'Standard URL',
+    shape: 'Square QR',
+    logo: false,
+    colors: false,
+    description: 'Download a clean square QR that links to your menu instantly.',
+  },
+  {
+    id: 'plus',
+    label: 'Plus',
+    url: 'menuzo.lk/spicegardenkitchen',
+    urlNote: 'Custom URL',
+    shape: 'Rounded pattern',
+    logo: true,
+    colors: true,
+    description: 'Custom URL, rounded dot pattern, brand colours, and your shop logo in the centre.',
+  },
+] as const;
+
+function QRExportBeat() {
+  const [tier, setTier] = useState<'free' | 'plus'>('free');
+  const active = qrTiers.find((t) => t.id === tier)!;
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+      {/* Left — copy */}
+      <div className="max-w-lg">
+        <h3 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground mb-3">
+          Print-ready QR codes for your menu link
+        </h3>
+        <p className="text-sm sm:text-base text-muted-foreground leading-relaxed mb-6">
+          Every Menuzo menu gets a QR code the moment you publish. Download crisp PNG or SVG files
+          sized for table tents, countertop stands, or signage.
+        </p>
+
+        {/* Free / Plus toggle */}
+        <div
+          className="inline-flex rounded-xl border border-border bg-muted/40 p-1 gap-1"
+          role="group"
+          aria-label="QR tier"
+        >
+          {qrTiers.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => setTier(t.id)}
+              className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
+                tier === t.id
+                  ? 'bg-background text-foreground shadow-sm border border-border'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              {t.label}
+              {t.id === 'plus' && (
+                <span className="ml-1.5 text-[10px] font-semibold text-[#C2530A] dark:text-primary uppercase tracking-wide">
+                  Plus
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+
+        <p className="mt-4 text-sm text-muted-foreground leading-relaxed">{active.description}</p>
+
+        {/* Feature list */}
+        <ul className="mt-5 space-y-2">
+          {[
+            { label: 'URL', value: active.urlNote },
+            { label: 'Pattern', value: active.shape },
+            { label: 'Logo', value: active.logo ? 'Shop logo in centre' : 'No logo' },
+            { label: 'Brand colours', value: active.colors ? 'Your palette' : 'Default black' },
+          ].map(({ label, value }) => (
+            <li key={label} className="flex items-baseline gap-3 text-sm">
+              <span className="w-28 shrink-0 text-muted-foreground">{label}</span>
+              <span className="font-medium text-foreground">{value}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      {/* Right — QR print-frame mock */}
+      <Card className="rounded-2xl border-border bg-card p-5 sm:p-6">
+        {/* Print card mock */}
+        <div
+          className={`relative rounded-xl border-2 p-6 flex flex-col items-center gap-4 transition-colors ${
+            tier === 'plus'
+              ? 'border-[#C2530A]/30 dark:border-primary/30 bg-[#FFF8F5] dark:bg-[#1A100A]'
+              : 'border-border bg-muted/20'
+          }`}
+        >
+          {/* Venue name */}
+          <div className="text-center">
+            <p
+              className={`text-sm font-semibold tracking-tight ${
+                tier === 'plus' ? 'text-[#C2530A] dark:text-primary' : 'text-foreground'
+              }`}
+            >
+              Spice Garden Kitchen
+            </p>
+            <p className="text-xs text-muted-foreground mt-0.5">Scan to view our menu</p>
+          </div>
+
+          {/* QR image */}
+          <div
+            className={`relative rounded-xl overflow-hidden ${
+              tier === 'plus'
+                ? 'ring-2 ring-[#C2530A]/20 dark:ring-primary/20'
+                : 'ring-1 ring-border'
+            }`}
+          >
+            <img
+              src="/Landing/spice-garden-qr.svg"
+              alt="Menuzo QR code for Spice Garden Kitchen"
+              width={160}
+              height={160}
+              loading="lazy"
+              className={`w-40 h-40 block transition-opacity ${tier === 'free' ? '' : 'opacity-90'}`}
+            />
+            {/* Plus logo overlay */}
+            {tier === 'plus' && (
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div className="w-9 h-9 rounded-lg bg-[#C2530A] dark:bg-primary flex items-center justify-center shadow-md">
+                  <span className="text-white text-[10px] font-bold leading-none">MZ</span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* URL pill */}
+          <div className="flex items-center gap-1.5">
+            <span
+              className={`font-mono text-xs px-3 py-1 rounded-full border ${
+                tier === 'plus'
+                  ? 'border-[#C2530A]/30 dark:border-primary/30 text-[#C2530A] dark:text-primary bg-[#C2530A]/5 dark:bg-primary/5'
+                  : 'border-border text-muted-foreground bg-muted/40'
+              }`}
+            >
+              {active.url}
+            </span>
+          </div>
+
+          {/* Plus badge */}
+          {tier === 'plus' && (
+            <span className="absolute top-3 right-3 text-[10px] font-semibold text-[#C2530A] dark:text-primary uppercase tracking-wide px-2 py-0.5 rounded-full border border-[#C2530A]/30 dark:border-primary/30 bg-[#C2530A]/5 dark:bg-primary/5">
+              Plus
+            </span>
+          )}
+        </div>
+
+        {/* Download badges */}
+        <div className="mt-4 flex items-center gap-2 justify-end">
+          <span className="text-xs text-muted-foreground">Export as</span>
+          {['.PNG', '.SVG'].map((ext) => (
+            <span
+              key={ext}
+              className="inline-flex items-center gap-1 text-xs font-mono font-medium text-foreground border border-border rounded-md px-2 py-1 bg-muted/30"
+            >
+              <Download className="w-3 h-3 text-muted-foreground" aria-hidden="true" />
+              {ext}
+            </span>
+          ))}
+        </div>
+      </Card>
+    </div>
+  );
+}
 
 export function ProductShowcaseSection() {
   const [selectedCategory, setSelectedCategory] = useState('kottu');
@@ -271,37 +442,8 @@ export function ProductShowcaseSection() {
           </div>
         </div>
 
-        {/* Beat 3: Custom URL & QR Export Distribution */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-          <div className="max-w-lg">
-            <h3 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground mb-3">
-              Export branded QR codes and custom menu links
-            </h3>
-            <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
-              Download crisp PNG or SVG files ready for table tents and counters. Menuzo Plus adds custom URLs, rounded QR patterns, brand colors, and your shop logo.
-            </p>
-          </div>
-
-          <Card className="rounded-2xl border-border bg-card p-5 sm:p-6 space-y-4">
-            <div className="flex items-center justify-between gap-3 pb-3 border-b border-border">
-              <div className="inline-flex items-center gap-2 text-sm font-medium text-foreground">
-                <QrCode className="w-4 h-4 text-[#C2530A] dark:text-primary" strokeWidth={1.5} aria-hidden="true" />
-                <span>QR & URL settings</span>
-              </div>
-              <span className="text-xs text-muted-foreground">PNG & SVG export</span>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-              <div className="rounded-xl border border-border bg-muted/30 p-3.5">
-                <p className="text-xs text-muted-foreground mb-1">Menu link</p>
-                <p className="font-medium text-foreground truncate">menuzo.lk/your-venue</p>
-              </div>
-              <div className="rounded-xl border border-border bg-muted/30 p-3.5">
-                <p className="text-xs text-muted-foreground mb-1">Export options</p>
-                <p className="font-medium text-foreground">Square or rounded QR</p>
-              </div>
-            </div>
-          </Card>
-        </div>
+        {/* Beat 3: QR Export — real QR visual with Free/Plus toggle */}
+        <QRExportBeat />
       </div>
     </section>
   );
