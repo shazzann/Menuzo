@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Check, Info, Minus, RefreshCw } from 'lucide-react';
+import { Check, Minus, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useApp } from '@/store';
@@ -7,7 +7,6 @@ import { BillingService } from '@/services/billing.service';
 import type { BillingPeriod } from '@/types/billing';
 import { trackEvent } from '@/lib/analytics';
 import { getPublicEmailUrl, getPublicWhatsAppUrl } from '@/lib/contact';
-import { FREE_PLAN_LIMITS, PLUS_GRACE_DAYS } from '@/lib/subscription';
 import {
   buildLandingPricingModel,
   type LandingBillingCycle,
@@ -270,7 +269,7 @@ export function PricingSection() {
         </div>
 
         {/* Overflow-safe Semantic Comparison Table */}
-        <Card className="w-full min-w-0 rounded-2xl border-border bg-card shadow-xs overflow-hidden p-0 gap-0 mb-6">
+        <Card className="w-full min-w-0 rounded-2xl border-border bg-card shadow-xs overflow-hidden p-0 gap-0">
           <div className="px-4 sm:px-5 py-4 border-b border-border">
             <h3 className="text-base font-medium text-foreground">Plan comparison</h3>
             <p className="text-xs sm:text-sm text-muted-foreground">
@@ -336,15 +335,6 @@ export function PricingSection() {
             </table>
           </div>
         </Card>
-
-        {/* Limit Enforcement Note */}
-        <div className="rounded-2xl border border-border bg-card px-5 py-4 flex items-start gap-3 text-xs sm:text-sm text-muted-foreground leading-relaxed">
-          <Info className="w-4 h-4 mt-0.5 shrink-0 text-foreground" strokeWidth={1.5} aria-hidden="true" />
-          <p>
-            <span className="font-medium text-foreground">What happens when a plan limit is reached? </span>
-            Creating new items or categories stops once your active limit is reached. If a Plus plan expires, your menu keeps everything visible for a {PLUS_GRACE_DAYS}-day grace period, then items above the Free allowance ({FREE_PLAN_LIMITS.items} dishes, {FREE_PLAN_LIMITS.categories} categories) remain safely saved in your dashboard and are simply hidden from the public menu until you upgrade.
-          </p>
-        </div>
       </div>
     </section>
   );
