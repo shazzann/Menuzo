@@ -100,37 +100,39 @@ export function HeroSection() {
   const formattedOwnerPrice = `LKR ${(dishPrice || 0).toLocaleString('en-US')}`;
 
   return (
-    <section id="home" className="pt-8 pb-14 sm:pt-12 sm:pb-20 border-b border-border bg-background">
-      <div className="landing-container grid grid-cols-1 lg:grid-cols-[0.95fr_1.05fr] gap-10 lg:gap-12 items-center">
+    <section id="home" className="landing-hero pt-10 pb-16 sm:pt-16 sm:pb-24 lg:pt-20 lg:pb-28 border-b landing-divider">
+      <div className="landing-container grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
         {/* Left: Core Product Message & Primary Owner Conversion */}
         <div className="max-w-xl landing-hero-enter">
-          <p className="text-sm font-medium text-muted-foreground mb-3">
+          <p className="landing-pill mb-7">
+            <span className="landing-pill-dot" aria-hidden="true" />
             A smarter menu for every table
           </p>
 
-          <h1 className="text-4xl sm:text-5xl font-semibold leading-[1.08] tracking-tight text-foreground mb-5">
-            Your restaurant menu, made smarter.
+          <h1 className="landing-display text-foreground mb-6">
+            Your restaurant menu,{' '}
+            <span className="text-muted-foreground/80 dark:text-muted-foreground">made smarter.</span>
           </h1>
 
-          <p className="text-base sm:text-lg leading-relaxed text-muted-foreground mb-7">
+          <p className="landing-lede max-w-[34rem] mb-9">
             Create a digital menu, share it through a QR code and update your dishes, prices and availability whenever you need.
           </p>
 
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mb-6">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mb-8">
             <Button
               size="lg"
               onClick={handlePrimaryCTA}
-              className="h-12 px-6 rounded-xl bg-primary text-[#12261F] hover:bg-primary/90 font-medium text-base w-full sm:w-auto transition-[color,background-color,transform] active:scale-[0.98]"
+              className="landing-cta h-12 px-6 rounded-full bg-primary text-[#12261F] hover:bg-primary/95 font-semibold text-base w-full sm:w-auto"
             >
               Build my free menu
-              <ArrowRight className="w-4 h-4" strokeWidth={1.5} aria-hidden="true" />
+              <ArrowRight className="w-4 h-4" strokeWidth={2} aria-hidden="true" />
             </Button>
 
             <Button
               variant="outline"
               size="lg"
               asChild
-              className="h-12 px-5 rounded-xl font-medium text-base w-full sm:w-auto transition-[color,background-color,transform] active:scale-[0.98]"
+              className="landing-ghost h-12 px-6 rounded-full font-medium text-base w-full sm:w-auto"
             >
               <a
                 href={LIVE_MENU_URL}
@@ -146,10 +148,12 @@ export function HeroSection() {
             </Button>
           </div>
 
-          <ul className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs sm:text-sm text-muted-foreground">
+          <ul className="flex flex-wrap items-center gap-x-6 gap-y-2.5 text-[13px] sm:text-sm text-muted-foreground">
             {['Free plan available', 'No customer app required', 'Update anytime'].map((item) => (
-              <li key={item} className="inline-flex items-center gap-1.5">
-                <Check className="w-4 h-4 text-[#18753F] dark:text-emerald-400 shrink-0" strokeWidth={1.75} aria-hidden="true" />
+              <li key={item} className="inline-flex items-center gap-2">
+                <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-[#18753F]/10 dark:bg-emerald-400/15 shrink-0" aria-hidden="true">
+                  <Check className="w-2.5 h-2.5 text-[#18753F] dark:text-emerald-400" strokeWidth={3} />
+                </span>
                 <span>{item}</span>
               </li>
             ))}
@@ -157,11 +161,11 @@ export function HeroSection() {
         </div>
 
         {/* Right: Synced Owner Control + Realistic Smartphone Menu Preview */}
-        <div className="landing-demo-preview landing-hero-enter-delayed space-y-3">
+        <div className="landing-demo-preview landing-hero-enter-delayed landing-stage space-y-3 min-w-0">
           <h2 className="sr-only">Live Spice Garden Kitchen interactive menu demonstration</h2>
 
           {/* Supporting Visual: Owner Management Bar */}
-          <div className="rounded-2xl border border-border bg-muted/40 p-3.5 sm:p-4 space-y-2.5">
+          <div className="landing-card-raised p-3.5 sm:p-4 space-y-2.5 max-w-[460px] mx-auto lg:max-w-none">
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2 text-xs">
                 <span className="font-medium text-foreground">Owner control: Chicken Kottu</span>

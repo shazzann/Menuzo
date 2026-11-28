@@ -228,19 +228,20 @@ export function AudienceSection() {
   };
 
   return (
-    <section id="who-its-for" className="landing-section bg-background border-b border-border">
-      <div className="landing-container space-y-8 sm:space-y-10">
-        <div className="max-w-2xl">
-          <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground mb-3">
+    <section id="who-its-for" className="landing-section bg-background border-b landing-divider">
+      <div className="landing-container space-y-12 sm:space-y-16">
+        <div className="landing-reveal max-w-2xl">
+          <span className="landing-rule" aria-hidden="true" />
+          <h2 className="landing-h2 text-foreground mb-5">
             Styled for every kind of food business
           </h2>
-          <p className="text-base text-muted-foreground leading-relaxed">
+          <p className="landing-lede">
             Each venue format can choose a curated Menuzo theme from our library or tailor its own menu colors.
           </p>
         </div>
 
         {/* Asymmetric Split: Venue Format List (Left) + Live Database-Themed Menu Preview (Right) */}
-        <div className="grid grid-cols-1 lg:grid-cols-[0.84fr_1.16fr] gap-6 lg:gap-10 items-center">
+        <div className="landing-reveal grid grid-cols-1 lg:grid-cols-[0.84fr_1.16fr] gap-6 lg:gap-12 items-center">
           {/* Left: Quiet Venue Format Selector */}
           <div
             role="radiogroup"
@@ -258,10 +259,10 @@ export function AudienceSection() {
                   role="radio"
                   aria-checked={selected}
                   onClick={() => handleSelectVenue(venue)}
-                  className={`shrink-0 lg:shrink lg:w-full flex items-center justify-between gap-4 px-4 py-3.5 rounded-2xl border text-left min-h-[44px] transition-[color,background-color,border-color,box-shadow] cursor-pointer ${
+                  className={`relative shrink-0 lg:shrink lg:w-full flex items-center justify-between gap-4 px-4 py-3.5 lg:px-5 lg:py-4 rounded-2xl border text-left min-h-[44px] transition-[color,background-color,border-color,box-shadow,transform] duration-300 cursor-pointer ${
                     selected
-                      ? 'bg-card border-foreground/25 shadow-xs'
-                      : 'bg-transparent border-border/80 hover:bg-muted/40 hover:border-border'
+                      ? 'bg-card border-foreground/20 shadow-[var(--landing-shadow-md)] lg:translate-x-1'
+                      : 'bg-transparent border-transparent lg:border-border/60 hover:bg-card/70 hover:border-border'
                   }`}
                 >
                   <div className="flex items-center gap-3 min-w-0">
@@ -314,7 +315,7 @@ export function AudienceSection() {
 
           {/* Right: Live Database-Themed Menu Canvas */}
           <div
-            className="landing-theme-preview rounded-2xl border border-border overflow-hidden shadow-xs min-w-0"
+            className="landing-theme-preview landing-phone-frame overflow-hidden min-w-0"
             data-shop-theme={isBrandTheme(activeTheme.colors) ? 'brand' : 'custom'}
             style={previewThemeStyles}
             aria-label={`Live themed menu preview for ${activeVenue.shopName} using ${activeTheme.name}`}

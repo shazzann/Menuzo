@@ -23,30 +23,37 @@ const steps = [
 
 export function HowItWorksSection() {
   return (
-    <section id="how-it-works" className="landing-section bg-muted/30 border-b border-border">
+    <section id="how-it-works" className="landing-section landing-paper border-b landing-divider">
       <div className="landing-container">
-        <div className="max-w-2xl mb-10 sm:mb-12">
-          <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground mb-2">
+        <div className="landing-reveal max-w-2xl mb-12 sm:mb-16">
+          <span className="landing-rule" aria-hidden="true" />
+          <h2 className="landing-h2 text-foreground mb-5">
             From setup to restaurant tables in three steps
           </h2>
-          <p className="text-base text-muted-foreground">
+          <p className="landing-lede">
             Publish your digital menu once and keep the same QR on every table.
           </p>
         </div>
 
-        <ol className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {steps.map((step) => {
+        <ol className="grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-8 lg:gap-12">
+          {steps.map((step, index) => {
             const Icon = step.icon;
             return (
-              <li key={step.number} className="pt-5 border-t border-border">
-                <div className="flex items-center justify-between gap-3 mb-3">
-                  <span className="text-xs font-medium text-muted-foreground tabular-nums">
+              <li
+                key={step.number}
+                className="landing-reveal landing-step pt-7"
+                style={{ '--reveal-delay': `${index * 110}ms` } as React.CSSProperties}
+              >
+                <div className="flex items-start justify-between gap-3 mb-8">
+                  <span className="landing-num text-5xl sm:text-6xl font-medium leading-none text-foreground/20">
                     {step.number}
                   </span>
-                  <Icon className="w-4 h-4 text-muted-foreground" strokeWidth={1.5} aria-hidden="true" />
+                  <span className="landing-icon-tile" aria-hidden="true">
+                    <Icon className="w-[18px] h-[18px]" strokeWidth={1.5} />
+                  </span>
                 </div>
-                <h3 className="text-lg font-medium text-foreground mb-2">{step.title}</h3>
-                <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
+                <h3 className="text-lg sm:text-xl font-semibold tracking-tight text-foreground mb-2.5">{step.title}</h3>
+                <p className="text-sm sm:text-[15px] text-muted-foreground leading-relaxed">
                   {step.description}
                 </p>
               </li>

@@ -42,31 +42,39 @@ const capabilityGroups = [
 
 export function FeaturesSection() {
   return (
-    <section id="features" className="landing-section bg-muted/30 border-b border-border">
+    <section id="features" className="landing-section landing-paper border-b landing-divider">
       <div className="landing-container">
-        <div className="max-w-2xl mb-10 sm:mb-12">
-          <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground mb-3">
+        <div className="landing-reveal max-w-2xl mb-12 sm:mb-16">
+          <span className="landing-rule" aria-hidden="true" />
+          <h2 className="landing-h2 text-foreground mb-5">
             Capabilities built for restaurant menus
           </h2>
-          <p className="text-base text-muted-foreground leading-relaxed">
+          <p className="landing-lede">
             Focused tools for managing what guests see in their browser while your staff handles service and orders.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 border-t border-border pt-8">
-          {capabilityGroups.map((group) => (
-            <div key={group.category} className="space-y-5">
-              <h3 className="text-sm font-medium text-foreground">
-                {group.category}
-              </h3>
-              <dl className="space-y-5">
-                {group.items.map((item) => (
-                  <div key={item.title} className="border-t border-border/70 pt-3">
-                    <dt className="text-base font-medium text-foreground mb-1">{item.title}</dt>
-                    <dd className="text-sm text-muted-foreground leading-relaxed">{item.detail}</dd>
-                  </div>
-                ))}
-              </dl>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6">
+          {capabilityGroups.map((group, index) => (
+            <div
+              key={group.category}
+              className="landing-reveal"
+              style={{ '--reveal-delay': `${index * 110}ms` } as React.CSSProperties}
+            >
+              <div className="landing-card landing-lift h-full p-6 sm:p-7">
+                <h3 className="flex items-center gap-2.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground mb-6">
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary" aria-hidden="true" />
+                  {group.category}
+                </h3>
+                <dl className="divide-y landing-divider">
+                  {group.items.map((item) => (
+                    <div key={item.title} className="py-5 first:pt-0 last:pb-0">
+                      <dt className="text-base sm:text-[17px] font-semibold tracking-tight text-foreground mb-1.5">{item.title}</dt>
+                      <dd className="text-sm text-muted-foreground leading-relaxed">{item.detail}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </div>
             </div>
           ))}
         </div>

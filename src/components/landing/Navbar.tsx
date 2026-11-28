@@ -76,10 +76,10 @@ export function Navbar() {
 
   return (
     <header
-      className={`sticky top-0 z-40 transition-colors duration-150 ${
+      className={`sticky top-0 z-40 transition-[background-color,border-color,box-shadow] duration-300 ${
         isScrolled
-          ? 'bg-background/95 border-b border-border'
-          : 'bg-background border-b border-transparent'
+          ? 'bg-background/80 backdrop-blur-xl backdrop-saturate-150 border-b border-[hsl(var(--landing-hairline))] shadow-[0_8px_24px_-18px_rgba(41,32,22,0.35)]'
+          : 'bg-transparent border-b border-transparent'
       }`}
     >
       <a
@@ -126,10 +126,10 @@ export function Navbar() {
                   e.preventDefault();
                   scrollToTarget(link.href);
                 }}
-                className={`text-sm font-medium transition-colors whitespace-nowrap py-2 ${
+                className={`relative text-sm font-medium transition-colors whitespace-nowrap py-2 after:absolute after:left-1/2 after:-bottom-0.5 after:h-[2px] after:w-4 after:-translate-x-1/2 after:rounded-full after:bg-primary after:transition-transform after:duration-300 ${
                   isActive
-                    ? 'text-foreground underline decoration-primary decoration-2 underline-offset-8'
-                    : 'text-muted-foreground hover:text-foreground'
+                    ? 'text-foreground after:scale-x-100'
+                    : 'text-muted-foreground hover:text-foreground after:scale-x-0'
                 }`}
               >
                 {link.name}
@@ -170,7 +170,7 @@ export function Navbar() {
               <Button
                 size="sm"
                 onClick={() => handlePrimaryClick('navbar')}
-                className="rounded-xl bg-primary text-[#12261F] hover:bg-primary/90 font-medium px-4 h-10 transition-[color,background-color,transform] active:scale-[0.98]"
+                className="landing-cta rounded-full bg-primary text-[#12261F] hover:bg-primary/95 font-semibold px-5 h-10"
               >
                 Build my free menu
               </Button>
@@ -188,7 +188,7 @@ export function Navbar() {
             <Button
               size="sm"
               onClick={() => handlePrimaryClick('navbar_mobile')}
-              className="rounded-xl bg-primary text-[#12261F] hover:bg-primary/90 font-medium px-3.5 min-h-[44px] text-xs sm:text-sm"
+              className="landing-cta rounded-full bg-primary text-[#12261F] hover:bg-primary/95 font-semibold px-4 min-h-[44px] text-xs sm:text-sm"
             >
               {state.user ? 'Dashboard' : 'Start free'}
             </Button>
@@ -200,7 +200,7 @@ export function Navbar() {
             aria-expanded={mobileMenuOpen}
             aria-controls="landing-mobile-nav"
             aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
-            className="rounded-xl min-h-[44px] min-w-[44px]"
+            className="landing-ghost rounded-full min-h-[44px] min-w-[44px]"
           >
             {mobileMenuOpen ? (
               <X className="w-5 h-5" strokeWidth={1.5} aria-hidden="true" />
@@ -214,7 +214,7 @@ export function Navbar() {
       {mobileMenuOpen && (
         <div
           id="landing-mobile-nav"
-          className="md:hidden border-t border-border bg-card px-4 py-4"
+          className="landing-fade-down md:hidden border-t border-[hsl(var(--landing-hairline))] bg-background/95 backdrop-blur-xl px-5 py-4 shadow-[0_16px_32px_-20px_rgba(41,32,22,0.35)]"
         >
           <nav className="flex flex-col" aria-label="Mobile navigation">
             {navLinks.map((link) => (

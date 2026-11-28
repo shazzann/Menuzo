@@ -78,27 +78,27 @@ const portionOptions = [
 
 function QRExportBeat() {
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
       {/* Left — copy */}
-      <div className="max-w-lg">
-        <h3 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground mb-3">
+      <div className="landing-reveal max-w-lg">
+        <h3 className="landing-h3 text-foreground mb-4">
           Print-ready QR codes for your menu link
         </h3>
-        <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
+        <p className="text-[15px] sm:text-base text-muted-foreground leading-relaxed">
           Every Menuzo menu gets a QR code the moment you publish. Download crisp PNG files
           sized for table tents, countertop stands, or signage, styled with your custom link,
           rounded dot pattern, brand colours, and shop logo.
         </p>
 
         {/* Feature list */}
-        <ul className="mt-6 space-y-2">
+        <ul className="mt-8 border-t landing-divider">
           {[
             { label: 'URL', value: 'Custom link' },
             { label: 'Pattern', value: 'Rounded pattern' },
             { label: 'Logo', value: 'Shop logo in centre' },
             { label: 'Brand colours', value: 'Your palette' },
           ].map(({ label, value }) => (
-            <li key={label} className="flex items-baseline gap-3 text-sm">
+            <li key={label} className="flex items-baseline gap-3 text-sm py-3 border-b landing-divider">
               <span className="w-28 shrink-0 text-muted-foreground">{label}</span>
               <span className="font-medium text-foreground">{value}</span>
             </li>
@@ -107,9 +107,10 @@ function QRExportBeat() {
       </div>
 
       {/* Right — QR print-frame mock */}
-      <Card className="rounded-2xl border-border bg-card p-5 sm:p-6">
+      <div className="landing-reveal landing-stage min-w-0" style={{ '--reveal-delay': '120ms' } as React.CSSProperties}>
+      <Card className="landing-card-raised p-5 sm:p-6 gap-0 max-w-md mx-auto">
         {/* Print card mock */}
-        <div className="relative rounded-xl border border-border bg-muted/25 p-6 flex flex-col items-center gap-4">
+        <div className="relative rounded-2xl border landing-divider landing-paper p-7 sm:p-8 flex flex-col items-center gap-5">
           {/* Venue name */}
           <div className="text-center">
             <p className="text-sm font-semibold tracking-tight text-foreground">
@@ -119,7 +120,7 @@ function QRExportBeat() {
           </div>
 
           {/* QR image */}
-          <div className="relative rounded-2xl overflow-hidden border border-border bg-white p-1.5 shadow-xs">
+          <div className="relative rounded-2xl overflow-hidden border border-black/5 bg-white p-2 shadow-[0_1px_2px_rgba(0,0,0,0.06),0_12px_28px_-12px_rgba(41,32,22,0.3)] -rotate-1 transition-transform duration-500 hover:rotate-0">
             <img
               src="/Landing/spice-garden-kitchen-qr-code.png"
               alt="Branded QR code with Spice Garden Kitchen logo"
@@ -141,12 +142,13 @@ function QRExportBeat() {
         {/* Download badge */}
         <div className="mt-4 flex items-center gap-2 justify-end">
           <span className="text-xs text-muted-foreground">Export as</span>
-          <span className="inline-flex items-center gap-1 text-xs font-mono font-medium text-foreground border border-border rounded-md px-2 py-1 bg-muted/30">
+          <span className="inline-flex items-center gap-1 text-xs font-mono font-medium text-foreground border landing-divider rounded-md px-2 py-1 landing-paper">
             <Download className="w-3 h-3 text-muted-foreground" aria-hidden="true" />
             .PNG
           </span>
         </div>
       </Card>
+      </div>
     </div>
   );
 }
@@ -162,36 +164,38 @@ export function ProductShowcaseSection() {
       : showcaseCategories.filter((category) => category.id === selectedCategory);
 
   return (
-    <section id="product" className="landing-section bg-background border-b border-border">
-      <div className="landing-container space-y-14 sm:space-y-18">
-        <div className="max-w-2xl">
-          <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground mb-3">
+    <section id="product" className="landing-section bg-background border-b landing-divider">
+      <div className="landing-container space-y-20 sm:space-y-28">
+        <div className="landing-reveal max-w-2xl">
+          <span className="landing-rule" aria-hidden="true" />
+          <h2 className="landing-h2 text-foreground mb-5">
             Built for menu structure, portions, and sharing
           </h2>
-          <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
+          <p className="landing-lede">
             Beyond instant price and stock toggles, Menuzo organizes categories, multi-portion pricing, and branded QR exports cleanly.
           </p>
         </div>
 
         {/* Beat 1: Owner Menu & Category Organization */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-          <div className="max-w-lg">
-            <h3 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground mb-3">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+          <div className="landing-reveal max-w-lg">
+            <h3 className="landing-h3 text-foreground mb-4">
               Organize dishes and categories without layout tools
             </h3>
-            <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
+            <p className="text-[15px] sm:text-base text-muted-foreground leading-relaxed">
               Sort categories cleanly, highlight specials with discount pricing, and turn every dish into scannable menu cards automatically.
             </p>
           </div>
 
-          <Card className="landing-demo-preview rounded-2xl border-border bg-card overflow-hidden p-0 gap-0">
+          <div className="landing-reveal landing-stage min-w-0" style={{ '--reveal-delay': '120ms' } as React.CSSProperties}>
+          <Card className="landing-demo-preview landing-card-raised overflow-hidden p-0 gap-0">
             <CategoryTabs
               categories={showcaseCategories}
               selectedCategory={selectedCategory}
               onSelectCategory={setSelectedCategory}
               className="static py-3 px-4 border-b border-border bg-card"
             />
-            <div className="p-4 sm:p-5 bg-muted/20 space-y-5" aria-live="polite">
+            <div className="p-4 sm:p-5 landing-paper space-y-5" aria-live="polite">
               {visibleSections.map((section) => {
                 const sectionItems = showcaseItems.filter((item) => item.category === section.id);
                 const isFiltered = selectedCategory === section.id;
@@ -217,11 +221,13 @@ export function ProductShowcaseSection() {
               })}
             </div>
           </Card>
+          </div>
         </div>
 
         {/* Beat 2: Interactive Portions & Variations (FoodDetailPage Radio UI) */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-          <Card className="landing-demo-preview rounded-2xl border-border bg-card p-5 sm:p-6 space-y-4 order-2 lg:order-1">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+          <div className="landing-reveal landing-stage min-w-0 order-2 lg:order-1">
+          <Card className="landing-demo-preview landing-card-raised p-5 sm:p-6 space-y-4 gap-0">
             <div className="flex items-center gap-4">
               <img
                 src="/Landing/food-seafood-rice.webp"
@@ -229,7 +235,7 @@ export function ProductShowcaseSection() {
                 width={80}
                 height={80}
                 loading="lazy"
-                className="w-20 h-20 shrink-0 object-cover rounded-xl border border-border"
+                className="w-20 h-20 shrink-0 object-cover rounded-2xl shadow-[0_8px_20px_-10px_rgba(41,32,22,0.45)] ring-1 ring-black/5 dark:ring-white/10"
               />
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-base text-foreground truncate">Seafood Fried Rice</p>
@@ -267,10 +273,10 @@ export function ProductShowcaseSection() {
                       role="radio"
                       aria-checked={selected}
                       onClick={() => setSelectedPortionIndex(idx)}
-                      className={`w-full flex items-center justify-between p-3.5 rounded-2xl border text-left transition-[color,background-color,border-color,transform] active:scale-[0.99] min-h-[56px] cursor-pointer ${
+                      className={`w-full flex items-center justify-between p-3.5 rounded-2xl border text-left transition-[color,background-color,border-color,box-shadow,transform] duration-300 active:scale-[0.99] min-h-[56px] cursor-pointer ${
                         selected
-                          ? 'bg-primary/10 border-primary ring-1 ring-primary/35'
-                          : 'bg-muted/40 hover:bg-muted/70 border-border text-foreground'
+                          ? 'bg-primary/[0.07] border-primary/70 shadow-[0_0_0_3px_hsl(var(--primary)/0.1)]'
+                          : 'landing-paper hover:bg-muted/60 border-border text-foreground'
                       }`}
                     >
                       <div className="flex items-center gap-3 min-w-0">
@@ -308,12 +314,13 @@ export function ProductShowcaseSection() {
               </div>
             </div>
           </Card>
+          </div>
 
-          <div className="max-w-lg order-1 lg:order-2">
-            <h3 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground mb-3">
+          <div className="landing-reveal max-w-lg order-1 lg:order-2">
+            <h3 className="landing-h3 text-foreground mb-4">
               Set distinct portions under a single dish
             </h3>
-            <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
+            <p className="text-[15px] sm:text-base text-muted-foreground leading-relaxed">
               Give Regular, Large, or sharing options their own LKR prices and availability so your category list stays uncluttered.
             </p>
           </div>

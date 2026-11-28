@@ -31,7 +31,7 @@ export function Footer() {
   };
 
   return (
-    <footer className="bg-card border-t border-border py-12 text-foreground">
+    <footer className="bg-background border-t border-border py-14 text-foreground">
       <div className="landing-container">
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-8 pb-8 border-b border-border">
           <div className="max-w-sm">

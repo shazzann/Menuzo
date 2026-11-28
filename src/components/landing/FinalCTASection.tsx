@@ -24,13 +24,13 @@ export function FinalCTASection() {
   };
 
   return (
-    <div className="bg-[#12261F] text-[#F3F5F0] py-16 sm:py-20 border-t border-[#243E35]">
-      <div className="landing-container flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
+    <div className="landing-container pb-16 sm:pb-24">
+      <div className="landing-reveal landing-final text-[#F3F5F0] px-6 py-12 sm:px-12 sm:py-16 lg:px-16 lg:py-20 flex flex-col lg:flex-row lg:items-end lg:justify-between gap-10">
         <div className="max-w-2xl">
-          <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-white mb-3">
+          <h2 className="landing-h2 text-white mb-5">
             Give your restaurant a menu that&apos;s easier to manage.
           </h2>
-          <p className="text-base sm:text-lg text-[#D2D8CF] leading-relaxed">
+          <p className="landing-lede !text-[#D2D8CF]">
             Start free today and keep every table’s dishes, prices, and availability up to date.
           </p>
         </div>
@@ -39,17 +39,17 @@ export function FinalCTASection() {
           <Button
             size="lg"
             onClick={handlePrimaryClick}
-            className="h-12 px-6 rounded-xl bg-primary text-[#12261F] hover:bg-primary/90 font-medium text-base transition-[color,background-color,transform] active:scale-[0.98]"
+            className="landing-cta h-12 px-6 rounded-full bg-primary text-[#12261F] hover:bg-primary/95 font-semibold text-base"
           >
             Build my free menu
-            <ArrowRight className="w-4 h-4" strokeWidth={1.5} aria-hidden="true" />
+            <ArrowRight className="w-4 h-4" strokeWidth={2} aria-hidden="true" />
           </Button>
 
           <Button
             variant="outline"
             size="lg"
             onClick={handleExploreClick}
-            className="h-12 px-5 rounded-xl bg-transparent border-[#4B6158] text-[#F3F5F0] hover:bg-white/10 hover:text-white font-medium text-base transition-[color,background-color,transform] active:scale-[0.98]"
+            className="h-12 px-6 rounded-full bg-white/[0.04] border-white/20 text-[#F3F5F0] hover:bg-white/10 hover:text-white hover:border-white/35 dark:bg-white/[0.04] dark:border-white/20 dark:hover:bg-white/10 font-medium text-base transition-[color,background-color,border-color,transform] active:scale-[0.98]"
           >
             Explore Menuzo
           </Button>
