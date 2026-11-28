@@ -38,6 +38,7 @@ import { ShopAnalyticsDataLoader } from '@/components/shared/ShopAnalyticsDataLo
 import { ShopThemeApplier } from '@/components/shared/ShopThemeApplier';
 import { SubscriptionDataLoader } from '@/components/shared/SubscriptionDataLoader';
 import { PlanCatalogLoader } from '@/lib/plan-catalog';
+import { OnlinePresenceTracker } from '@/lib/online-presence';
 import { PlanVisibilityLoader } from '@/components/shared/PlanVisibilityLoader';
 import { SubscriptionPage } from '@/pages/SubscriptionPage';
 import { freeSubscription } from '@/lib/subscription';
@@ -194,6 +195,7 @@ function App() {
       <AppProvider>
         <BrowserRouter>
           <RouterSync />
+          <OnlinePresenceTracker />
           <PublicDataLoader />
           <AdminDataLoader />
           <ShopAnalyticsDataLoader />

@@ -14,6 +14,7 @@ import { CompanyBillingService, companyBillingError } from '@/services/company-b
 import { supabase } from '@/lib/supabase';
 import { AuthService } from '@/services/auth.service';
 import { CompanyDashboard } from '@/components/company-admin/CompanyDashboard';
+import { useOnlineCount } from '@/lib/online-presence';
 import { CompanyShopList } from '@/components/company-admin/CompanyShopList';
 import { CompanyShopDetail } from '@/components/company-admin/CompanyShopDetail';
 import { CompanyPlans } from '@/components/company-admin/CompanyPlans';
@@ -125,6 +126,7 @@ const navGroups: NavGroup[] = [
 export function CompanyAdminPage() {
   const { state, dispatch } = useApp();
   const { theme, setTheme } = useTheme();
+  const onlineCount = useOnlineCount();
   
   const [access, setAccess] = useState<'checking' | 'allowed' | 'denied'>('checking');
   const [accessError, setAccessError] = useState('');
@@ -406,10 +408,13 @@ export function CompanyAdminPage() {
             </div>
 
             {/* Active Users Badge */}
-            <div className="hidden lg:flex items-center gap-1.5 bg-emerald-500/10 text-emerald-500 rounded-full px-3 py-1.5 text-xs font-medium">
-              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            <div
+              className="hidden lg:flex items-center gap-1.5 bg-emerald-500/10 text-emerald-500 rounded-full px-3 py-1.5 text-xs font-medium"
+              title="People with Menuzo open right now: menus, owner dashboards and the website. Admin portal tabs are not counted."
+            >
+              <div className={`w-1.5 h-1.5 rounded-full bg-emerald-500 ${onlineCount === null ? '' : 'animate-pulse'}`} />
               <Users className="w-3 h-3" />
-              <span>2,134 Online</span>
+              <span>{onlineCount === null ? '…' : onlineCount.toLocaleString('en-US')} Online</span>
             </div>
 
             {/* Current Time */}
