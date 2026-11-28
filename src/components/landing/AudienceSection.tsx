@@ -283,19 +283,25 @@ export function AudienceSection() {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 shrink-0">
-                    <span className="hidden sm:inline text-xs text-muted-foreground">
+                  <div
+                    className={`inline-flex items-center gap-2 shrink-0 rounded-full border px-2.5 py-1 transition-colors ${
+                      selected
+                        ? 'border-foreground/15 bg-muted/60'
+                        : 'border-border/80 bg-muted/30'
+                    }`}
+                    title={`${venueTheme.name} palette`}
+                  >
+                    <span className="hidden sm:inline text-xs font-medium text-foreground/80">
                       {venueTheme.name}
                     </span>
                     <span
-                      className="flex items-center gap-1"
-                      title={`${venueTheme.name} palette`}
+                      className="inline-flex h-3.5 w-11 rounded-full overflow-hidden border border-black/15 dark:border-white/20 shrink-0"
                       aria-hidden="true"
                     >
                       {venueTheme.swatches.map((swatch) => (
                         <span
                           key={swatch.label}
-                          className="w-3 h-3 rounded-full border border-black/15 dark:border-white/20"
+                          className="flex-1 h-full"
                           style={{ backgroundColor: swatch.hex }}
                         />
                       ))}
