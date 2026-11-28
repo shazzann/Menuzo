@@ -200,7 +200,7 @@ export const PLAN_FEATURES = {
   enterprise: { digitalMenu: true, qrCode: true, customThemes: true, qrBranding: true, customUrl: true, analytics: 'advanced', prioritySupport: true, advancedCustomization: true, allFeatures: true },
 } as const;
 
-/** The plan whose limits and features apply now: the paid plan (including grace), else Free. */
+/** The plan whose item and category limits apply now: the paid plan (including grace), else Free. */
 export function effectivePlan(subscription: User['subscription'] | undefined, now = Date.now()): PlanDefinition {
   const free = getPlanDefinition('free') ?? BUILT_IN_PLANS[0];
   if (!hasPaidMenuAccess(subscription, now)) return free;
@@ -230,8 +230,26 @@ export function planLimitMessage(
     : { message: `The ${current.name} plan allows up to ${limit} ${noun}. Plan limit reached.`, canUpgrade: false };
 }
 
-export function hasPlanFeature(subscription: User['subscription'] | undefined, feature: PlanFeatureKey, now = Date.now()): boolean {
-  return effectivePlan(subscription, now).features[feature];
+/**
+ * The plan whose features (themes, QR branding, custom URL, analytics, no "Powered by")
+ * a shop has. A shop keeps its paid plan's features after the plan expires or an admin
+ * suspends or revokes it; only the item and category limits drop to Free (effectivePlan).
+ */
+export function featurePlan(subscription: User['subscription'] | undefined): PlanDefinition {
+  const free = getPlanDefinition('free') ?? BUILT_IN_PLANS[0];
+  if (!subscription || !isPaidPlanSlug(subscription.plan)) return free;
+  return getPlanDefinition(subscription.plan) ?? free;
+}
+
+/** True for any shop on a paid plan, active or ended: it keeps paid features. */
+export function hasPaidFeatures(subscription: User['subscription'] | undefined): boolean {
+  return featurePlan(subscription).slug !== 'free';
+}
+
+// `now` is kept for existing callers; features no longer depend on the plan being active.
+export function hasPlanFeature(subscription: User['subscription'] | undefined, feature: PlanFeatureKey, _now = Date.now()): boolean {
+  void _now;
+  return featurePlan(subscription).features[feature];
 }
 
 export function hasFeatureAccess(

@@ -158,6 +158,26 @@ test('Feature entitlement inheritance', () => {
   assert.equal(subscription.hasFeatureAccess(activeEnterprise, 'allFeatures'), true);
 });
 
+test('An ended, suspended or revoked plan keeps its features; only item and category limits drop to Free', () => {
+  const day = 86400000;
+  const expiredLongAgo = { plan: 'plus', status: 'expired', expiresAt: new Date(Date.now() - 30 * day) };
+  const suspended = { plan: 'enterprise', status: 'cancelled', expiresAt: new Date(Date.now() + 30 * day) };
+  const revoked = { plan: 'pro', status: 'cancelled', expiresAt: new Date(Date.now() - 1000) };
+  for (const ended of [expiredLongAgo, suspended, revoked]) {
+    assert.equal(subscription.isPaidActive(ended), false);
+    assert.deepEqual(plain(subscription.getPlanLimits(ended)), { items: 10, categories: 2 });
+    assert.equal(subscription.hasPaidFeatures(ended), true);
+    assert.equal(subscription.hasPlanFeature(ended, 'custom_themes'), true);
+    assert.equal(subscription.hasPlanFeature(ended, 'qr_branding'), true);
+    assert.equal(subscription.hasPlanFeature(ended, 'custom_url'), true);
+  }
+  assert.equal(subscription.hasPlanFeature(suspended, 'priority_support'), true);
+  assert.equal(subscription.hasPlanFeature(expiredLongAgo, 'priority_support'), false);
+  const free = subscription.freeSubscription();
+  assert.equal(subscription.hasPaidFeatures(free), false);
+  assert.equal(subscription.hasPlanFeature(free, 'custom_themes'), false);
+});
+
 test('Curated themes provide exactly 5 free preset themes and premium Pro themes', () => {
   const freeThemes = curatedThemes.CURATED_THEMES.filter(t => !t.isPro);
   const proThemes = curatedThemes.CURATED_THEMES.filter(t => t.isPro);

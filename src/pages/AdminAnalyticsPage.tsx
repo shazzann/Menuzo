@@ -5,7 +5,7 @@ import { useApp } from '@/store';
 import { BottomNav } from '@/components/shared/BottomNav';
 import type { AdminTab } from '@/types';
 import { cn } from '@/lib/utils';
-import { isPaidActive, getPlanLimits, getPlanDefinition } from '@/lib/subscription';
+import { isPaidActive, getPlanLimits, getPlanDefinition, hasPlanFeature } from '@/lib/subscription';
 import { usePlanCatalog } from '@/lib/plan-catalog';
 import { ANALYTICS_RANGE_LABELS, summarizeShopViews, viewsTrend, type AnalyticsRange } from '@/lib/shopAnalytics';
 import { MenuViewsChart, TrendBadge } from '@/components/admin/MenuViewsChart';
@@ -132,7 +132,7 @@ export function AdminAnalyticsPage() {
           </div>
         </div>
 
-        {!proActive && (
+        {!hasPlanFeature(user?.subscription, 'advanced_analytics') && (
           <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-start gap-3">
               <Crown className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />

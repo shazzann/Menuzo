@@ -141,6 +141,7 @@ function historyHarness(fetch) {
     },
     'react/jsx-runtime': jsx, 'lucide-react': icons, '@/components/ui/button': { Button },
     '@/lib/billing': { formatPaymentAmount: (amount,currency) => `${currency} ${amount}` },
+    '@/lib/subscription': load('src/lib/subscription.ts', {}),
     '@/services/company-billing.service': { CompanyBillingService: { shopBilling: async (...args) => { calls.push(args); return fetch(...args); } }, companyBillingError: error => error.message },
   });
   function render() { stateIndex=0; effectIndex=0; return CompanyShopBillingDetail({shopId:'shop-id'}); }

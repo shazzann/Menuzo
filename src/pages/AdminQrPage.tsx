@@ -7,7 +7,7 @@ import { useApp } from '@/store';
 import { AdminQrSettings } from '@/components/admin/AdminQrSettings';
 import { normalizeQrColorStyle, normalizeQrPattern } from '@/lib/qrCode';
 import { markQrGenerated, withQrGenerated } from '@/lib/qrProgress';
-import { isProActive } from '@/lib/subscription';
+import { hasPlanFeature } from '@/lib/subscription';
 
 export function AdminQrPage() {
   const { state, dispatch } = useApp();
@@ -21,7 +21,8 @@ export function AdminQrPage() {
     setQrPattern(normalizeQrPattern((shop.theme as any)?.qrPattern));
   }, [shop.theme]);
 
-  const proActive = isProActive(state.user?.subscription);
+  // Kept after a paid plan ends; only item and category limits drop to Free.
+  const proActive = hasPlanFeature(state.user?.subscription, 'qr_branding');
 
   const handleSave = async () => {
     const isAdvanced = qrStyle === 'brand' || qrPattern === 'rounded';

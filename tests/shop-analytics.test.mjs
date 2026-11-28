@@ -68,7 +68,7 @@ function page(dailyStats) {
     'lucide-react': new Proxy({}, { get: () => () => null }),
     '@/components/ui/button': { Button: 'button' }, '@/components/shared/BottomNav': { BottomNav: () => null },
     '@/components/admin/MenuViewsChart': { MenuViewsChart: Chart, TrendBadge: () => null }, '@/lib/shopAnalytics': analytics,
-    '@/lib/utils': { cn: (...args) => args.join(' ') }, '@/lib/subscription': { isProActive: () => false, isPaidActive: () => false, getPlanLimits: () => ({ items: 10, categories: 2 }), getPlanDefinition: () => undefined }, '@/lib/plan-catalog': { usePlanCatalog: () => [] },
+    '@/lib/utils': { cn: (...args) => args.join(' ') }, '@/lib/subscription': { isProActive: () => false, isPaidActive: () => false, getPlanLimits: () => ({ items: 10, categories: 2 }), getPlanDefinition: () => undefined, hasPlanFeature: () => false, hasPaidFeatures: () => false }, '@/lib/plan-catalog': { usePlanCatalog: () => [] },
     '@/store': { useApp: () => ({ state: { user: null, foodItems: [], categories: [], shop: { view_count: 9999, qr_scan_count: 999, daily_stats: dailyStats } }, dispatch: action => actions.push(action) }) },
   });
   return { render: () => nodes(AdminAnalyticsPage()), Chart, actions };
@@ -106,7 +106,7 @@ test('dashboard and Analytics default show identical seven-day counts and graph 
     'react/jsx-runtime': jsx, '@/lib/shopAnalytics': analytics,
     '@/lib/shopUrls': {getShopMenuUrl:()=> 'https://menuzo.test/cafe'},
     '@/components/admin/MenuViewsChart': { MenuViewsChart: report.Chart },
-    '@/lib/subscription':{isProActive:()=>false,planNotice:()=>null,getPlanLimits:()=>({items:10,categories:2}),isPaidActive:()=>false,getPlanDefinition:()=>undefined},'@/lib/plan-catalog':{usePlanCatalog:()=>[]},
+    '@/lib/subscription':{isProActive:()=>false,planNotice:()=>null,getPlanLimits:()=>({items:10,categories:2}),isPaidActive:()=>false,getPlanDefinition:()=>undefined,hasPlanFeature:()=>false,hasPaidFeatures:()=>false},'@/lib/plan-catalog':{usePlanCatalog:()=>[]},
     '@/hooks/useOnboardingStatus':{useOnboardingStatus:()=>({isComplete:false})},
     '@/store': {useApp:()=>({state:{shop:{id:'shop',name:'Cafe',username:'cafe',view_count:9999,qr_scan_count:999,daily_stats:stats},planHiddenItemIds:[],foodItems:[],user:null},dispatch(){}})},
   });

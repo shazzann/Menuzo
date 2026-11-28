@@ -9,7 +9,7 @@ import { isValidThemeColor, normalizeShopTheme, withThemeColors } from '@/lib/th
 import { AdminThemeSettings } from '@/components/admin/AdminThemeSettings';
 import { ThemeActionBar } from '@/components/admin/theme';
 import { useCuratedThemes } from '@/components/admin/theme/useCuratedThemes';
-import { isProActive } from '@/lib/subscription';
+import { hasPlanFeature } from '@/lib/subscription';
 
 export function AdminThemePage() {
   const { state, dispatch } = useApp();
@@ -23,9 +23,10 @@ export function AdminThemePage() {
   const [draftTheme, setDraftTheme] = useState<ThemeConfig | null>(null);
   const selectedTheme = draftTheme ?? appliedTheme;
 
-  // Pro themes can be previewed by anyone but applied only with an active paid plan
+  // Pro themes can be previewed by anyone but applied only on a plan with custom themes.
+  // A plan that ended keeps them; only its item and category limits drop to Free
   // (also enforced by the enforce_pro_shop_themes database trigger).
-  const proActive = isProActive(state.user?.subscription);
+  const proActive = hasPlanFeature(state.user?.subscription, 'custom_themes');
   const themes = useCuratedThemes();
   const sameColors = (a: ThemeConfig, b: ThemeConfig) =>
     a.primary.toLowerCase() === b.primary.toLowerCase() &&

@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { CompanyBillingService, companyBillingError } from '@/services/company-billing.service';
 import { formatPaymentAmount } from '@/lib/billing';
 import type { ShopBillingDetails } from '@/types/company-billing';
+import { hasPlanFeature } from '@/lib/subscription';
 
 const date = (value: string | null) => value ? new Date(value).toLocaleString() : '—';
 
@@ -49,9 +50,9 @@ export function CompanyShopBillingDetail({ shopId }: { shopId: string }) {
           </dl>
           <div className="mt-4 flex flex-wrap gap-4 text-sm">
             {shop.username && <a className="inline-flex items-center gap-1 text-primary" href={`/${encodeURIComponent(shop.slug || shop.username)}`} target="_blank" rel="noreferrer">View shop menu<ExternalLink className="h-3 w-3" /></a>}
-            {shop.slug && (shop.pro_active ? <a className="inline-flex items-center gap-1 text-primary" href={`/${encodeURIComponent(shop.slug)}`} target="_blank" rel="noreferrer">/{shop.slug}<ExternalLink className="h-3 w-3" /></a> : <span className="text-muted-foreground">/{shop.slug} · inactive</span>)}
+            {shop.slug && (hasPlanFeature({ plan: shop.subscription_plan || 'free', status: 'expired', expiresAt: null }, 'custom_url') ? <a className="inline-flex items-center gap-1 text-primary" href={`/${encodeURIComponent(shop.slug)}`} target="_blank" rel="noreferrer">/{shop.slug}<ExternalLink className="h-3 w-3" /></a> : <span className="text-muted-foreground">/{shop.slug} · inactive</span>)}
           </div>
-          <p className="mt-3 text-xs text-muted-foreground">Subscription access is shared by this owner's shops. The payment history below contains only requests submitted for this shop.</p>
+          <p className="mt-3 text-xs text-muted-foreground">Subscription access is shared by this owner's shops. When paid access ends, only the item and category limits drop to Free; themes, QR branding and the custom URL keep working. The payment history below contains only requests submitted for this shop.</p>
         </section>
         <section aria-label="Shop payment history" className="space-y-3">
           <h3 className="font-semibold">Payment history <span className="font-normal text-muted-foreground">({result.payments.total})</span></h3>

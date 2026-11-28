@@ -31,7 +31,7 @@ function page(name,share) {
       useTransform:()=>1
     },
     '@/store':{useApp:()=>({state:{shop,planHiddenItemIds:[],foodItems:[food],categories:[{id:'all',name:'All'}],selectedFoodItem:food,user:{subscription:{plan:'free'}},currentView:name==='FoodDetailPage'?'customer-food-detail':'customer-menu',searchQuery:'',selectedCategory:'all'},dispatch(){}})},
-    '@/lib/shopUrls':urls,'@/lib/shopAnalytics':load('src/lib/shopAnalytics.ts'),'@/lib/subscription':{isProActive:()=>false,planNotice:()=>null,getPlanLimits:()=>({items:10,categories:2}),isPaidActive:()=>false,getPlanDefinition:()=>undefined},'@/lib/plan-catalog':{usePlanCatalog:()=>[]},'@/lib/themeUtils':{isBrandTheme:()=>true},
+    '@/lib/shopUrls':urls,'@/lib/shopAnalytics':load('src/lib/shopAnalytics.ts'),'@/lib/subscription':{isProActive:()=>false,planNotice:()=>null,getPlanLimits:()=>({items:10,categories:2}),isPaidActive:()=>false,getPlanDefinition:()=>undefined,hasPlanFeature:()=>false,hasPaidFeatures:()=>false},'@/lib/plan-catalog':{usePlanCatalog:()=>[]},'@/lib/themeUtils':{isBrandTheme:()=>true},
     '@/lib/timeUtils':{checkShopStatus:()=>({isOpen:true})},
     '@/lib/qrCode':{normalizeQrColorStyle:()=>'classic',normalizeQrPattern:()=>'square',QR_PATTERNS:[],QR_COLOR_STYLES:[]},
     '@/hooks/useOnboardingStatus':{useOnboardingStatus:()=>({isComplete:false})},'@/hooks/useSEO':{useSEO(){}},
