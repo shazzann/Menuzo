@@ -95,3 +95,32 @@ export function checkShopStatus(schedules: ShopSchedule[] | undefined): { isOpen
   // Default to closed if day is not found in schedule at all
   return { isOpen: false };
 }
+
+function addDays(dateStr: string, days: number): string {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  return new Date(Date.UTC(y, m - 1, d + days)).toISOString().slice(0, 10);
+}
+
+/**
+ * When an item marked "sold out for today" comes back: the opening time of the shop's
+ * next open day after today (Sri Lanka time). Opening hours never cross midnight, so a
+ * business day is a calendar day. With no schedule, or no open day in the next two
+ * weeks, it comes back at midnight.
+ */
+export function nextBusinessDayStart(schedules: ShopSchedule[] | undefined, now: Date = new Date()): Date {
+  const today = new Intl.DateTimeFormat('en-CA', { timeZone: TIMEZONE, year: 'numeric', month: '2-digit', day: '2-digit' }).format(now);
+  const tomorrow = addDays(today, 1);
+  const midnight = new Date(`${tomorrow}T00:00:00+05:30`);
+  const active = (schedules || []).filter((s) => s.type === 'regular' || (s.type === 'special' && !!s.date && s.date > today));
+  if (active.length === 0) return midnight;
+  for (let offset = 1; offset <= 14; offset++) {
+    const date = addDays(today, offset);
+    const dayOfWeek = new Date(`${date}T00:00:00Z`).getUTCDay();
+    const schedule = active.find((s) => s.type === 'special' && s.date === date)
+      ?? active.find((s) => s.type === 'regular' && s.dayOfWeek === dayOfWeek);
+    if (schedule?.isOpen && /^\d{2}:\d{2}$/.test(schedule.openTime)) {
+      return new Date(`${date}T${schedule.openTime}:00+05:30`);
+    }
+  }
+  return midnight;
+}

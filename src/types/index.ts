@@ -31,7 +31,10 @@ export interface FoodItem {
   discountedPrice?: number;
   finalPrice: number;
   isSpecialOffer: boolean;
+  // Whether customers can order it right now: switched on and not sold out for today.
   isAvailable: boolean;
+  // Set while the item is sold out for today; it comes back on its own at this time.
+  unavailableUntil?: string;
   pricingType?: 'fixed' | 'variants';
   options?: FoodItemOption[];
 }

@@ -20,7 +20,9 @@ export function formatFood(
     food_item_options?: Database['public']['Tables']['food_item_options']['Row'][] | null;
   })[]
 ): FoodItem[] {
+  const now = Date.now();
   return rows.map(item => {
+    const until = item.is_available && item.unavailable_until && new Date(item.unavailable_until).getTime() > now ? item.unavailable_until : undefined;
     const rawOptions = item.food_item_options || (item as unknown as { options?: Database['public']['Tables']['food_item_options']['Row'][] }).options;
     const options: FoodItemOption[] | undefined = Array.isArray(rawOptions)
       ? rawOptions
@@ -48,7 +50,8 @@ export function formatFood(
       discount: Number(item.discount),
       finalPrice: Number(item.final_price),
       isSpecialOffer: !!item.is_special_offer,
-      isAvailable: !!item.is_available,
+      isAvailable: !!item.is_available && !until,
+      ...(until ? { unavailableUntil: until } : {}),
       pricingType: (item.pricing_type as 'fixed' | 'variants') || 'fixed',
       options: options && options.length > 0 ? options : undefined,
     };

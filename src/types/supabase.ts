@@ -135,6 +135,7 @@ export interface Database {
           id: string
           image: string | null
           is_available: boolean | null
+          unavailable_until: string | null
           is_special_offer: boolean | null
           name: string
           original_price: number
@@ -151,6 +152,7 @@ export interface Database {
           id?: string
           image?: string | null
           is_available?: boolean | null
+          unavailable_until?: string | null
           is_special_offer?: boolean | null
           name: string
           original_price: number
@@ -167,6 +169,7 @@ export interface Database {
           id?: string
           image?: string | null
           is_available?: boolean | null
+          unavailable_until?: string | null
           is_special_offer?: boolean | null
           name?: string
           original_price?: number

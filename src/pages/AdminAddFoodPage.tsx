@@ -1,19 +1,16 @@
-import { useState } from 'react';
-import { Settings, Plus, Search, MoreVertical, Edit2, Trash2, Star, Check, X, Camera, ArrowLeft, Lock, Image as ImageIcon } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { Settings, Plus, Search, Trash2, Star, Camera, ArrowLeft, Lock, Image as ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 
 import { useApp } from '@/store';
 import { BottomNav } from '@/components/shared/BottomNav';
+import { FoodAvailabilityBadge, FoodItemActionsMenu } from '@/components/admin/FoodItemActionsMenu';
+import { formatReturnTime, type FoodAvailability } from '@/lib/foodAvailability';
+import { nextBusinessDayStart } from '@/lib/timeUtils';
 import type { AdminTab, FoodItem, FoodItemOption } from '@/types';
 import type { Database } from '@/types/supabase';
 import { cn } from '@/lib/utils';
@@ -74,6 +71,8 @@ export function AdminAddFoodPage() {
   });
   const [isCreatingCategory, setIsCreatingCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
+
+  const soldOutUntil = useMemo(() => nextBusinessDayStart(state.shop.openingHours), [state.shop.openingHours]);
 
   const filteredItems = foodItems.filter((item) => {
     const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -278,6 +277,13 @@ export function AdminAddFoodPage() {
     
     let newItemId = editingItem?.id || `item-${Date.now()}`;
 
+    // A "sold out today" item shows the Available switch off. Leaving it off keeps the
+    // temporary hold; switching it on clears it; switching an available item off hides it.
+    const keepsTodayHold = !!editingItem?.unavailableUntil && !formData.isAvailable;
+    const availabilityPayload = keepsTodayHold
+      ? { is_available: true }
+      : { is_available: formData.isAvailable ?? true, unavailable_until: null };
+
     try {
       if (state.shop.id && state.shop.id !== 'shop-1') {
         type FoodItemInsert = Database['public']['Tables']['food_items']['Insert'];
@@ -291,7 +297,7 @@ export function AdminAddFoodPage() {
           discount: discount,
           final_price: Number(finalPrice.toFixed(2)),
           is_special_offer: formData.isSpecialOffer,
-          is_available: formData.isAvailable ?? true,
+          ...availabilityPayload,
           category: finalCategoryName || null,
           pricing_type: pricingType,
         };
@@ -335,7 +341,8 @@ export function AdminAddFoodPage() {
         discount: discount,
         finalPrice: Number(finalPrice.toFixed(2)),
         isSpecialOffer: formData.isSpecialOffer || false,
-        isAvailable: formData.isAvailable ?? true,
+        isAvailable: keepsTodayHold ? false : formData.isAvailable ?? true,
+        ...(keepsTodayHold && editingItem?.unavailableUntil ? { unavailableUntil: editingItem.unavailableUntil } : {}),
         pricingType: pricingType,
         options: cleanOptions,
       };
@@ -366,6 +373,29 @@ export function AdminAddFoodPage() {
     } catch (err) {
       console.error('Error deleting food item:', err);
       toast.error('Failed to delete item.');
+    }
+  };
+
+  // "Sold out for today" hides the item until the shop's next opening time, when it
+  // returns on its own. "Unavailable" hides it until the owner turns it back on.
+  const handleSetAvailability = async (item: FoodItem, status: FoodAvailability) => {
+    const until = status === 'today' ? nextBusinessDayStart(state.shop.openingHours).toISOString() : null;
+    try {
+      if (!item.id.startsWith('item-') && state.shop.id && state.shop.id !== 'shop-1') {
+        await MenuService.updateMenuItem(item.id, { is_available: status !== 'off', unavailable_until: until });
+      }
+      const updated: FoodItem = { ...item, isAvailable: status === 'available' };
+      if (until) updated.unavailableUntil = until; else delete updated.unavailableUntil;
+      dispatch({ type: 'UPDATE_FOOD_ITEM', payload: updated });
+      toast.success(
+        status === 'available' ? `${item.name} is available again`
+          : status === 'today' ? `${item.name} is sold out for today`
+          : `${item.name} is hidden from your menu`,
+        { description: status === 'today' && until ? `It comes back automatically ${formatReturnTime(until)}.` : undefined },
+      );
+    } catch (err) {
+      console.error('Error updating availability:', err);
+      toast.error('Failed to update availability.');
     }
   };
 
@@ -764,7 +794,11 @@ export function AdminAddFoodPage() {
             <div className="flex items-center justify-between p-3 rounded-xl bg-muted">
               <div>
                 <p className="font-medium text-sm">Available</p>
-                <p className="text-xs text-muted-foreground">Show on menu</p>
+                <p className="text-xs text-muted-foreground">
+                  {editingItem?.unavailableUntil && !formData.isAvailable
+                    ? `Sold out today · back ${formatReturnTime(editingItem.unavailableUntil)}`
+                    : 'Show on menu'}
+                </p>
               </div>
               <Switch
                 checked={formData.isAvailable}
@@ -911,6 +945,7 @@ export function AdminAddFoodPage() {
               <p className="text-xs text-muted-foreground line-clamp-1">
                 {item.category}
               </p>
+              <FoodAvailabilityBadge item={item} className="mt-1" />
               <div className="flex items-center gap-2 mt-1 flex-wrap">
                 <span className="text-sm font-bold">
                   {item.pricingType === 'variants' && item.options && item.options.length > 0
@@ -929,53 +964,14 @@ export function AdminAddFoodPage() {
                 )}
               </div>
             </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="text-muted-foreground" onClick={(e) => e.stopPropagation()}>
-                  <MoreVertical className="w-4 h-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem 
-                  onSelect={() => handleOpenForm(item)}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <Edit2 className="w-4 h-4 mr-2" />
-                  Edit
-                </DropdownMenuItem>
-                <DropdownMenuItem 
-                  onSelect={() => handleToggleQuick(item, 'isSpecialOffer')}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <Star className="w-4 h-4 mr-2" />
-                  {item.isSpecialOffer ? 'Remove Special' : 'Mark as Special'}
-                </DropdownMenuItem>
-                <DropdownMenuItem 
-                  onSelect={() => handleToggleQuick(item, 'isAvailable')}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  {item.isAvailable ? (
-                    <>
-                      <X className="w-4 h-4 mr-2" />
-                      Mark Unavailable
-                    </>
-                  ) : (
-                    <>
-                      <Check className="w-4 h-4 mr-2" />
-                      Mark Available
-                    </>
-                  )}
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onSelect={() => handleDelete(item.id)}
-                  onClick={(e) => e.stopPropagation()}
-                  className="text-destructive"
-                >
-                  <Trash2 className="w-4 h-4 mr-2" />
-                  Delete
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <FoodItemActionsMenu
+              item={item}
+              soldOutUntil={soldOutUntil}
+              onEdit={() => handleOpenForm(item)}
+              onToggleSpecial={() => handleToggleQuick(item, 'isSpecialOffer')}
+              onSetAvailability={(status) => void handleSetAvailability(item, status)}
+              onDelete={() => void handleDelete(item.id)}
+            />
           </div>
         ))}
       </div>
