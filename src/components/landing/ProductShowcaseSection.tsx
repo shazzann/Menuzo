@@ -103,33 +103,7 @@ const portionOptions = [
   { label: 'Large', serve: 'Sharing portion', price: 'Rs. 1650.00' },
 ];
 
-const qrStyles = [
-  {
-    id: 'square',
-    label: 'Square',
-    url: 'menuzo.lk/spicegarden',
-    urlNote: 'Standard link',
-    shape: 'Square modules',
-    logo: false,
-    colors: false,
-    description: 'Clean, high-contrast square QR code ready for instant printing.',
-  },
-  {
-    id: 'branded',
-    label: 'Branded',
-    url: 'menuzo.lk/spicegardenkitchen',
-    urlNote: 'Custom link',
-    shape: 'Rounded pattern',
-    logo: true,
-    colors: true,
-    description: 'Custom link, rounded dot pattern, brand colours, and your shop logo in the centre.',
-  },
-] as const;
-
 function QRExportBeat() {
-  const [style, setStyle] = useState<'square' | 'branded'>('branded');
-  const active = qrStyles.find((s) => s.id === style)!;
-
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
       {/* Left — copy */}
@@ -137,42 +111,19 @@ function QRExportBeat() {
         <h3 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground mb-3">
           Print-ready QR codes for your menu link
         </h3>
-        <p className="text-sm sm:text-base text-muted-foreground leading-relaxed mb-6">
+        <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
           Every Menuzo menu gets a QR code the moment you publish. Download crisp PNG or SVG files
-          sized for table tents, countertop stands, or signage.
+          sized for table tents, countertop stands, or signage, styled with your custom link,
+          rounded dot pattern, brand colours, and shop logo.
         </p>
 
-        {/* QR style toggle */}
-        <div
-          className="inline-flex rounded-xl border border-border bg-muted/40 p-1 gap-1"
-          role="group"
-          aria-label="QR style"
-        >
-          {qrStyles.map((s) => (
-            <button
-              key={s.id}
-              type="button"
-              onClick={() => setStyle(s.id)}
-              className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
-                style === s.id
-                  ? 'bg-background text-foreground shadow-sm border border-border'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              {s.label}
-            </button>
-          ))}
-        </div>
-
-        <p className="mt-4 text-sm text-muted-foreground leading-relaxed">{active.description}</p>
-
         {/* Feature list */}
-        <ul className="mt-5 space-y-2">
+        <ul className="mt-6 space-y-2">
           {[
-            { label: 'URL', value: active.urlNote },
-            { label: 'Pattern', value: active.shape },
-            { label: 'Logo', value: active.logo ? 'Shop logo in centre' : 'No logo' },
-            { label: 'Brand colours', value: active.colors ? 'Your palette' : 'Default black' },
+            { label: 'URL', value: 'Custom link' },
+            { label: 'Pattern', value: 'Rounded pattern' },
+            { label: 'Logo', value: 'Shop logo in centre' },
+            { label: 'Brand colours', value: 'Your palette' },
           ].map(({ label, value }) => (
             <li key={label} className="flex items-baseline gap-3 text-sm">
               <span className="w-28 shrink-0 text-muted-foreground">{label}</span>
@@ -185,44 +136,20 @@ function QRExportBeat() {
       {/* Right — QR print-frame mock */}
       <Card className="rounded-2xl border-border bg-card p-5 sm:p-6">
         {/* Print card mock */}
-        <div
-          className={`relative rounded-xl border-2 p-6 flex flex-col items-center gap-4 transition-colors ${
-            style === 'branded'
-              ? 'border-[#C2530A]/30 dark:border-primary/30 bg-[#FFF8F5] dark:bg-[#1A100A]'
-              : 'border-border bg-muted/20'
-          }`}
-        >
+        <div className="relative rounded-xl border-2 border-[#C2530A]/30 dark:border-primary/30 bg-[#FFF8F5] dark:bg-[#1A100A] p-6 flex flex-col items-center gap-4">
           {/* Venue name */}
           <div className="text-center">
-            <p
-              className={`text-sm font-semibold tracking-tight ${
-                style === 'branded' ? 'text-[#C2530A] dark:text-primary' : 'text-foreground'
-              }`}
-            >
+            <p className="text-sm font-semibold tracking-tight text-[#C2530A] dark:text-primary">
               Spice Garden Kitchen
             </p>
             <p className="text-xs text-muted-foreground mt-0.5">Scan to view our menu</p>
           </div>
 
           {/* QR image */}
-          <div
-            className={`relative rounded-xl overflow-hidden ${
-              style === 'branded'
-                ? 'ring-2 ring-[#C2530A]/20 dark:ring-primary/20'
-                : 'ring-1 ring-border'
-            }`}
-          >
+          <div className="relative rounded-xl overflow-hidden ring-2 ring-[#C2530A]/20 dark:ring-primary/20">
             <img
-              src={
-                style === 'branded'
-                  ? '/Landing/spice-garden-kitchen-qr-code.png'
-                  : '/Landing/spice-garden-qr.svg'
-              }
-              alt={
-                style === 'branded'
-                  ? 'Branded QR code with Spice Garden Kitchen logo'
-                  : 'Square QR code for Spice Garden Kitchen'
-              }
+              src="/Landing/spice-garden-kitchen-qr-code.png"
+              alt="Branded QR code with Spice Garden Kitchen logo"
               width={160}
               height={160}
               loading="lazy"
@@ -232,14 +159,8 @@ function QRExportBeat() {
 
           {/* URL pill */}
           <div className="flex items-center gap-1.5">
-            <span
-              className={`font-mono text-xs px-3 py-1 rounded-full border ${
-                style === 'branded'
-                  ? 'border-[#C2530A]/30 dark:border-primary/30 text-[#C2530A] dark:text-primary bg-[#C2530A]/5 dark:bg-primary/5'
-                  : 'border-border text-muted-foreground bg-muted/40'
-              }`}
-            >
-              {active.url}
+            <span className="font-mono text-xs px-3 py-1 rounded-full border border-[#C2530A]/30 dark:border-primary/30 text-[#C2530A] dark:text-primary bg-[#C2530A]/5 dark:bg-primary/5">
+              menuzo.lk/spicegardenkitchen
             </span>
           </div>
         </div>
