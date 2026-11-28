@@ -23,6 +23,7 @@ const founders: Founder[] = [
     name: 'Hasni Zihar',
     role: 'Co-Founder',
     initials: 'HZ',
+    photo: '/Landing/founder-hasni.webp',
     links: [
       { label: 'LinkedIn', href: 'https://www.linkedin.com/in/kr-hasni-zihar/', kind: 'linkedin' },
       { label: 'Portfolio', href: 'https://hasnizihar.vercel.app/', kind: 'website' },
@@ -33,6 +34,7 @@ const founders: Founder[] = [
     name: 'Shazan',
     role: 'Co-Founder',
     initials: 'S',
+    photo: '/Landing/founder-shazan.webp',
     links: [
       { label: 'LinkedIn', href: 'https://www.linkedin.com/in/shazanshaheed/', kind: 'linkedin' },
       { label: 'Portfolio', href: 'https://www.shazion.com/', kind: 'website' },
@@ -138,14 +140,14 @@ export function AboutPage() {
                   className="p-6 rounded-2xl bg-card border border-border flex flex-col justify-between gap-6"
                 >
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-muted border border-border overflow-hidden flex items-center justify-center text-foreground font-semibold text-base shrink-0">
+                    <div className="w-14 h-14 rounded-xl bg-muted border border-border overflow-hidden flex items-center justify-center text-foreground font-semibold text-base shrink-0">
                       {founder.photo ? (
                         <img
                           src={founder.photo}
                           alt={founder.name}
-                          width={48}
-                          height={48}
-                          className="w-full h-full object-cover"
+                          width={56}
+                          height={56}
+                          className="w-full h-full object-cover object-top"
                         />
                       ) : (
                         <span>{founder.initials}</span>
