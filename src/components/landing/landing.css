@@ -81,6 +81,24 @@
   color: hsl(var(--primary));
 }
 
+/* Keep custom shop theme text legible across light and dark curated palettes in AudienceSection */
+.landing-theme-preview[data-shop-theme="custom"] .bg-card .text-primary {
+  color: hsl(var(--shop-surface-primary-text));
+}
+
+.landing-theme-preview[data-shop-theme="custom"] .bg-background .text-primary {
+  color: hsl(var(--shop-page-primary-text));
+}
+
+.landing-theme-preview .food-card:hover {
+  transform: none;
+}
+
+.landing-theme-preview * {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
 /* Realistic restrained phone frame without glows or decorative shadows */
 .landing-phone-frame {
   border-radius: 1.75rem;
