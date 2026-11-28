@@ -7,7 +7,8 @@ export type BillingPeriod = {
   active: boolean;
 };
 
-export type PaidPlanSlug = 'plus' | 'enterprise';
+/** Any paid plan's slug ('plus', 'enterprise' or an admin-created plan). */
+export type PaidPlanSlug = string;
 
 export type PlanPrice = {
   plan_slug: PaidPlanSlug;

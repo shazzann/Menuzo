@@ -99,7 +99,8 @@ export interface User {
   shopName: string;
   shopId: string;
   subscription: {
-    plan: 'free' | 'plus' | 'pro' | 'enterprise';
+    /** A plan slug: 'free', 'plus', 'enterprise' or an admin-created plan. */
+    plan: string;
     expiresAt: Date | null;
     status: 'active' | 'expired' | 'cancelled';
   };

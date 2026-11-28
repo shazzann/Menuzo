@@ -21,7 +21,8 @@ import { ImageCropperModal } from '@/components/shared/ImageCropperModal';
 import { CategoryTabs } from '@/components/shared/CategoryTabs';
 import { CategoryReorderModal } from '@/components/shared/CategoryReorderModal';
 import { trackEvent } from '@/lib/analytics';
-import { hasPaidMenuAccess, getPlanLimits } from '@/lib/subscription';
+import { getPlanLimits, planLimitMessage } from '@/lib/subscription';
+import { usePlanCatalog } from '@/lib/plan-catalog';
 import { PlanStatusBanner } from '@/components/subscription/PlanStatusBanner';
 import { toast } from 'sonner';
 import { MenuService, CategoryService, StorageService } from '@/services';
@@ -38,10 +39,14 @@ export function AdminAddFoodPage() {
   const { foodItems, categories } = state;
   // Items over the Free plan limits stay editable here but are hidden from customers.
   const hiddenIds = new Set(state.planHiddenItemIds);
-  const isPaid = hasPaidMenuAccess(state.user?.subscription);
+  usePlanCatalog();
   const planLimits = getPlanLimits(state.user?.subscription);
-  const userPlan = state.user?.subscription?.plan || 'free';
-  const isEnterprise = userPlan === 'enterprise' && isPaid;
+  const showPlanLimit = (kind: 'items' | 'categories') => {
+    const { message, canUpgrade } = planLimitMessage(state.user?.subscription, kind);
+    toast.error(message, canUpgrade ? {
+      action: { label: 'Upgrade', onClick: () => dispatch({ type: 'SET_VIEW', payload: 'admin-subscription' }) },
+    } : undefined);
+  };
   const atItemLimit = foodItems.length >= planLimits.items;
   const currentCategories = categories.filter((c) => c.id !== 'all');
   const atCategoryLimit = currentCategories.length >= planLimits.categories;
@@ -79,17 +84,7 @@ export function AdminAddFoodPage() {
 
   const handleOpenForm = (item?: FoodItem) => {
     if (!item && atItemLimit) {
-      if (!isPaid) {
-        toast.error(`The Free plan allows up to ${planLimits.items} food items. Upgrade to Plus to add more.`, {
-          action: { label: 'Upgrade', onClick: () => dispatch({ type: 'SET_VIEW', payload: 'admin-subscription' }) },
-        });
-      } else if (!isEnterprise) {
-        toast.error(`The Plus plan allows up to ${planLimits.items} food items. Upgrade to Enterprise to add up to 500 items.`, {
-          action: { label: 'Upgrade', onClick: () => dispatch({ type: 'SET_VIEW', payload: 'admin-subscription' }) },
-        });
-      } else {
-        toast.error(`The Enterprise plan allows up to ${planLimits.items} food items. Plan limit reached.`);
-      }
+      showPlanLimit('items');
       return;
     }
     setIsCreatingCategory(false);
@@ -249,17 +244,7 @@ export function AdminAddFoodPage() {
     }
 
     if (!editingItem && atItemLimit) {
-      if (!isPaid) {
-        toast.error(`The Free plan allows up to ${planLimits.items} food items. Upgrade to Plus to add more.`, {
-          action: { label: 'Upgrade', onClick: () => dispatch({ type: 'SET_VIEW', payload: 'admin-subscription' }) },
-        });
-      } else if (!isEnterprise) {
-        toast.error(`The Plus plan allows up to ${planLimits.items} food items. Upgrade to Enterprise to add up to 500 items.`, {
-          action: { label: 'Upgrade', onClick: () => dispatch({ type: 'SET_VIEW', payload: 'admin-subscription' }) },
-        });
-      } else {
-        toast.error(`The Enterprise plan allows up to ${planLimits.items} food items. Plan limit reached.`);
-      }
+      showPlanLimit('items');
       return;
     }
 
@@ -287,17 +272,7 @@ export function AdminAddFoodPage() {
 
     const isNewCat = !!finalCategoryName && !currentCategories.some((c) => c.name.toLowerCase() === finalCategoryName.toLowerCase());
     if (isNewCat && atCategoryLimit) {
-      if (!isPaid) {
-        toast.error(`The Free plan allows up to ${planLimits.categories} categories. Upgrade to Plus to add more.`, {
-          action: { label: 'Upgrade', onClick: () => dispatch({ type: 'SET_VIEW', payload: 'admin-subscription' }) },
-        });
-      } else if (!isEnterprise) {
-        toast.error(`The Plus plan allows up to ${planLimits.categories} categories. Upgrade to Enterprise to add up to 50 categories.`, {
-          action: { label: 'Upgrade', onClick: () => dispatch({ type: 'SET_VIEW', payload: 'admin-subscription' }) },
-        });
-      } else {
-        toast.error(`The Enterprise plan allows up to ${planLimits.categories} categories. Plan limit reached.`);
-      }
+      showPlanLimit('categories');
       return;
     }
     
@@ -611,17 +586,7 @@ export function AdminAddFoodPage() {
                     variant="outline" 
                     onClick={() => {
                       if (atCategoryLimit) {
-                        if (!isPaid) {
-                          toast.error(`The Free plan allows up to ${planLimits.categories} categories. Upgrade to Plus to add more.`, {
-                            action: { label: 'Upgrade', onClick: () => dispatch({ type: 'SET_VIEW', payload: 'admin-subscription' }) },
-                          });
-                        } else if (!isEnterprise) {
-                          toast.error(`The Plus plan allows up to ${planLimits.categories} categories. Upgrade to Enterprise to add up to 50 categories.`, {
-                            action: { label: 'Upgrade', onClick: () => dispatch({ type: 'SET_VIEW', payload: 'admin-subscription' }) },
-                          });
-                        } else {
-                          toast.error(`The Enterprise plan allows up to ${planLimits.categories} categories. Plan limit reached.`);
-                        }
+                        showPlanLimit('categories');
                         return;
                       }
                       setIsCreatingCategory(true);

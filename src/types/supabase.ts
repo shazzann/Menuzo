@@ -1,6 +1,7 @@
 import type { BankTransferSettings, BillingPeriod, PaymentRequest, PlanPrice, ShopCustomUrl } from './billing';
 import type { AdminPaymentRequest, AdminShopSubscription, BillingPage, ShopBillingDetails } from './company-billing';
 import type { AdminPromoCode, PromoCode, PromoCodeUsage, PromoPlan, PromoPreview } from './promo-codes';
+import type { AdminPlan, AdminPlanInput } from './plans';
 
 export type Json =
   | string
@@ -42,6 +43,21 @@ export interface Database {
           is_active: boolean
           created_at: string
           updated_at: string
+          description: string
+          highlights: string[]
+          excluded: string[]
+          badge: string | null
+          is_popular: boolean
+          is_public: boolean
+          sort_order: number
+          has_custom_themes: boolean
+          has_qr_branding: boolean
+          has_custom_url: boolean
+          has_advanced_analytics: boolean
+          has_priority_support: boolean
+          has_advanced_customization: boolean
+          has_all_features: boolean
+          updated_by: string | null
         }
         Insert: {
           id?: string
@@ -363,7 +379,7 @@ export interface Database {
       admin_list_promo_codes: { Args: Record<string, never>; Returns: AdminPromoCode[] }
       admin_list_promo_code_usage: { Args: { p_promo_code_id: string }; Returns: PromoCodeUsage[] }
       preview_promo_code: {
-        Args: { p_code: string; p_shop_id: string; p_plan: PromoPlan | 'pro' }
+        Args: { p_code: string; p_shop_id: string; p_plan: string }
         Returns: PromoPreview
       }
       submit_payment_request_with_promo: {
@@ -389,6 +405,8 @@ export interface Database {
         Returns: ShopBillingDetails
       }
       is_company_billing_admin: { Args: Record<string, never>; Returns: boolean }
+      admin_list_plans: { Args: Record<string, never>; Returns: AdminPlan[] }
+      admin_save_plan: { Args: { p_plan: AdminPlanInput; p_create: boolean }; Returns: AdminPlan }
       admin_set_plan_price: {
         Args: { p_plan_slug: string; p_period_id: string; p_amount: number }
         Returns: PlanPrice

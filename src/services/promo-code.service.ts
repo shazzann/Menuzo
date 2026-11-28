@@ -1,6 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import type {
-  AdminPromoCode, PromoCode, PromoCodeInput, PromoCodeStatus, PromoCodeUsage, PromoPlan, PromoPreview,
+  AdminPromoCode, PromoCode, PromoCodeInput, PromoCodeStatus, PromoCodeUsage, PromoPreview,
 } from '@/types/promo-codes';
 
 // Company admins manage promo codes through RLS-guarded table writes; listing and
@@ -37,7 +37,7 @@ export const PromoCodeService = {
     if (error) throw error;
     return data ?? [];
   },
-  async preview(code: string, shopId: string, plan: PromoPlan | 'pro'): Promise<PromoPreview> {
+  async preview(code: string, shopId: string, plan: string): Promise<PromoPreview> {
     const { data, error } = await supabase.rpc('preview_promo_code', { p_code: code.trim(), p_shop_id: shopId, p_plan: plan });
     if (error) throw error;
     return data;

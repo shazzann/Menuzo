@@ -8,13 +8,14 @@ import { useApp } from '@/store';
 import { BillingService } from '@/services/billing.service';
 import { SubscriptionService } from '@/services/subscription.service';
 import { PromoCodeService } from '@/services/promo-code.service';
-import { isPaidActive, getPlanLimits } from '@/lib/subscription';
+import { isPaidActive, getPlanLimits, getPlanDefinition, normalizePlanSlug, planDisplayName as planName, purchasablePlans, PLAN_FEATURE_LABELS, BUILT_IN_PLANS } from '@/lib/subscription';
+import { usePlanCatalog } from '@/lib/plan-catalog';
 import { billingErrorMessage, discountedAmount, formatPaymentAmount, isCheckoutReady, paymentWhatsAppUrl, periodsForPlan, placeholderPeriods } from '@/lib/billing';
 import { getTodayDateString } from '@/lib/timeUtils';
 import type { BankTransferSettings, BillingPeriod, PaymentRequest, PlanPrice, ShopCustomUrl } from '@/types/billing';
 import type { PromoPreview } from '@/types/promo-codes';
 import { toast } from 'sonner';
-import { SubscriptionPlanComparison } from '@/components/subscription/SubscriptionPlanComparison';
+import { SubscriptionPlanComparison, type ComparisonPlan } from '@/components/subscription/SubscriptionPlanComparison';
 
 const steps = ['Select period', 'Bank transfer', 'Verify payment'];
 const panel = 'rounded-2xl border border-border bg-card p-5 sm:p-7';
@@ -29,14 +30,17 @@ export function SubscriptionPage() {
   const [bank, setBank] = useState<BankTransferSettings | null>(null);
   const [requests, setRequests] = useState<PaymentRequest[]>([]);
   const [customUrl, setCustomUrl] = useState<ShopCustomUrl | null>(null);
-  const [selectedPlan, setSelectedPlan] = useState<'plus' | 'enterprise'>(() => {
+  // The plan picked on this page or on the landing page; null until the owner chooses.
+  const [chosenPlan, setSelectedPlan] = useState<string | null>(() => {
     try {
       if (typeof sessionStorage !== 'undefined') {
         const intent = sessionStorage.getItem('menuzo_upgrade_intent');
-        if (intent === 'enterprise') return 'enterprise';
+        if (intent) return normalizePlanSlug(intent);
       }
-    } catch {}
-    return 'plus';
+    } catch {
+      // Storage can be unavailable (private mode); fall back to the default plan.
+    }
+    return null;
   });
   const [selectedId, setSelectedId] = useState(() => {
     try {
@@ -58,7 +62,7 @@ export function SubscriptionPage() {
   const [form, setForm] = useState({ payerName: '', reference: '', date: getTodayDateString(), slug: '', note: '' });
   // A checked promo code belongs to the plan it was checked for; switching plans drops it.
   const [promoInput, setPromoInput] = useState('');
-  const [promo, setPromo] = useState<(PromoPreview & { plan: 'plus' | 'enterprise' }) | null>(null);
+  const [promo, setPromo] = useState<(PromoPreview & { plan: string }) | null>(null);
   const [promoChecking, setPromoChecking] = useState(false);
   const [promoError, setPromoError] = useState('');
   const generation = useRef(0);
@@ -66,18 +70,27 @@ export function SubscriptionPage() {
   const pageActive = useRef(false);
   const userId = user?.id;
   const proActive = isPaidActive(user?.subscription);
-  const isEnterprise = user?.subscription?.plan === 'enterprise' && proActive;
+  const catalog = usePlanCatalog();
+  const buyablePlans = purchasablePlans();
+  const currentPlanSlug = normalizePlanSlug(user?.subscription?.plan);
+  // A plan that can no longer be bought falls back to the owner's own plan, then Plus, then the first one.
+  const selectedPlan = [chosenPlan, proActive ? currentPlanSlug : null, 'plus', buyablePlans[0]?.slug]
+    .find(slug => !!slug && buyablePlans.some(plan => plan.slug === slug)) ?? 'plus';
+  const selectedPlanDef = getPlanDefinition(selectedPlan);
+  const selectedTone = selectedPlanDef?.features.all_features && !selectedPlanDef.isPopular ? 'premium' : 'primary';
+  const currentPlanDef = getPlanDefinition(currentPlanSlug);
+  const currentPremium = proActive && !!currentPlanDef?.features.all_features && !currentPlanDef.isPopular;
   const planLimits = getPlanLimits(user?.subscription);
   const currentCategories = categories.filter(c => c.id !== 'all');
 
   // Compute price for currently selected period & plan
   // Prices come from plan_prices; the server re-checks the same row at submit time.
-  const plusPeriods = periodsForPlan(periods, prices, 'plus');
-  const enterprisePeriods = periodsForPlan(periods, prices, 'enterprise');
-  const pricedPeriod = (plan: 'plus' | 'enterprise', periodId: string): BillingPeriod | undefined => {
-    const period = (plan === 'enterprise' ? enterprisePeriods : plusPeriods).find(item => item.id === periodId);
-    return period ? { ...period, label: `${period.label} ${plan === 'enterprise' ? 'Enterprise' : 'Plus'}` } : undefined;
+  const pricedPeriod = (plan: string, periodId: string): BillingPeriod | undefined => {
+    const period = periodsForPlan(periods, prices, plan).find(item => item.id === periodId);
+    return period ? { ...period, label: `${period.label} ${planName(plan)}` } : undefined;
   };
+  const comparisonPlans: ComparisonPlan[] = buyablePlans.map(plan => ({ plan, periods: periodsForPlan(periods, prices, plan.slug) }));
+  const freePlan = catalog.find(plan => plan.slug === 'free') ?? BUILT_IN_PLANS[0];
   const basePeriod = periods.find(period => period.id === selectedId);
   const currentPeriod = pricedPeriod(selectedPlan, selectedId);
 
@@ -139,7 +152,7 @@ export function SubscriptionPage() {
     catch { toast.error('Could not copy. Please select and copy the text.'); }
   };
 
-  const planDisplayName = selectedPlan === 'enterprise' ? 'Enterprise' : 'Plus';
+  const planDisplayName = planName(selectedPlan);
 
   const applyPromo = async () => {
     const code = promoInput.trim().toUpperCase();
@@ -238,14 +251,15 @@ export function SubscriptionPage() {
 
         {showComparison && (
           <SubscriptionPlanComparison
-            periods={plusPeriods}
-            enterprisePeriods={enterprisePeriods}
+            free={freePlan}
+            plans={comparisonPlans}
+            periods={periods}
             selectedId={selectedId}
             loading={loading}
             ready={ready && !!shop.id}
             onSelect={id => { setSelectedId(id); setTransferMade(false); setReceiptSent(false); }}
             onKeepFree={() => dispatch({ type: 'SET_VIEW', payload: 'user-dashboard' })}
-            onUpgrade={(plan = 'plus') => {
+            onUpgrade={plan => {
               if (!ready || !currentPeriod || !shop.id) return;
               setSelectedPlan(plan);
               const computedPeriod = pricedPeriod(plan, currentPeriod.id);
@@ -288,7 +302,7 @@ export function SubscriptionPage() {
                   <section role="status" className={`${panel} border-emerald-500/30`}>
                     <div className="flex items-center gap-2 font-semibold text-emerald-600"><CheckCircle2 className="w-5 h-5" />Payment verified</div>
                     <p className="text-sm mt-2 text-muted-foreground">
-                      {proActive ? `Your ${isEnterprise ? 'Enterprise' : 'Plus'} subscription is active.` : user?.subscription.status === 'expired' ? 'Your subscription has expired. Choose a period below to renew.' : user?.subscription.status === 'cancelled' ? 'Your previous payment was verified, but your subscription has been cancelled. Your account is on Free.' : 'Your payment has been verified. We are waiting for your subscription to be activated.'}
+                      {proActive ? `Your ${planName(currentPlanSlug)} subscription is active.` : user?.subscription.status === 'expired' ? 'Your subscription has expired. Choose a period below to renew.' : user?.subscription.status === 'cancelled' ? 'Your previous payment was verified, but your subscription has been cancelled. Your account is on Free.' : 'Your payment has been verified. We are waiting for your subscription to be activated.'}
                     </p>
                   </section>
                 )}
@@ -309,7 +323,7 @@ export function SubscriptionPage() {
                       <div className="space-y-6">
                         <div>
                           <h3 className="text-xl font-bold">
-                            {proActive ? `Renew ${isEnterprise ? 'Enterprise' : 'Plus'}` : `Choose ${planDisplayName}`}
+                            {proActive && selectedPlan === currentPlanSlug ? `Renew ${planDisplayName}` : `Choose ${planDisplayName}`}
                           </h3>
                           <p className="text-sm text-muted-foreground mt-1">
                             Pay once for the selected period. No automatic renewals.
@@ -323,34 +337,35 @@ export function SubscriptionPage() {
 
                         {/* Plan Selector for Renewals/Upgrades */}
                         <div className="grid sm:grid-cols-2 gap-3">
-                          <button
-                            type="button"
-                            onClick={() => setSelectedPlan('plus')}
-                            className={`p-4 rounded-xl border-2 text-left transition-all ${
-                              selectedPlan === 'plus' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/40'
-                            }`}
-                          >
-                            <div className="flex items-center justify-between mb-1">
-                              <span className="font-bold text-sm">Plus Plan</span>
-                              <Crown className="w-4 h-4 text-primary" />
-                            </div>
-                            <p className="text-xs text-muted-foreground">100 items · 20 categories · Custom URL & themes</p>
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => setSelectedPlan('enterprise')}
-                            className={`p-4 rounded-xl border-2 text-left transition-all ${
-                              selectedPlan === 'enterprise' ? 'border-purple-500 bg-purple-500/5' : 'border-border hover:border-purple-500/40'
-                            }`}
-                          >
-                            <div className="flex items-center justify-between mb-1">
-                              <span className="font-bold text-sm text-purple-400">Enterprise Plan</span>
-                              <Zap className="w-4 h-4 text-purple-400" />
-                            </div>
-                            <p className="text-xs text-muted-foreground">500 items · 50 categories · Full feature access</p>
-                          </button>
+                          {buyablePlans.map(plan => {
+                            const premium = plan.features.all_features && !plan.isPopular;
+                            const active = selectedPlan === plan.slug;
+                            const unlocked = (Object.keys(PLAN_FEATURE_LABELS) as (keyof typeof PLAN_FEATURE_LABELS)[])
+                              .filter(key => plan.features[key]).length;
+                            return (
+                              <button
+                                key={plan.slug}
+                                type="button"
+                                onClick={() => setSelectedPlan(plan.slug)}
+                                aria-pressed={active}
+                                className={`p-4 rounded-xl border-2 text-left transition-all ${
+                                  active
+                                    ? premium ? 'border-purple-500 bg-purple-500/5' : 'border-primary bg-primary/5'
+                                    : premium ? 'border-border hover:border-purple-500/40' : 'border-border hover:border-primary/40'
+                                }`}
+                              >
+                                <div className="flex items-center justify-between mb-1">
+                                  <span className={`font-bold text-sm ${premium ? 'text-purple-400' : ''}`}>{plan.name} Plan</span>
+                                  {premium ? <Zap className="w-4 h-4 text-purple-400" /> : <Crown className="w-4 h-4 text-primary" />}
+                                </div>
+                                <p className="text-xs text-muted-foreground">
+                                  {plan.maxItems.toLocaleString('en-US')} items · {plan.maxCategories.toLocaleString('en-US')} categories · {unlocked} premium {unlocked === 1 ? 'feature' : 'features'}
+                                </p>
+                              </button>
+                            );
+                          })}
                         </div>
+                        {!buyablePlans.length && <p className="text-sm text-muted-foreground">No paid plans are available right now.</p>}
 
                         <fieldset>
                           <legend className="sr-only">Subscription period</legend>
@@ -390,18 +405,20 @@ export function SubscriptionPage() {
                               <Button type="submit" variant="outline" disabled={!promoInput.trim() || promoChecking || !shop.id}>{promoChecking ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Apply'}</Button>
                             </form>
                           )}
-                          {promo && !activePromo && <p className="text-xs text-muted-foreground">{promo.code} was checked for {promo.plan === 'enterprise' ? 'Enterprise' : 'Plus'}. Apply it again for {planDisplayName}.</p>}
+                          {promo && !activePromo && <p className="text-xs text-muted-foreground">{promo.code} was checked for {planName(promo.plan)}. Apply it again for {planDisplayName}.</p>}
                           {promoError && <p role="alert" className="text-sm text-destructive">{promoError}</p>}
                           {activePromo && selected?.amount != null && <p className="text-sm">You pay <strong>{payableText}</strong> <span className="text-muted-foreground line-through">{formatPaymentAmount(selected.amount, selected.currency)}</span></p>}
                         </div>
 
                         <ul className="grid sm:grid-cols-2 gap-3 text-sm">
-                          {(selectedPlan === 'enterprise'
-                            ? ['Up to 500 menu items', 'Up to 50 categories', 'Advanced customization', 'Priority support 24/7']
-                            : ['Up to 100 menu items', 'Up to 20 categories', 'Custom menu URL', 'Priority support']
-                          ).map(feature => (
+                          {(selectedPlanDef ? [
+                            `Up to ${selectedPlanDef.maxItems.toLocaleString('en-US')} menu items`,
+                            `Up to ${selectedPlanDef.maxCategories.toLocaleString('en-US')} categories`,
+                            ...(Object.keys(PLAN_FEATURE_LABELS) as (keyof typeof PLAN_FEATURE_LABELS)[])
+                              .filter(key => selectedPlanDef.features[key]).map(key => PLAN_FEATURE_LABELS[key]),
+                          ] : []).map(feature => (
                             <li key={feature} className="flex items-center gap-2">
-                              <Check className={`w-4 h-4 ${selectedPlan === 'enterprise' ? 'text-purple-400' : 'text-primary'}`} />
+                              <Check className={`w-4 h-4 ${selectedTone === 'premium' ? 'text-purple-400' : 'text-primary'}`} />
                               {feature}
                             </li>
                           ))}
@@ -410,7 +427,7 @@ export function SubscriptionPage() {
                         {!ready && <p className="text-sm bg-muted rounded-xl p-4 text-muted-foreground">Subscription payments are coming soon. Prices and bank details will appear here when ready.</p>}
 
                         <Button
-                          className={`w-full sm:w-auto gap-2 ${selectedPlan === 'enterprise' ? 'bg-purple-600 hover:bg-purple-700 text-white' : ''}`}
+                          className={`w-full sm:w-auto gap-2 ${selectedTone === 'premium' ? 'bg-purple-600 hover:bg-purple-700 text-white' : ''}`}
                           disabled={!selected || !shop.id}
                           onClick={() => {
                             setCheckoutPeriod(selected || null);
@@ -558,11 +575,11 @@ export function SubscriptionPage() {
 
           {!showComparison && (
             <aside className="space-y-5">
-              <section className={`${panel} ${isEnterprise ? 'bg-purple-500/10 border-purple-500/30' : 'bg-primary/5 border-primary/20'}`}>
-                <Crown className={`w-7 h-7 mb-4 ${isEnterprise ? 'text-purple-400' : 'text-primary'}`} />
+              <section className={`${panel} ${currentPremium ? 'bg-purple-500/10 border-purple-500/30' : 'bg-primary/5 border-primary/20'}`}>
+                <Crown className={`w-7 h-7 mb-4 ${currentPremium ? 'text-purple-400' : 'text-primary'}`} />
                 <p className="text-xs text-muted-foreground uppercase tracking-wide">Current plan</p>
                 <h3 className="text-2xl font-bold mt-1">
-                  {proActive ? (isEnterprise ? 'Enterprise active' : 'Plus active') : 'Free'}
+                  {proActive ? `${planName(currentPlanSlug)} active` : 'Free'}
                 </h3>
                 <p className="text-sm text-muted-foreground mt-2">
                   {proActive && user?.subscription.expiresAt

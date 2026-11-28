@@ -1,7 +1,8 @@
 import { AlertTriangle, Clock, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useApp } from '@/store';
-import { FREE_PLAN_LIMITS, planNotice, subscriptionPhase, type PlanNoticeKind } from '@/lib/subscription';
+import { getPlanDefinition, planDisplayName, planNotice, subscriptionPhase, BUILT_IN_PLANS, type PlanNoticeKind } from '@/lib/subscription';
+import { usePlanCatalog } from '@/lib/plan-catalog';
 import { cn } from '@/lib/utils';
 
 const day = (date: Date) => date.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
@@ -10,13 +11,16 @@ const day = (date: Date) => date.toLocaleDateString(undefined, { day: 'numeric',
 // `kinds` limits which notices a page shows (the dashboard shows all of them).
 export function PlanStatusBanner({ className, kinds }: { className?: string; kinds?: PlanNoticeKind[] }) {
   const { state, dispatch } = useApp();
+  usePlanCatalog();
   const plan = subscriptionPhase(state.user?.subscription);
   const hidden = state.planHiddenItemIds.length;
   const notice = planNotice(state.user?.subscription, hidden);
   if (!notice || (kinds && !kinds.includes(notice))) return null;
   const openSubscription = () => dispatch({ type: 'SET_VIEW', payload: 'admin-subscription' });
 
-  const planName = state.user?.subscription.plan === 'enterprise' ? 'Enterprise' : 'Plus';
+  const planName = planDisplayName(state.user?.subscription.plan);
+  const free = getPlanDefinition('free') ?? BUILT_IN_PLANS[0];
+  const FREE_PLAN_LIMITS = { items: free.maxItems, categories: free.maxCategories };
 
   let tone: 'warning' | 'info';
   let Icon = Clock;

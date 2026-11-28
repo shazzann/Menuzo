@@ -50,13 +50,21 @@ test('new and unavailable profiles default to Free without an expiry', () => {
   const expected = { plan: 'free', status: 'active', expiresAt: null };
   assert.deepEqual(plain(subscription.freeSubscription()), expected);
   assert.deepEqual(plain(subscription.subscriptionFromProfile(null)), expected);
-  for (const plan of [null, 'free', 'unknown']) {
+  for (const plan of [null, 'free']) {
     assert.deepEqual(plain(subscription.subscriptionFromProfile({
       subscription_plan: plan,
       subscription_status: 'active',
       subscription_expires_at: future.toISOString(),
     })), expected);
   }
+  // A plan the catalog does not know is kept (it may load later) but never grants paid access.
+  const unknown = subscription.subscriptionFromProfile({
+    subscription_plan: 'unknown', subscription_status: 'active', subscription_expires_at: future.toISOString(),
+  });
+  assert.equal(unknown.plan, 'unknown');
+  assert.equal(subscription.isPaidActive(unknown), false);
+  assert.equal(subscription.hasPaidMenuAccess(unknown), false);
+  assert.deepEqual(plain(subscription.getPlanLimits(unknown)), { items: 10, categories: 2 });
 });
 
 for (const [name, value, expected] of [
@@ -444,6 +452,7 @@ function subscriptionPageHarness(options = {}) {
     '@/services/promo-code.service': { PromoCodeService: {
       preview: async () => { throw new Error('Checkout tests do not apply promo codes'); },
     } },
+    '@/lib/plan-catalog': { usePlanCatalog: () => subscription.getPlanCatalog() },
     '@/lib/subscription': subscription,
     '@/lib/billing': billing,
     '@/components/subscription/SubscriptionPlanComparison': comparison,
@@ -476,7 +485,7 @@ test('Free plan comparison shows benefits and blocks checkout when pricing is un
   const cleanup = page.runEffects();
   await flush();
   const rendered = page.render();
-  assert.match(rendered.html, /Compare Free and Pro plans/);
+  assert.match(rendered.html, /Compare Free and paid plans/);
   assert.match(rendered.html, /Monthly/);
   assert.match(rendered.html, /Yearly/);
   assert.match(rendered.html, /Coming soon/);
@@ -636,7 +645,7 @@ test('Free comparison uses live LKR prices and preserves the yearly choice into 
   assert.match(page.render().html, /Yearly (Plus|Pro)/);
   assert.match(page.render().html, /LKR.*15,000/);
   buttonByText(page,'Back').props.onClick();
-  assert.match(page.render().html, /Compare Free and Pro plans/);
+  assert.match(page.render().html, /Compare Free and paid plans/);
   assert.equal(findElement(page.render().tree,node => node.type === 'input' && node.props.value === 'yearly').props.checked,true);
   buttonByText(page,'Continue with Free').props.onClick();
   assert.deepEqual(page.actions.at(-1),{type:'SET_VIEW',payload:'user-dashboard'});
@@ -665,23 +674,77 @@ test('Enterprise checkout quotes and submits the Enterprise database price', asy
   });
   const cleanup = await mountPage(page);
   assert.match(page.render().html, /LKR.*7,000/);
-  buttonByText(page, 'Choose Enterprise').props.onClick();
+  buttonByText(page, 'Upgrade to Enterprise').props.onClick();
   assert.match(page.render().html, /Monthly Enterprise/);
   assert.match(page.render().html, /LKR.*7,000/);
   cleanup();
 });
+
+const businessPlan = {
+  ...subscription.BUILT_IN_PLANS[1], slug: 'business', name: 'Business', badge: null, isPopular: false, sortOrder: 15,
+  maxItems: 250, maxCategories: 30,
+  features: { ...subscription.BUILT_IN_PLANS[1].features, custom_themes: false },
+};
+function withCatalog(plans, run) {
+  subscription.setPlanCatalog(plans);
+  return Promise.resolve().then(run).finally(() => subscription.setPlanCatalog(subscription.BUILT_IN_PLANS));
+}
+
+test('an admin-created plan sets its own limits, features and upgrade path', () => withCatalog(
+  [...subscription.BUILT_IN_PLANS, businessPlan],
+  () => {
+    const now = Date.parse('2026-11-29T12:00:00Z');
+    const business = { plan: 'business', status: 'active', expiresAt: new Date(now + 86400000 * 10) };
+    assert.equal(subscription.isPaidActive(business, now), true);
+    assert.deepEqual(plain(subscription.getPlanLimits(business, now)), { items: 250, categories: 30 });
+    assert.equal(subscription.hasPlanFeature(business, 'custom_url', now), true);
+    assert.equal(subscription.hasPlanFeature(business, 'custom_themes', now), false);
+    assert.equal(subscription.planDisplayName('business'), 'Business');
+    // Free shops are pointed at the smallest bigger plan; Business at Enterprise; Enterprise at nothing.
+    assert.match(subscription.planLimitMessage(subscription.freeSubscription(), 'items', now).message, /Free plan allows up to 10 food items\. Upgrade to Plus/);
+    assert.match(subscription.planLimitMessage(business, 'items', now).message, /Business plan allows up to 250 food items\. Upgrade to Enterprise to add up to 500/);
+    const enterprise = { ...business, plan: 'enterprise' };
+    assert.deepEqual(plain(subscription.planLimitMessage(enterprise, 'items', now)), {
+      message: 'The Enterprise plan allows up to 500 food items. Plan limit reached.', canUpgrade: false,
+    });
+    // A retired plan cannot be bought but still grants what was paid for.
+    subscription.setPlanCatalog([...subscription.BUILT_IN_PLANS, { ...businessPlan, isActive: false }]);
+    assert.equal(subscription.isPaidActive(business, now), true);
+    assert.equal(subscription.purchasablePlans().some(plan => plan.slug === 'business'), false);
+  },
+));
+
+test('checkout lists an admin-created plan and quotes its database price', () => withCatalog(
+  [...subscription.BUILT_IN_PLANS, businessPlan],
+  async () => {
+    const lkr = [{ ...configuredPeriod, currency: 'LKR' }, { ...yearlyPeriod, currency: 'LKR' }];
+    const price = (plan_slug, period_id, amount) => ({ plan_slug, period_id, amount, currency: 'LKR', updated_at: '', updated_by: null });
+    const page = subscriptionPageHarness({
+      periods: lkr, bank: configuredBank,
+      prices: [price('plus', 'monthly', 3500), price('plus', 'yearly', 33600), price('business', 'monthly', 4800), price('business', 'yearly', 48000)],
+    });
+    const cleanup = await mountPage(page);
+    assert.match(page.render().html, /Business/);
+    assert.match(page.render().html, /Food items: 250/);
+    assert.match(page.render().html, /LKR.*4,800/);
+    buttonByText(page, 'Upgrade to Business').props.onClick();
+    assert.match(page.render().html, /Monthly Business/);
+    assert.match(page.render().html, /LKR.*4,800/);
+    cleanup();
+  },
+));
 
 test('active Pro and pending payments retain their existing management screens', async () => {
   const pro = subscriptionPageHarness({ periods: [configuredPeriod,yearlyPeriod],bank:configuredBank,
     subscription: {plan:'pro',status:'active',expiresAt:new Date(Date.now()+86400000)} });
   const disposePro = await mountPage(pro);
   assert.match(pro.render().html,/Renew (Plus|Pro)/);
-  assert.doesNotMatch(pro.render().html,/Compare Free and Pro plans/);
+  assert.doesNotMatch(pro.render().html,/Compare Free and paid plans/);
   disposePro();
   const pending = subscriptionPageHarness({ requests:[savedPayment] });
   const disposePending = await mountPage(pending);
   assert.match(pending.render().html,/Payment verification pending/);
-  assert.doesNotMatch(pending.render().html,/Compare Free and Pro plans/);
+  assert.doesNotMatch(pending.render().html,/Compare Free and paid plans/);
   disposePending();
 });
 
@@ -784,15 +847,15 @@ test('one plan notice at a time: ending soon, grace, or hidden items', () => {
 });
 
 test('plan comparison features match the configured 10-feature matrix', () => {
+  const [free, plus, enterprise] = subscription.BUILT_IN_PLANS;
+  const priced = (monthly, yearly) => [
+    { id: 'monthly', label: 'Monthly', months: 1, amount: monthly, currency: 'LKR', active: true },
+    { id: 'yearly', label: 'Yearly', months: 12, amount: yearly, currency: 'LKR', active: true },
+  ];
   const rendered = renderToStaticMarkup(React.createElement(comparison.SubscriptionPlanComparison, {
-    periods: [
-      { id: 'monthly', label: 'Monthly', months: 1, amount: 3500, currency: 'LKR', active: true },
-      { id: 'yearly', label: 'Yearly', months: 12, amount: 33600, currency: 'LKR', active: true },
-    ],
-    enterprisePeriods: [
-      { id: 'monthly', label: 'Monthly', months: 1, amount: 6000, currency: 'LKR', active: true },
-      { id: 'yearly', label: 'Yearly', months: 12, amount: 65000, currency: 'LKR', active: true },
-    ],
+    free,
+    plans: [{ plan: plus, periods: priced(3500, 33600) }, { plan: enterprise, periods: priced(6000, 65000) }],
+    periods: priced(null, null),
     selectedId: 'monthly',
     loading: false,
     ready: true,
@@ -815,14 +878,14 @@ test('plan comparison features match the configured 10-feature matrix', () => {
   // 5. Custom QR branding: Basic vs Advanced
   assert.match(rendered, /Custom QR branding: Basic/);
   assert.match(rendered, /Custom QR branding: Advanced/);
-  // 6. Analytics dashboard: Pro only
-  assert.match(rendered, /Analytics dashboard.*Pro only/);
+  // 6. Analytics dashboard: paid plans only
+  assert.match(rendered, /Analytics dashboard.*Paid plans only/);
   // 7. Restaurant profile
   assert.match(rendered, /Restaurant profile/);
   // 8. Shareable menu link
   assert.match(rendered, /Shareable menu link/);
-  // 9. Custom menu URL: Pro only
-  assert.match(rendered, /Custom menu URL.*Pro only/);
+  // 9. Custom menu URL: paid plans only
+  assert.match(rendered, /Custom menu URL.*Paid plans only/);
   // 10. Support: Standard vs Priority
   assert.match(rendered, /Support: Standard/);
   assert.match(rendered, /Support: Priority/);

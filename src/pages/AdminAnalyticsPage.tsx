@@ -5,18 +5,21 @@ import { useApp } from '@/store';
 import { BottomNav } from '@/components/shared/BottomNav';
 import type { AdminTab } from '@/types';
 import { cn } from '@/lib/utils';
-import { isProActive, isPaidActive, getPlanLimits } from '@/lib/subscription';
+import { isPaidActive, getPlanLimits, getPlanDefinition } from '@/lib/subscription';
+import { usePlanCatalog } from '@/lib/plan-catalog';
 import { ANALYTICS_RANGE_LABELS, summarizeShopViews, viewsTrend, type AnalyticsRange } from '@/lib/shopAnalytics';
 import { MenuViewsChart, TrendBadge } from '@/components/admin/MenuViewsChart';
 
 export function AdminAnalyticsPage() {
   const { state, dispatch } = useApp();
   const { user, foodItems, categories, shop } = state;
-  const proActive = typeof isPaidActive === 'function' ? isPaidActive(user?.subscription) : isProActive(user?.subscription);
-  const activePlanTier = user?.subscription?.plan ?? (proActive ? 'plus' : 'free');
-  const isEnterprise = proActive && activePlanTier === 'enterprise';
-  const planDisplayName = isEnterprise ? 'Enterprise' : proActive ? 'Plus' : 'Free';
-  const planLimits = typeof getPlanLimits === 'function' ? getPlanLimits(user?.subscription) : { items: 10, categories: 2 };
+  usePlanCatalog();
+  const proActive = isPaidActive(user?.subscription);
+  const currentPlan = proActive ? getPlanDefinition(user?.subscription?.plan) : undefined;
+  // Full-access plans that are not the highlighted one get the purple treatment.
+  const isEnterprise = !!currentPlan?.features.all_features && !currentPlan.isPopular;
+  const planDisplayName = currentPlan?.name ?? 'Free';
+  const planLimits = getPlanLimits(user?.subscription);
   const currentCategories = (categories || []).filter((c) => c.id !== 'all');
   const [timeRange, setTimeRange] = useState<AnalyticsRange>('week');
 

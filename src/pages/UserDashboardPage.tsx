@@ -24,7 +24,8 @@ import { useState, useRef } from 'react';
 import { toast } from 'sonner';
 import { SmallQrPreview, type SmallQrPreviewRef } from '@/components/admin/SmallQrPreview';
 import type { AdminTab } from '@/types';
-import { isProActive, planNotice } from '@/lib/subscription';
+import { getPlanDefinition, isProActive, planNotice } from '@/lib/subscription';
+import { usePlanCatalog } from '@/lib/plan-catalog';
 import { markQrGenerated } from '@/lib/qrProgress';
 import {
   AlertDialog,
@@ -42,10 +43,11 @@ export function UserDashboardPage() {
   const { state, dispatch } = useApp();
   const { shop, foodItems, user } = state;
   const proActive = isProActive(user?.subscription);
-  const userPlan = user?.subscription?.plan || 'free';
-  const isEnterprise = userPlan === 'enterprise' && proActive;
-  const isPlus = (userPlan === 'plus' || userPlan === 'pro') && proActive;
-  const planDisplayName = isEnterprise ? 'Enterprise' : isPlus ? 'Plus' : 'Free';
+  usePlanCatalog();
+  const currentPlan = proActive ? getPlanDefinition(user?.subscription?.plan) : undefined;
+  // Full-access plans that are not the highlighted one get the purple treatment.
+  const isEnterprise = !!currentPlan?.features.all_features && !currentPlan.isPopular;
+  const planDisplayName = currentPlan?.name ?? 'Free';
   const showPlanNotice = planNotice(user?.subscription, state.planHiddenItemIds.length) !== null;
   const isLoadingData = state.shopDataStatus === 'loading';
   const qrRef = useRef<SmallQrPreviewRef>(null);

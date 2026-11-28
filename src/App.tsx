@@ -37,6 +37,7 @@ import { AdminDataLoader } from '@/components/shared/AdminDataLoader';
 import { ShopAnalyticsDataLoader } from '@/components/shared/ShopAnalyticsDataLoader';
 import { ShopThemeApplier } from '@/components/shared/ShopThemeApplier';
 import { SubscriptionDataLoader } from '@/components/shared/SubscriptionDataLoader';
+import { PlanCatalogLoader } from '@/lib/plan-catalog';
 import { PlanVisibilityLoader } from '@/components/shared/PlanVisibilityLoader';
 import { SubscriptionPage } from '@/pages/SubscriptionPage';
 import { freeSubscription } from '@/lib/subscription';
@@ -196,6 +197,7 @@ function App() {
           <PublicDataLoader />
           <AdminDataLoader />
           <ShopAnalyticsDataLoader />
+          <PlanCatalogLoader />
           <SubscriptionDataLoader />
           <PlanVisibilityLoader />
           <ShopThemeApplier />
