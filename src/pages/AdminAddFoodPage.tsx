@@ -952,8 +952,8 @@ export function AdminAddFoodPage() {
                     : `Rs. ${item.finalPrice.toFixed(2)}`}
                 </span>
                 {item.pricingType === 'variants' && item.options && item.options.length > 0 && (
-                  <span className="text-[10px] px-1.5 py-0.5 bg-primary/20 text-primary rounded-full font-medium">
-                    {item.options.length} options
+                  <span className="text-[10px] px-1.5 py-0.5 bg-primary/20 text-primary rounded-full font-medium whitespace-nowrap">
+                    {item.options.length} {item.options.length === 1 ? 'portion' : 'portions'}
                   </span>
                 )}
                 {(item.discountedPrice ?? 0) > 0 && item.pricingType !== 'variants' && (

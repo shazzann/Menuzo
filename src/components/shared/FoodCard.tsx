@@ -54,8 +54,8 @@ export function FoodCard({ item, onClick, variant = 'grid' }: FoodCardProps) {
                 <span className="text-sm font-bold text-primary">
                   From Rs. {minPrice.toFixed(2)}
                 </span>
-                <span className="text-[10px] px-2 py-0.5 bg-primary/10 text-primary border border-primary/20 rounded-full font-medium">
-                  {item.options!.length} options
+                <span className="shrink-0 whitespace-nowrap text-[10px] px-2 py-0.5 bg-primary/10 text-primary border border-primary/20 rounded-full font-medium">
+                  {item.options!.length} {item.options!.length === 1 ? 'portion' : 'portions'}
                 </span>
               </>
             ) : item.discount ? (
@@ -121,12 +121,16 @@ export function FoodCard({ item, onClick, variant = 'grid' }: FoodCardProps) {
         </p>
         <div className="food-card-prices flex flex-wrap items-baseline gap-x-2 gap-y-1 mt-auto pt-2">
           {isVariants ? (
-            <div className="flex items-center justify-between w-full">
-              <span className="food-card-current-price whitespace-nowrap text-sm font-bold text-primary">
+            <div className="flex items-center justify-between gap-1.5 w-full min-w-0">
+              <span className="food-card-current-price whitespace-nowrap text-sm font-bold text-primary truncate">
                 From Rs. {minPrice.toFixed(2)}
               </span>
-              <span className="text-[10px] px-1.5 py-0.5 bg-primary/10 text-primary border border-primary/20 rounded-full font-medium">
-                {item.options!.length} options
+              <span
+                title={`${item.options!.length} ${item.options!.length === 1 ? 'portion' : 'portions'}`}
+                aria-label={`${item.options!.length} ${item.options!.length === 1 ? 'portion' : 'portions'}`}
+                className="shrink-0 whitespace-nowrap text-[10px] px-1.5 py-0.5 bg-primary/10 text-primary border border-primary/20 rounded-md font-semibold tabular-nums leading-none"
+              >
+                P{item.options!.length}
               </span>
             </div>
           ) : item.discount ? (
