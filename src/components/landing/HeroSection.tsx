@@ -230,7 +230,7 @@ export function HeroSection() {
           </div>
 
           {/* Subtle Visual Connection Indicator */}
-          <div className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
+          <div className="flex items-center justify-center gap-1.5 py-1.5 text-xs text-muted-foreground">
             <ArrowDownRight className="w-3.5 h-3.5 text-primary" strokeWidth={1.75} aria-hidden="true" />
             <span>Updates reflect immediately on the guest phone menu</span>
           </div>
@@ -240,7 +240,7 @@ export function HeroSection() {
             className="landing-phone-frame overflow-hidden max-w-[460px] mx-auto lg:max-w-none"
             aria-label="Smartphone view of Spice Garden Kitchen live Menuzo menu"
           >
-            <div className="px-4 py-2 border-b border-border bg-muted/30 flex items-center justify-between gap-2 text-xs text-muted-foreground">
+            <div className="px-4 sm:px-5 py-2.5 border-b border-border bg-muted/30 flex items-center justify-between gap-2 text-xs text-muted-foreground">
               <span className="truncate font-medium">menuzo.lk/spicegardenkitchen</span>
               <span className="inline-flex items-center gap-1.5 text-[#18753F] dark:text-emerald-400 font-medium shrink-0">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#18753F] dark:bg-emerald-400" aria-hidden="true" />
@@ -248,7 +248,7 @@ export function HeroSection() {
               </span>
             </div>
 
-            <div className="p-3.5 sm:px-4 border-b border-border flex flex-wrap items-center justify-between gap-3 bg-card">
+            <div className="p-4 sm:px-5 sm:py-4 border-b border-border flex flex-wrap items-center justify-between gap-3 bg-card">
               <div className="flex items-center gap-3 min-w-0">
                 <img
                   src="/Landing/spice-garden-kitchen-logo.webp"
@@ -289,9 +289,9 @@ export function HeroSection() {
                   recordFirstDemoInteraction();
                   setSelectedCategory(cat);
                 }}
-                className="static py-2.5 px-4 border-b border-border"
+                className="static py-3.5 px-4 sm:px-5 border-b border-border"
               />
-              <div className="p-3.5 sm:p-4 space-y-3" aria-live="polite">
+              <div className="p-4 sm:p-5 space-y-3.5" aria-live="polite">
                 {visibleDemoItems.map((item) => (
                   <FoodCard key={item.id} item={item} variant="list" />
                 ))}
