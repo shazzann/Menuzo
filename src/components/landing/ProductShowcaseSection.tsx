@@ -136,30 +136,30 @@ function QRExportBeat() {
       {/* Right — QR print-frame mock */}
       <Card className="rounded-2xl border-border bg-card p-5 sm:p-6">
         {/* Print card mock */}
-        <div className="relative rounded-xl border-2 border-[#C2530A]/30 dark:border-primary/30 bg-[#FFF8F5] dark:bg-[#1A100A] p-6 flex flex-col items-center gap-4">
+        <div className="relative rounded-xl border border-border bg-muted/25 p-6 flex flex-col items-center gap-4">
           {/* Venue name */}
           <div className="text-center">
-            <p className="text-sm font-semibold tracking-tight text-[#C2530A] dark:text-primary">
+            <p className="text-sm font-semibold tracking-tight text-foreground">
               Spice Garden Kitchen
             </p>
             <p className="text-xs text-muted-foreground mt-0.5">Scan to view our menu</p>
           </div>
 
           {/* QR image */}
-          <div className="relative rounded-xl overflow-hidden ring-2 ring-[#C2530A]/20 dark:ring-primary/20">
+          <div className="relative rounded-2xl overflow-hidden border border-border bg-white p-1.5 shadow-xs">
             <img
               src="/Landing/spice-garden-kitchen-qr-code.png"
               alt="Branded QR code with Spice Garden Kitchen logo"
               width={160}
               height={160}
               loading="lazy"
-              className="w-40 h-40 block bg-white object-contain"
+              className="w-40 h-40 block bg-white object-contain rounded-xl"
             />
           </div>
 
           {/* URL pill */}
           <div className="flex items-center gap-1.5">
-            <span className="font-mono text-xs px-3 py-1 rounded-full border border-[#C2530A]/30 dark:border-primary/30 text-[#C2530A] dark:text-primary bg-[#C2530A]/5 dark:bg-primary/5">
+            <span className="font-mono text-xs px-3 py-1 rounded-full border border-primary/25 text-[#C2530A] dark:text-primary bg-primary/10">
               menuzo.lk/spicegardenkitchen
             </span>
           </div>
