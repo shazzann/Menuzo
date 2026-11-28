@@ -1,0 +1,138 @@
+/* Scoped Menuzo Landing Design System
+ * Isolated under .landing so admin, customer menu, and auth routes are unaffected.
+ */
+
+.landing {
+  --landing-chalkboard: #12261f;
+  --landing-chalk: #f3f5f0;
+  --landing-surface: #ffffff;
+  --landing-surface-muted: #eaece6;
+  --landing-orange: #f97316;
+  --landing-orange-hover: #ea580c;
+  --landing-live: #1f8a4c;
+  --landing-soldout: #c8372d;
+  --landing-slate: #3d4a44;
+  --landing-border: #d2d8cf;
+  --landing-border-strong: #b6c0b3;
+
+  --landing-font-display: 'Bricolage Grotesque', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    'Noto Sans Sinhala', 'Noto Sans Tamil', 'Iskoola Pota', 'Latha', sans-serif;
+  --landing-font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    'Noto Sans Sinhala', 'Noto Sans Tamil', 'Iskoola Pota', 'Latha', sans-serif;
+  --landing-font-serif: 'Source Serif 4', Georgia, Cambria, 'Times New Roman',
+    'Noto Serif Sinhala', 'Noto Serif Tamil', serif;
+
+  background-color: var(--landing-chalk);
+  color: var(--landing-chalkboard);
+  font-family: var(--landing-font-body);
+  color-scheme: light;
+  overflow-x: clip;
+}
+
+.landing h1,
+.landing h2,
+.landing h3,
+.landing h4,
+.landing .landing-display {
+  font-family: var(--landing-font-display);
+  letter-spacing: -0.025em;
+}
+
+.landing .landing-serif {
+  font-family: var(--landing-font-serif);
+}
+
+.landing-container {
+  width: 100%;
+  max-width: 1160px;
+  margin-inline: auto;
+  padding-inline: 1rem;
+}
+
+@media (min-width: 640px) {
+  .landing-container {
+    padding-inline: 1.5rem;
+  }
+}
+
+.landing-section {
+  padding-block: 4rem;
+}
+
+@media (min-width: 768px) {
+  .landing-section {
+    padding-block: 5.5rem;
+  }
+}
+
+.landing-card {
+  background-color: var(--landing-surface);
+  border: 1px solid var(--landing-border);
+  border-radius: 4px;
+}
+
+.landing-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  padding: 0.6875rem 1.25rem;
+  border-radius: 4px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.2;
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+  cursor: pointer;
+}
+
+.landing-btn:focus-visible,
+.landing a:focus-visible,
+.landing button:focus-visible,
+.landing input:focus-visible {
+  outline: 2px solid var(--landing-orange);
+  outline-offset: 2px;
+}
+
+.landing-btn-primary {
+  background-color: var(--landing-orange);
+  color: var(--landing-chalkboard);
+  border: 1px solid var(--landing-orange);
+}
+
+.landing-btn-primary:hover {
+  background-color: var(--landing-orange-hover);
+  border-color: var(--landing-orange-hover);
+}
+
+.landing-btn-dark {
+  background-color: var(--landing-chalkboard);
+  color: #ffffff;
+  border: 1px solid var(--landing-chalkboard);
+}
+
+.landing-btn-dark:hover {
+  background-color: #1c382e;
+  border-color: #1c382e;
+}
+
+.landing-btn-secondary {
+  background-color: var(--landing-surface);
+  color: var(--landing-chalkboard);
+  border: 1px solid var(--landing-border-strong);
+}
+
+.landing-btn-secondary:hover {
+  background-color: var(--landing-surface-muted);
+  border-color: var(--landing-chalkboard);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing *,
+  .landing *::before,
+  .landing *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

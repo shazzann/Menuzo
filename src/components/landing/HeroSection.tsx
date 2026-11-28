@@ -1,177 +1,273 @@
-import { useState } from 'react';
-import { ArrowRight, ChevronRight, QrCode, BarChart3, CheckCircle2, Play } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useRef, useState } from 'react';
+import { ArrowRight, CheckCircle2, MessageCircle, RotateCcw } from 'lucide-react';
 import { useApp } from '@/store';
-import { motion } from 'framer-motion';
 import { trackEvent } from '@/lib/analytics';
+import { getPublicWhatsAppUrl } from '@/lib/contact';
+
+const DEFAULT_DISH_PRICE = 950;
 
 export function HeroSection() {
-  const { dispatch } = useApp();
-  const [loadIframe, setLoadIframe] = useState(false);
+  const { state, dispatch } = useApp();
+  const [dishAvailable, setDishAvailable] = useState(true);
+  const [dishPrice, setDishPrice] = useState(DEFAULT_DISH_PRICE);
+  const hasInteractedRef = useRef(false);
 
-  const handleCTAClick = () => {
-    trackEvent('hero_cta_clicked', { source: 'hero' });
-    dispatch({ type: 'SET_VIEW', payload: 'signup' });
-  };
+  const whatsappUrl = getPublicWhatsAppUrl(
+    'Hello Menuzo, I would like to learn more about setting up a digital QR menu.'
+  );
 
-  const handleDemoClick = () => {
-    trackEvent('demo_first_interaction', { source: 'hero_secondary_button' });
-    setLoadIframe(true);
-    document.getElementById('product-demo')?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  const handlePhoneDemoClick = () => {
-    trackEvent('demo_opened', { source: 'hero_phone_mockup' });
-    setLoadIframe(true);
-  };
-
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1
-      }
+  const recordFirstDemoInteraction = () => {
+    if (!hasInteractedRef.current) {
+      hasInteractedRef.current = true;
+      trackEvent('demo_first_interaction', { source: 'hero_demo' });
     }
   };
 
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    show: { opacity: 1, y: 0, transition: { type: "spring" as any, stiffness: 100, damping: 20 } }
+  const handleAvailabilityToggle = () => {
+    recordFirstDemoInteraction();
+    const next = !dishAvailable;
+    setDishAvailable(next);
+    trackEvent('demo_toggled', {
+      control: 'availability',
+      value: next ? 'available' : 'sold_out',
+    });
   };
 
+  const handlePriceChange = (raw: string) => {
+    recordFirstDemoInteraction();
+    const digits = raw.replace(/\D/g, '').slice(0, 5);
+    const parsed = digits ? Number(digits) : 0;
+    setDishPrice(parsed);
+    trackEvent('demo_toggled', {
+      control: 'price',
+      value: parsed,
+    });
+  };
+
+  const handleReset = () => {
+    recordFirstDemoInteraction();
+    setDishAvailable(true);
+    setDishPrice(DEFAULT_DISH_PRICE);
+    trackEvent('demo_toggled', { control: 'reset', value: 'default' });
+  };
+
+  const handlePrimaryCTA = () => {
+    trackEvent('hero_cta_clicked', { source: 'hero' });
+    if (state.user) {
+      dispatch({ type: 'SET_VIEW', payload: 'user-dashboard' });
+      return;
+    }
+    trackEvent('signup_started', { source: 'hero' });
+    dispatch({ type: 'SET_VIEW', payload: 'signup' });
+  };
+
+  const handleContactFallback = () => {
+    trackEvent('whatsapp_clicked', { source: 'hero_contact_fallback' });
+    dispatch({ type: 'SET_VIEW', payload: 'contact' });
+  };
+
+  const formattedPrice = `LKR ${(dishPrice || 0).toLocaleString('en-US')}`;
+
   return (
-    <section className="relative pt-32 pb-32 px-4 overflow-hidden">
-      {/* Background Layers */}
-      <div className="absolute inset-0 z-0">
-        <div className="absolute inset-0 bg-gradient-to-b from-primary/10 via-background to-background" />
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_0%,#000_70%,transparent_100%)]" />
-        <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-primary/20 rounded-full blur-[128px] -z-10 animate-pulse-glow" />
-        <div className="absolute top-1/4 right-1/4 w-[600px] h-[600px] bg-orange-500/10 rounded-full blur-[128px] -z-10" />
-      </div>
+    <section id="home" className="pt-8 pb-14 sm:pt-12 sm:pb-20 border-b border-[#D2D8CF]">
+      <div className="landing-container grid grid-cols-1 lg:grid-cols-[1.05fr_0.95fr] gap-10 lg:gap-12 items-center">
+        {/* Left: Core Product Message & Conversion CTAs */}
+        <div className="max-w-xl">
+          <p className="text-xs sm:text-sm font-semibold uppercase tracking-[0.08em] text-[#3D4A44] mb-3">
+            A simpler way to manage your restaurant menu
+          </p>
 
-      <div className="max-w-7xl mx-auto text-center relative z-10">
-        <motion.div variants={containerVariants} initial="hidden" animate="show" className="max-w-3xl mx-auto flex flex-col items-center">
-          <motion.h1 variants={itemVariants} className="text-5xl sm:text-7xl md:text-8xl font-bold leading-[1.1] mb-8 tracking-tighter">
-            Your menu.<br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-br from-primary via-orange-400 to-red-500">Live in minutes.</span>
-          </motion.h1>
-          <motion.p variants={itemVariants} className="text-xl sm:text-2xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed font-medium">
+          <h1 className="text-3xl sm:text-5xl font-bold leading-[1.08] text-[#12261F] mb-5">
+            Update your menu once. Every table sees it instantly.
+          </h1>
+
+          <p className="text-base sm:text-lg leading-relaxed text-[#3D4A44] mb-7">
             Menuzo gives Sri Lankan cafés and restaurants a QR menu you can change any time, so prices and sold-out dishes are always right.
-          </motion.p>
-          <motion.div variants={itemVariants} className="flex flex-col w-full sm:w-auto items-center">
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full sm:w-auto mb-6">
-              <Button
-                size="lg"
-                onClick={handleCTAClick}
-                className="bg-primary text-[#12261F] hover:bg-primary/90 w-full sm:w-auto h-14 px-8 rounded-full text-lg font-semibold shadow-[0_8px_30px_rgb(255,100,50,0.3)] hover:shadow-[0_8px_40px_rgb(255,100,50,0.4)] hover:-translate-y-1 transition-all duration-300"
-              >
-                Create Your Free Menu
-                <ArrowRight className="w-5 h-5 ml-2" />
-              </Button>
-              <Button
-                variant="outline"
-                size="lg"
-                onClick={handleDemoClick}
-                className="w-full sm:w-auto h-14 px-8 rounded-full text-lg font-semibold border-border/80 bg-background/50 backdrop-blur-md hover:bg-muted/80 transition-all duration-300"
-              >
-                View Demo
-                <ChevronRight className="w-5 h-5 ml-2 text-muted-foreground" />
-              </Button>
-            </div>
+          </p>
 
-            {/* Trust Elements */}
-            <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs font-semibold text-muted-foreground uppercase tracking-widest">
-              <span className="flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-green-500" /> Free plan · No card · No app for guests</span>
-            </div>
-          </motion.div>
-        </motion.div>
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mb-5">
+            <button
+              type="button"
+              onClick={handlePrimaryCTA}
+              className="landing-btn landing-btn-primary w-full sm:w-auto px-6 py-3.5 text-base"
+            >
+              Build my free menu
+              <ArrowRight className="w-4 h-4" aria-hidden="true" />
+            </button>
 
-        {/* Hero Mockup */}
-        <motion.div
-          id="product-demo"
-          initial={{ opacity: 0, y: 100 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1, delay: 0.4, type: "spring" as any, stiffness: 50 }}
-          className="mt-24 relative max-w-5xl mx-auto flex justify-center"
+            {whatsappUrl ? (
+              <a
+                href={whatsappUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => trackEvent('whatsapp_clicked', { source: 'hero' })}
+                className="landing-btn landing-btn-secondary w-full sm:w-auto px-5 py-3.5 text-base"
+              >
+                <MessageCircle className="w-4 h-4 text-[#1F8A4C]" aria-hidden="true" />
+                Chat with us on WhatsApp
+              </a>
+            ) : (
+              <button
+                type="button"
+                onClick={handleContactFallback}
+                className="landing-btn landing-btn-secondary w-full sm:w-auto px-5 py-3.5 text-base"
+              >
+                <MessageCircle className="w-4 h-4 text-[#1F8A4C]" aria-hidden="true" />
+                Talk to us
+              </button>
+            )}
+          </div>
+
+          <p className="inline-flex items-center gap-2 text-xs sm:text-sm font-medium text-[#3D4A44]">
+            <CheckCircle2 className="w-4 h-4 text-[#1F8A4C] shrink-0" aria-hidden="true" />
+            <span>Free plan. No card. Your guests need no app.</span>
+          </p>
+        </div>
+
+        {/* Right: Lightweight Interactive Owner -> Guest Menu Preview */}
+        <div
+          className="landing-card p-4 sm:p-5 bg-white"
+          aria-label="Interactive menu update preview"
         >
-          {/* Left Floating Card - QR */}
-          <motion.div
-            animate={{ y: [0, -15, 0] }}
-            transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute left-[10%] top-[20%] hidden xl:flex flex-col gap-3 p-5 rounded-3xl bg-card/80 border border-white/10 shadow-2xl backdrop-blur-xl z-20 w-64"
-          >
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center"><QrCode className="w-5 h-5 text-primary" /></div>
-              <div className="font-semibold text-sm">QR Code Ready</div>
+          <div className="flex items-center justify-between gap-2 pb-3 mb-4 border-b border-[#EAECE6]">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.06em] text-[#3D4A44]">
+                Live menu sync preview
+              </p>
+              <p className="text-xs text-[#3D4A44]">
+                Try changing the dish below to see what guests see.
+              </p>
             </div>
-            <div className="aspect-square w-full bg-white rounded-xl p-3 flex items-center justify-center overflow-hidden">
-              <img src="/Landing/spice-garden-kitchen-qr.png" alt="Spice Garden Kitchen QR" className="w-full h-full object-contain" />
-            </div>
-            <Button size="sm" variant="secondary" className="w-full rounded-lg pointer-events-none">Download</Button>
-          </motion.div>
+            <button
+              type="button"
+              onClick={handleReset}
+              className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-[#12261F] border border-[#D2D8CF] rounded-[4px] hover:bg-[#F3F5F0] shrink-0"
+            >
+              <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />
+              Reset
+            </button>
+          </div>
 
-          {/* Right Floating Card - Analytics */}
-          <motion.div
-            animate={{ y: [0, 15, 0] }}
-            transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-            className="absolute right-[5%] top-[40%] hidden xl:flex flex-col gap-3 p-5 rounded-3xl bg-card/80 border border-white/10 shadow-2xl backdrop-blur-xl z-20 w-64"
-          >
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-green-500/20 flex items-center justify-center"><BarChart3 className="w-4 h-4 text-green-500" /></div>
-                <span className="font-semibold text-sm">Live Views</span>
-              </div>
-              <span className="text-green-500 text-xs font-bold bg-green-500/10 px-2 py-1 rounded-full">+24%</span>
-            </div>
-            <div className="text-4xl font-bold font-mono">1,284</div>
-            <div className="h-12 flex items-end gap-1 mt-2">
-              {[40, 70, 45, 90, 65, 100, 80].map((h, i) => (
-                <div key={i} className="flex-1 bg-primary/50 rounded-t-sm" style={{ height: `${h}%` }} />
-              ))}
-            </div>
-          </motion.div>
+          <div className="grid grid-cols-1 sm:grid-cols-[1fr_220px] gap-4 items-start">
+            {/* Owner Control */}
+            <div className="border border-[#D2D8CF] rounded-[4px] p-3.5 bg-[#F3F5F0]">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-[#3D4A44] mb-3">
+                Owner control
+              </p>
 
-          {/* Central Phone Mockup */}
-          <div className="relative z-10 w-[320px] md:w-[360px] h-[680px] md:h-[760px] bg-black rounded-[3rem] p-3 shadow-2xl shadow-primary/20 border-4 border-muted flex shrink-0 group">
-            {/* Notch */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-7 bg-black rounded-b-3xl z-30" />
-
-            {/* Screen */}
-            <div className="w-full h-full bg-background rounded-[2.25rem] overflow-hidden relative flex flex-col">
-              <div className="flex-1 w-full h-full relative z-10 pt-6 bg-black overflow-hidden rounded-[2rem]">
-                {loadIframe ? (
-                  <iframe
-                    src={import.meta.env.VITE_MENU_DEMO_URL || "/spicegardenkitchen"}
-                    className="border-none origin-top-left"
-                    style={{
-                      width: '125%',
-                      height: 'calc(125% + 30px)',
-                      transform: 'scale(0.8)',
-                      marginTop: '-24px'
-                    }}
-                    title="Menuzo Demo Menu"
-                    loading="lazy"
-                  />
-                ) : (
-                  <div className="relative w-full h-full group cursor-pointer bg-black" onClick={handlePhoneDemoClick}>
-                    <img
-                      src="/Landing/liveDemoSchreenShot.jpeg"
-                      alt="Menu Demo Placeholder"
-                      className="w-full h-full object-cover opacity-50 group-hover:opacity-30 transition-opacity"
-                    />
-                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 backdrop-blur-[2px]">
-                      <div className="w-20 h-20 bg-primary rounded-full flex items-center justify-center shadow-2xl shadow-primary/50 text-white pl-1 mb-4 group-hover:scale-110 transition-transform">
-                        <Play className="w-10 h-10" />
-                      </div>
-                      <span className="text-white font-bold text-xl drop-shadow-md">Try Live Demo</span>
-                    </div>
+              <div className="bg-white border border-[#D2D8CF] rounded-[4px] p-3 space-y-3">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <p className="text-sm font-semibold text-[#12261F]">Chicken Kottu</p>
+                    <p className="text-xs text-[#3D4A44]">Mains</p>
                   </div>
-                )}
+                  <span
+                    className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-[4px] text-xs font-semibold ${
+                      dishAvailable
+                        ? 'bg-[#1F8A4C]/10 text-[#1F8A4C]'
+                        : 'bg-[#C8372D]/10 text-[#C8372D]'
+                    }`}
+                  >
+                    <span
+                      className={`w-1.5 h-1.5 rounded-full ${
+                        dishAvailable ? 'bg-[#1F8A4C]' : 'bg-[#C8372D]'
+                      }`}
+                      aria-hidden="true"
+                    />
+                    {dishAvailable ? 'Available' : 'Sold out'}
+                  </span>
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="hero-demo-price"
+                    className="block text-xs font-medium text-[#3D4A44] mb-1"
+                  >
+                    Price (LKR)
+                  </label>
+                  <input
+                    id="hero-demo-price"
+                    type="text"
+                    inputMode="numeric"
+                    value={dishPrice === 0 ? '' : String(dishPrice)}
+                    onChange={(e) => handlePriceChange(e.target.value)}
+                    placeholder="950"
+                    className="w-full h-10 px-3 text-sm font-semibold text-[#12261F] bg-white border border-[#B6C0B3] rounded-[4px] tabular-nums"
+                  />
+                </div>
+
+                <button
+                  type="button"
+                  aria-pressed={!dishAvailable}
+                  onClick={handleAvailabilityToggle}
+                  className={`w-full min-h-[40px] px-3 py-2 rounded-[4px] text-xs font-semibold border transition-colors ${
+                    dishAvailable
+                      ? 'border-[#C8372D] text-[#C8372D] bg-white hover:bg-[#C8372D]/5'
+                      : 'border-[#1F8A4C] text-[#1F8A4C] bg-white hover:bg-[#1F8A4C]/5'
+                  }`}
+                >
+                  {dishAvailable ? 'Mark as sold out' : 'Mark as available'}
+                </button>
+              </div>
+            </div>
+
+            {/* Guest Phone Preview */}
+            <div className="mx-auto w-full max-w-[240px] sm:max-w-none bg-[#12261F] rounded-[18px] p-2.5 border border-[#12261F]">
+              <div className="bg-white rounded-[12px] p-3 text-[#12261F]">
+                <div className="pb-2 mb-2.5 border-b border-[#EAECE6]">
+                  <p className="landing-serif text-sm font-semibold text-[#12261F]">
+                    Ceylon Roast Café
+                  </p>
+                  <p className="text-[11px] text-[#3D4A44]">Guest view · Browser menu</p>
+                </div>
+
+                <ul className="space-y-2.5 text-xs">
+                  <li className="flex items-start justify-between gap-2 pb-2 border-b border-[#EAECE6]">
+                    <div className="min-w-0">
+                      <p
+                        className={`font-semibold truncate ${
+                          dishAvailable ? 'text-[#12261F]' : 'text-[#3D4A44] line-through'
+                        }`}
+                      >
+                        Chicken Kottu
+                      </p>
+                      <span
+                        className={`inline-block mt-0.5 text-[10px] font-semibold ${
+                          dishAvailable ? 'text-[#1F8A4C]' : 'text-[#C8372D]'
+                        }`}
+                      >
+                        {dishAvailable ? 'Available' : 'Sold out'}
+                      </span>
+                    </div>
+                    <span className="font-semibold tabular-nums shrink-0 text-[#12261F]">
+                      {formattedPrice}
+                    </span>
+                  </li>
+
+                  <li className="flex items-start justify-between gap-2 pb-2 border-b border-[#EAECE6]">
+                    <div>
+                      <p className="font-semibold text-[#12261F]">Iced Milo</p>
+                      <span className="text-[10px] font-medium text-[#1F8A4C]">Available</span>
+                    </div>
+                    <span className="font-semibold tabular-nums shrink-0">LKR 450</span>
+                  </li>
+
+                  <li className="flex items-start justify-between gap-2">
+                    <div>
+                      <p className="font-semibold text-[#12261F]">Butter Croissant</p>
+                      <span className="text-[10px] font-medium text-[#1F8A4C]">Available</span>
+                    </div>
+                    <span className="font-semibold tabular-nums shrink-0">LKR 520</span>
+                  </li>
+                </ul>
+
+                <p className="mt-3 pt-2 border-t border-[#EAECE6] text-[10px] text-[#3D4A44] text-center">
+                  Browse menu · Order with your server
+                </p>
               </div>
             </div>
           </div>
-        </motion.div>
+        </div>
       </div>
     </section>
   );

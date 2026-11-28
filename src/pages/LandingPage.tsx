@@ -1,37 +1,28 @@
+import '@/components/landing/landing.css';
 import { Navbar } from '@/components/landing/Navbar';
 import { HeroSection } from '@/components/landing/HeroSection';
 import { ProblemSolutionSection } from '@/components/landing/ProblemSolutionSection';
-
-import { QRShowcaseSection } from '@/components/landing/QRShowcaseSection';
-import { AnalyticsSection } from '@/components/landing/AnalyticsSection';
-import { FeaturesSection } from '@/components/landing/FeaturesSection';
-import { UseCasesSection } from '@/components/landing/UseCasesSection';
 import { HowItWorksSection } from '@/components/landing/HowItWorksSection';
+import { FeaturesSection } from '@/components/landing/FeaturesSection';
+import { ProofSection } from '@/components/landing/ProofSection';
 import { PricingSection } from '@/components/landing/PricingSection';
 import { FAQSection } from '@/components/landing/FAQSection';
-import { FinalCTASection } from '@/components/landing/FinalCTASection';
 import { Footer } from '@/components/landing/Footer';
-
 
 export function LandingPage() {
   return (
-    <div className="min-h-screen bg-background text-foreground selection:bg-primary/30 selection:text-primary">
+    <div className="landing min-h-screen flex flex-col">
       <Navbar />
-      <main className="relative">
+      <main className="flex-1">
         <HeroSection />
         <ProblemSolutionSection />
-        <FeaturesSection />
-        <UseCasesSection />
         <HowItWorksSection />
-        <QRShowcaseSection />
-
-        <AnalyticsSection />
+        <FeaturesSection />
+        <ProofSection />
         <PricingSection />
         <FAQSection />
-        <FinalCTASection />
       </main>
       <Footer />
-
     </div>
   );
 }

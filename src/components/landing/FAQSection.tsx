@@ -4,68 +4,70 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
-import { motion } from 'framer-motion';
+import { FREE_PLAN_LIMITS } from '@/lib/subscription';
+import { FinalCTASection } from '@/components/landing/FinalCTASection';
+
+const faqs = [
+  {
+    q: 'Do customers need to download an app?',
+    a: 'No. Customers can scan the QR code and open the menu directly in their browser.',
+  },
+  {
+    q: 'Can customers order and pay through Menuzo?',
+    a: 'Menuzo currently provides digital menu browsing. Customers place orders directly with restaurant staff.',
+  },
+  {
+    q: 'Can I change a menu after publishing it?',
+    a: 'Yes. Changes made to the published menu are reflected when customers open it.',
+  },
+  {
+    q: 'Can I use Menuzo for free?',
+    a: `Yes. The Free plan supports up to ${FREE_PLAN_LIMITS.items} food items and ${FREE_PLAN_LIMITS.categories} categories with no credit card required.`,
+  },
+  {
+    q: 'Do I need technical knowledge?',
+    a: 'No. The menu management interface is designed to help restaurant owners manage their menus without coding.',
+  },
+  {
+    q: 'Can I customize my menu?',
+    a: 'The Free plan includes preset menu themes, while Plus adds custom brand themes, QR branding, and a custom menu URL.',
+  },
+];
 
 export function FAQSection() {
-  const faqs = [
-    {
-      q: 'Do I need a credit card to sign up?',
-      a: 'No. You can create and publish a menu on the Free plan without entering card details.'
-    },
-    {
-      q: 'Can customers order and pay through the menu?',
-      a: 'Not today. Menuzo is a digital menu, not an ordering or payment system. Guests browse the menu and place their orders with your staff.'
-    },
-    {
-      q: 'How do I update my menu?',
-      a: 'Edit a dish, change a price or mark an item sold out from your dashboard. The published menu updates, and your QR code stays the same.'
-    },
-    {
-      q: 'Does it work offline?',
-      a: 'Guests need an internet connection to open and browse the online menu.'
-    },
-    {
-      q: 'Can I use my own domain name?',
-      a: 'Custom menu links are available on eligible paid plans. The Free plan uses a Menuzo menu link.'
-    }
-  ];
-
   return (
-    <section id="faq" className="py-32 px-4 bg-muted/10 relative overflow-hidden">
-      <div className="max-w-4xl mx-auto relative z-10">
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-100px" }}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-20"
-        >
-          <span className="inline-block px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-bold uppercase tracking-widest mb-4">
-            FAQ
-          </span>
-          <h2 className="text-4xl md:text-6xl font-bold tracking-tight">Common questions.</h2>
-        </motion.div>
+    <section id="faq" className="bg-white">
+      <div className="landing-section">
+        <div className="landing-container max-w-3xl">
+          <div className="mb-8 sm:mb-10">
+            <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[#3D4A44] mb-2">
+              FAQ
+            </p>
+            <h2 className="text-2xl sm:text-4xl font-bold text-[#12261F]">
+              Frequently asked questions
+            </h2>
+          </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-100px" }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-        >
-          <Accordion type="single" collapsible className="w-full">
-            {faqs.map((faq, i) => (
-              <AccordionItem key={i} value={`item-${i}`} className="border-border/50 py-4">
-                <AccordionTrigger className="text-left text-xl font-bold hover:text-primary transition-colors hover:no-underline">
+          <Accordion type="single" collapsible className="w-full border-t border-[#D2D8CF]">
+            {faqs.map((faq, index) => (
+              <AccordionItem
+                key={faq.q}
+                value={`item-${index}`}
+                className="border-b border-[#D2D8CF]"
+              >
+                <AccordionTrigger className="py-4 text-left text-base sm:text-lg font-semibold text-[#12261F] hover:text-[#3D4A44] hover:no-underline">
                   {faq.q}
                 </AccordionTrigger>
-                <AccordionContent className="text-muted-foreground text-lg leading-relaxed pt-2">
+                <AccordionContent className="text-sm sm:text-base text-[#3D4A44] leading-relaxed pb-4">
                   {faq.a}
                 </AccordionContent>
               </AccordionItem>
             ))}
           </Accordion>
-        </motion.div>
+        </div>
       </div>
+
+      <FinalCTASection />
     </section>
   );
 }
