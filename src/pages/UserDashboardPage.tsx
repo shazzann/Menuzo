@@ -160,7 +160,7 @@ export function UserDashboardPage() {
           <Button
             type="button"
             variant="outline"
-            onClick={() => handleTabChange('menu-preview')}
+            onClick={() => dispatch({ type: 'SET_VIEW', payload: 'customer-menu' })}
             className="h-auto py-3 px-2 flex flex-col items-center justify-center gap-1.5 rounded-2xl border-border bg-card hover:bg-muted/70 transition-all shadow-sm active:scale-[0.98]"
           >
             <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
