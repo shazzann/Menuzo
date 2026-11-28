@@ -14,6 +14,7 @@ interface Founder {
   name: string;
   role: string;
   initials: string;
+  photo?: string;
   links: FounderLink[];
 }
 
@@ -24,7 +25,7 @@ const founders: Founder[] = [
     initials: 'HZ',
     links: [
       { label: 'LinkedIn', href: 'https://www.linkedin.com/in/kr-hasni-zihar/', kind: 'linkedin' },
-      { label: 'hasnizihar.vercel.app', href: 'https://hasnizihar.vercel.app/', kind: 'website' },
+      { label: 'Portfolio', href: 'https://hasnizihar.vercel.app/', kind: 'website' },
       { label: '@ziharhasni', href: 'https://www.instagram.com/ziharhasni/', kind: 'instagram' },
     ],
   },
@@ -34,7 +35,7 @@ const founders: Founder[] = [
     initials: 'S',
     links: [
       { label: 'LinkedIn', href: 'https://www.linkedin.com/in/shazanshaheed/', kind: 'linkedin' },
-      { label: 'shazion.com', href: 'https://www.shazion.com/', kind: 'website' },
+      { label: 'Portfolio', href: 'https://www.shazion.com/', kind: 'website' },
       { label: '@shaza__n', href: 'https://www.instagram.com/shaza__n/', kind: 'instagram' },
     ],
   },
@@ -137,8 +138,18 @@ export function AboutPage() {
                   className="p-6 rounded-2xl bg-card border border-border flex flex-col justify-between gap-6"
                 >
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-muted border border-border flex items-center justify-center text-foreground font-semibold text-base shrink-0">
-                      <span>{founder.initials}</span>
+                    <div className="w-12 h-12 rounded-xl bg-muted border border-border overflow-hidden flex items-center justify-center text-foreground font-semibold text-base shrink-0">
+                      {founder.photo ? (
+                        <img
+                          src={founder.photo}
+                          alt={founder.name}
+                          width={48}
+                          height={48}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <span>{founder.initials}</span>
+                      )}
                     </div>
                     <div className="min-w-0">
                       <h3 className="text-lg font-semibold text-foreground truncate">
