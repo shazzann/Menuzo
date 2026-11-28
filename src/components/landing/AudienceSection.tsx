@@ -165,7 +165,7 @@ const VENUE_PRESETS: VenuePreset[] = [
       name: 'Berry Fudge Sundae',
       description: 'Double scoop gelato topped with warm chocolate fudge drizzle.',
       tagline: 'Rich hot fudge topping',
-      image: '/Landing/audience-dessert.webp',
+      image: '/Landing/food-chocolate-sundae.webp',
       category: 'primary',
       originalPrice: 920,
       finalPrice: 920,
