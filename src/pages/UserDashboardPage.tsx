@@ -17,6 +17,7 @@ import { summarizeShopViews, viewsTrend } from '@/lib/shopAnalytics';
 import { Button } from '@/components/ui/button';
 import { useApp } from '@/store';
 import { BottomNav } from '@/components/shared/BottomNav';
+import { ShopLogoAvatar } from '@/components/shared/ShopLogoAvatar';
 import { OnboardingChecklist } from '@/components/dashboard/OnboardingChecklist';
 import { PlanStatusBanner } from '@/components/subscription/PlanStatusBanner';
 import { useOnboardingStatus } from '@/hooks/useOnboardingStatus';
@@ -125,17 +126,7 @@ export function UserDashboardPage() {
       <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-lg border-b border-border">
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-3">
-            {shop.logo ? (
-              <img
-                src={shop.logo}
-                alt={shop.name}
-                className="w-10 h-10 rounded-xl object-cover border border-border/50 shrink-0"
-              />
-            ) : (
-              <div className="w-10 h-10 rounded-xl bg-primary/15 text-primary border border-primary/20 flex items-center justify-center font-bold text-base shrink-0">
-                {shop.name ? shop.name.charAt(0).toUpperCase() : 'S'}
-              </div>
-            )}
+            <ShopLogoAvatar logo={shop.logo} name={shop.name} />
             <div>
               <h1 className="font-bold text-base sm:text-lg text-foreground leading-tight">Dashboard</h1>
               <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">

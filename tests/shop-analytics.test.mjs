@@ -66,7 +66,7 @@ function page(dailyStats) {
   const { AdminAnalyticsPage } = load('src/pages/AdminAnalyticsPage.tsx', {
     react: { useState: initial => { range ??= initial; return [range, value => { range = value; }]; } }, 'react/jsx-runtime': jsx,
     'lucide-react': new Proxy({}, { get: () => () => null }),
-    '@/components/ui/button': { Button: 'button' }, '@/components/shared/BottomNav': { BottomNav: () => null },
+    '@/components/ui/button': { Button: 'button' }, '@/components/shared/BottomNav': { BottomNav: () => null }, '@/components/shared/ShopLogoAvatar': { ShopLogoAvatar: () => null },
     '@/components/admin/MenuViewsChart': { MenuViewsChart: Chart, TrendBadge: () => null }, '@/lib/shopAnalytics': analytics,
     '@/lib/utils': { cn: (...args) => args.join(' ') }, '@/lib/subscription': { isProActive: () => false, isPaidActive: () => false, getPlanLimits: () => ({ items: 10, categories: 2 }) },
     '@/store': { useApp: () => ({ state: { user: null, foodItems: [], categories: [], shop: { view_count: 9999, qr_scan_count: 999, daily_stats: dailyStats } }, dispatch: action => actions.push(action) }) },

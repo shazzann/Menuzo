@@ -3,6 +3,7 @@ import { Settings, Calendar, QrCode, Utensils, LayoutGrid, Crown } from 'lucide-
 import { Button } from '@/components/ui/button';
 import { useApp } from '@/store';
 import { BottomNav } from '@/components/shared/BottomNav';
+import { ShopLogoAvatar } from '@/components/shared/ShopLogoAvatar';
 import type { AdminTab } from '@/types';
 import { cn } from '@/lib/utils';
 import { isProActive, isPaidActive, getPlanLimits } from '@/lib/subscription';
@@ -50,9 +51,7 @@ export function AdminAnalyticsPage() {
       <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-lg border-b border-border">
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-transparent flex items-center justify-center">
-              <img src="/logo/Logo favicon.png" alt="Logo" className="w-8 h-8 object-contain" />
-            </div>
+            <ShopLogoAvatar logo={shop.logo} name={shop.name} />
             <div>
               <h1 className="font-semibold text-sm">Analytics</h1>
               <p className="text-xs text-muted-foreground">Shop performance</p>

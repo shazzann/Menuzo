@@ -7,6 +7,7 @@ import { CategoryTabs } from '@/components/shared/CategoryTabs';
 import { SpecialOffersCarousel } from '@/components/shared/SpecialOffersCarousel';
 import { FoodCard } from '@/components/shared/FoodCard';
 import { BottomNav } from '@/components/shared/BottomNav';
+import { ShopLogoAvatar } from '@/components/shared/ShopLogoAvatar';
 import type { AdminTab, FoodItem } from '@/types';
 import { PlanStatusBanner } from '@/components/subscription/PlanStatusBanner';
 import { motion, AnimatePresence, useMotionValue, useTransform, type Variants } from 'framer-motion';
@@ -555,9 +556,7 @@ export function AdminPreviewPage() {
       <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-lg border-b border-border">
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-transparent flex items-center justify-center">
-              <img src="/logo/Logo favicon.png" alt="Logo" className="w-8 h-8 object-contain" />
-            </div>
+            <ShopLogoAvatar logo={shop.logo} name={shop.name} />
             <div>
               <h1 className="font-semibold text-sm">Menu Preview</h1>
               <p className="text-xs text-muted-foreground">See what customers see</p>
