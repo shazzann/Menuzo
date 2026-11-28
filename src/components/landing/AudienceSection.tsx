@@ -264,9 +264,9 @@ export function AudienceSection() {
                       : 'bg-transparent border-border/80 hover:bg-muted/40 hover:border-border'
                   }`}
                 >
-                  <div className="flex items-start gap-3 min-w-0">
+                  <div className="flex items-center gap-3 min-w-0">
                     <span
-                      className={`hidden lg:flex w-4 h-4 mt-0.5 rounded-full border-2 items-center justify-center shrink-0 transition-colors ${
+                      className={`hidden lg:flex w-4 h-4 rounded-full border-2 items-center justify-center shrink-0 transition-colors ${
                         selected ? 'border-primary' : 'border-muted-foreground/40'
                       }`}
                       aria-hidden="true"
