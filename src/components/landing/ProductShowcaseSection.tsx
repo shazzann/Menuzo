@@ -85,7 +85,7 @@ function QRExportBeat() {
           Print-ready QR codes for your menu link
         </h3>
         <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
-          Every Menuzo menu gets a QR code the moment you publish. Download crisp PNG or SVG files
+          Every Menuzo menu gets a QR code the moment you publish. Download crisp PNG files
           sized for table tents, countertop stands, or signage, styled with your custom link,
           rounded dot pattern, brand colours, and shop logo.
         </p>
@@ -138,18 +138,13 @@ function QRExportBeat() {
           </div>
         </div>
 
-        {/* Download badges */}
+        {/* Download badge */}
         <div className="mt-4 flex items-center gap-2 justify-end">
           <span className="text-xs text-muted-foreground">Export as</span>
-          {['.PNG', '.SVG'].map((ext) => (
-            <span
-              key={ext}
-              className="inline-flex items-center gap-1 text-xs font-mono font-medium text-foreground border border-border rounded-md px-2 py-1 bg-muted/30"
-            >
-              <Download className="w-3 h-3 text-muted-foreground" aria-hidden="true" />
-              {ext}
-            </span>
-          ))}
+          <span className="inline-flex items-center gap-1 text-xs font-mono font-medium text-foreground border border-border rounded-md px-2 py-1 bg-muted/30">
+            <Download className="w-3 h-3 text-muted-foreground" aria-hidden="true" />
+            .PNG
+          </span>
         </div>
       </Card>
     </div>
