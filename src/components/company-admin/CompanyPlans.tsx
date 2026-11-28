@@ -1,33 +1,89 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
-  CheckCircle2, XCircle, Star, CreditCard, Pencil, Trash2, Plus,
+  CheckCircle2, XCircle, Star, CreditCard, Pencil, Loader2, RefreshCw, Plus,
   Tag, Megaphone, Percent, Calendar, Gift, Save, X
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { Input } from '@/components/ui/input';
 import { PricingService, type PricingPlan } from '@/services/pricing.service';
+import { BillingService } from '@/services/billing.service';
+import { companyBillingError } from '@/services/company-billing.service';
+import type { PaidPlanSlug, PlanPrice } from '@/types/billing';
+
+const PRICE_PERIODS = [
+  { id: 'monthly', label: 'Monthly', suffix: '/month' },
+  { id: 'yearly', label: 'Yearly', suffix: '/year' },
+] as const;
+type PeriodId = typeof PRICE_PERIODS[number]['id'];
+
+const isPaidPlan = (id: string): id is PaidPlanSlug => id === 'plus' || id === 'enterprise';
+const formatPrice = (amount: number, currency: string) =>
+  `${currency} ${amount.toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
 
 export function CompanyPlans() {
-  const [plans, setPlans] = useState<PricingPlan[]>([]);
-  const [editingPlanId, setEditingPlanId] = useState<string | null>(null);
-  const [editPrice, setEditPrice] = useState('');
+  // Plan copy (description, features) stays in code; prices live in the plan_prices table.
+  const [plans] = useState<PricingPlan[]>(() =>
+    PricingService.getPlans().map(plan => (plan.id === 'pro' ? { ...plan, id: 'plus' } : plan)));
+  const [prices, setPrices] = useState<PlanPrice[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
+  const [editingPlanId, setEditingPlanId] = useState<PaidPlanSlug | null>(null);
+  const [draft, setDraft] = useState<Record<PeriodId, string>>({ monthly: '', yearly: '' });
+  const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    const loadPlans = () => setPlans(PricingService.getPlans());
-    loadPlans();
-
-    const handleUpdate = () => loadPlans();
-    window.addEventListener('pricing_updated', handleUpdate);
-    return () => window.removeEventListener('pricing_updated', handleUpdate);
+  const loadPrices = useCallback(async () => {
+    setLoading(true);
+    try {
+      setPrices(await BillingService.getPlanPrices());
+      setLoadError('');
+    } catch (error) {
+      setLoadError(companyBillingError(error));
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  const handleEdit = (plan: PricingPlan) => {
-    setEditingPlanId(plan.id);
-    setEditPrice(plan.price);
+  useEffect(() => {
+    let cancelled = false;
+    void Promise.resolve().then(() => { if (!cancelled) return loadPrices(); });
+    return () => { cancelled = true; };
+  }, [loadPrices]);
+
+  const priceOf = (plan: PaidPlanSlug, period: PeriodId) =>
+    prices.find(p => p.plan_slug === plan && p.period_id === period);
+
+  const handleEdit = (plan: PaidPlanSlug) => {
+    setEditingPlanId(plan);
+    setDraft({
+      monthly: String(priceOf(plan, 'monthly')?.amount ?? ''),
+      yearly: String(priceOf(plan, 'yearly')?.amount ?? ''),
+    });
   };
 
-  const handleSave = (id: string) => {
-    PricingService.updatePlanPrice(id, editPrice);
-    setEditingPlanId(null);
+  const handleSave = async (plan: PaidPlanSlug) => {
+    const changes: { period: PeriodId; amount: number }[] = [];
+    for (const { id, label } of PRICE_PERIODS) {
+      const amount = Number(draft[id].replace(/,/g, '').trim());
+      if (!Number.isFinite(amount) || amount <= 0 || Math.round(amount * 100) !== amount * 100) {
+        toast.error(`Enter a ${label.toLowerCase()} price above zero with at most two decimals.`);
+        return;
+      }
+      if (amount !== Number(priceOf(plan, id)?.amount)) changes.push({ period: id, amount });
+    }
+    if (!changes.length) { setEditingPlanId(null); return; }
+    setSaving(true);
+    try {
+      const saved = await Promise.all(changes.map(c => BillingService.setPlanPrice(plan, c.period, c.amount)));
+      setPrices(current => current.map(p =>
+        saved.find(s => s.plan_slug === p.plan_slug && s.period_id === p.period_id) ?? p));
+      setEditingPlanId(null);
+      toast.success(`${plan === 'plus' ? 'Plus' : 'Enterprise'} prices updated. New checkouts use them right away.`);
+    } catch (error) {
+      toast.error(companyBillingError(error));
+      void loadPrices();
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleCancel = () => {
@@ -40,13 +96,21 @@ export function CompanyPlans() {
       <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Subscription Plans</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">Manage pricing plans and features</p>
+          <p className="text-sm text-muted-foreground mt-0.5">These prices are what the landing page shows and checkout charges.</p>
         </div>
-        <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-medium shadow-lg shadow-primary/25 hover:opacity-90 transition-opacity">
-          <Plus className="w-4 h-4" />
-          Create Plan
+        <button
+          onClick={() => void loadPrices()}
+          disabled={loading}
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-muted/30 hover:bg-muted/50 text-sm font-medium transition-colors disabled:opacity-50"
+        >
+          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+          Refresh
         </button>
       </div>
+
+      {loadError && (
+        <p role="alert" className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-500">{loadError}</p>
+      )}
 
       {/* Plan Cards - Admin Theme */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -72,39 +136,64 @@ export function CompanyPlans() {
 
             <div className="flex justify-between items-center mb-1">
               <h3 className="text-lg font-bold">{plan.name}</h3>
-              {editingPlanId === plan.id ? (
+              {isPaidPlan(plan.id) && (editingPlanId === plan.id ? (
                 <div className="flex gap-1">
-                  <button onClick={() => handleSave(plan.id)} className="p-1.5 rounded bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20">
-                    <Save className="w-3.5 h-3.5" />
+                  <button onClick={() => void handleSave(plan.id as PaidPlanSlug)} disabled={saving} aria-label={`Save ${plan.name} prices`} className="p-1.5 rounded bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 disabled:opacity-50">
+                    {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
                   </button>
-                  <button onClick={handleCancel} className="p-1.5 rounded bg-red-500/10 text-red-500 hover:bg-red-500/20">
+                  <button onClick={handleCancel} disabled={saving} aria-label="Cancel editing" className="p-1.5 rounded bg-red-500/10 text-red-500 hover:bg-red-500/20 disabled:opacity-50">
                     <X className="w-3.5 h-3.5" />
                   </button>
                 </div>
               ) : (
-                <button onClick={() => handleEdit(plan)} className="p-1.5 rounded hover:bg-muted/50 text-muted-foreground transition-colors">
+                <button onClick={() => handleEdit(plan.id as PaidPlanSlug)} disabled={loading || !!loadError} aria-label={`Edit ${plan.name} prices`} className="p-1.5 rounded hover:bg-muted/50 text-muted-foreground transition-colors disabled:opacity-40">
                   <Pencil className="w-3.5 h-3.5" />
                 </button>
-              )}
+              ))}
             </div>
 
-            <div className="flex items-baseline gap-1 mb-3">
-              {editingPlanId === plan.id ? (
-                <Input 
-                  value={editPrice}
-                  onChange={(e) => setEditPrice(e.target.value)}
-                  className="text-2xl font-bold tracking-tight h-10 w-28 px-2"
-                  autoFocus
-                />
+            <div className="space-y-2 mb-4">
+              {!isPaidPlan(plan.id) ? (
+                <>
+                  <span className="text-3xl font-bold tracking-tight">LKR 0</span>
+                  <p className="text-xs text-muted-foreground">Always free, so there is no price to set.</p>
+                </>
+              ) : loading ? (
+                <p className="flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="w-4 h-4 animate-spin" /> Loading prices…</p>
               ) : (
-                <span className="text-3xl font-bold tracking-tight">{plan.price}</span>
+                PRICE_PERIODS.map(period => {
+                  const price = priceOf(plan.id as PaidPlanSlug, period.id);
+                  return (
+                    <div key={period.id} className="flex items-center justify-between gap-3">
+                      <span className="text-xs font-medium text-muted-foreground w-16">{period.label}</span>
+                      {editingPlanId === plan.id ? (
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs text-muted-foreground">{price?.currency ?? 'LKR'}</span>
+                          <Input
+                            inputMode="decimal"
+                            aria-label={`${plan.name} ${period.label.toLowerCase()} price`}
+                            value={draft[period.id]}
+                            onChange={(e) => setDraft(d => ({ ...d, [period.id]: e.target.value }))}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') void handleSave(plan.id as PaidPlanSlug);
+                              if (e.key === 'Escape') handleCancel();
+                            }}
+                            className="h-9 w-32 px-2 text-right font-semibold"
+                            autoFocus={period.id === 'monthly'}
+                            disabled={saving}
+                          />
+                        </div>
+                      ) : (
+                        <span className="text-xl font-bold tracking-tight">
+                          {price ? formatPrice(Number(price.amount), price.currency) : 'Not set'}
+                          <span className="ml-1 text-xs font-medium text-muted-foreground">{period.suffix}</span>
+                        </span>
+                      )}
+                    </div>
+                  );
+                })
               )}
-              {plan.period && <span className="text-sm text-muted-foreground font-medium">{plan.period}</span>}
             </div>
-
-            {plan.billingNote && (
-              <p className="text-xs text-muted-foreground -mt-2 mb-3">{plan.billingNote}</p>
-            )}
 
             <p className="text-sm text-muted-foreground mb-4 flex-grow">
               {plan.description}
@@ -126,14 +215,19 @@ export function CompanyPlans() {
             </div>
 
             <div className="mt-auto pt-4 border-t border-border/50">
-              <div className="flex items-center gap-2">
-                <button className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-primary/10 text-primary text-sm font-medium hover:bg-primary/20 transition-colors">
-                  <Pencil className="w-3.5 h-3.5" /> Edit Details
+              {isPaidPlan(plan.id) ? (
+                <button
+                  onClick={() => (editingPlanId === plan.id ? void handleSave(plan.id as PaidPlanSlug) : handleEdit(plan.id as PaidPlanSlug))}
+                  disabled={loading || !!loadError || saving}
+                  className="w-full flex items-center justify-center gap-1.5 py-2 rounded-lg bg-primary/10 text-primary text-sm font-medium hover:bg-primary/20 transition-colors disabled:opacity-50"
+                >
+                  {editingPlanId === plan.id
+                    ? <><Save className="w-3.5 h-3.5" /> Save Prices</>
+                    : <><Pencil className="w-3.5 h-3.5" /> Edit Prices</>}
                 </button>
-                <button className="p-2 rounded-lg hover:bg-red-500/10 text-muted-foreground hover:text-red-500 transition-colors">
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
+              ) : (
+                <p className="text-center text-xs text-muted-foreground py-2">Free plan has no price to edit.</p>
+              )}
             </div>
           </div>
         ))}

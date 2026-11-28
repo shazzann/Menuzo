@@ -4,18 +4,16 @@ import { formatPaymentAmount } from '@/lib/billing';
 import type { BillingPeriod } from '@/types/billing';
 
 type Props = {
+  /** Billing periods priced for Plus. */
   periods: BillingPeriod[];
+  /** The same periods priced for Enterprise. */
+  enterprisePeriods: BillingPeriod[];
   selectedId: string;
   loading: boolean;
   ready: boolean;
   onSelect: (id: string) => void;
   onUpgrade: (plan?: 'plus' | 'enterprise') => void;
   onKeepFree: () => void;
-};
-
-const DEFAULT_PRICING = {
-  plus: { monthly: 1500, annual: 15000 },
-  enterprise: { monthly: 6000, annual: 65000, annualRegular: 72000, annualSavings: 7000 },
 };
 
 const features = [
@@ -35,6 +33,7 @@ const features = [
 
 export function SubscriptionPlanComparison({
   periods,
+  enterprisePeriods,
   selectedId,
   loading,
   ready,
@@ -50,6 +49,12 @@ export function SubscriptionPlanComparison({
   const savings = monthly?.amount && yearly?.amount && monthly.currency === yearly.currency
     ? monthly.amount * 12 - yearly.amount : 0;
   const payable = selected?.active && selected.amount !== null && selected.amount > 0;
+  const enterpriseSelected = enterprisePeriods.find(period => period.id === selectedId);
+  const enterpriseMonthly = enterprisePeriods.find(period => period.id === 'monthly' && period.months === 1 && period.active);
+  const enterpriseYearly = enterprisePeriods.find(period => period.id === 'yearly' && period.months === 12 && period.active);
+  const enterpriseSavings = enterpriseMonthly?.amount && enterpriseYearly?.amount && enterpriseMonthly.currency === enterpriseYearly.currency
+    ? enterpriseMonthly.amount * 12 - enterpriseYearly.amount : 0;
+  const enterprisePayable = enterpriseSelected?.active && enterpriseSelected.amount !== null && enterpriseSelected.amount > 0;
 
   return (
     <section aria-label="Compare Free and Pro plans" className="space-y-7">
@@ -250,17 +255,17 @@ export function SubscriptionPlanComparison({
                 <strong className="text-xl sm:text-4xl font-bold tracking-tight text-purple-400">
                   {loading
                     ? 'Loading…'
-                    : isYearly
-                    ? formatPaymentAmount(DEFAULT_PRICING.enterprise.annual, selected?.currency || 'LKR')
-                    : formatPaymentAmount(DEFAULT_PRICING.enterprise.monthly, selected?.currency || 'LKR')}
+                    : enterprisePayable && enterpriseSelected
+                    ? formatPaymentAmount(enterpriseSelected.amount, enterpriseSelected.currency)
+                    : 'Coming soon'}
                 </strong>
                 <span className="text-xs sm:text-sm text-muted-foreground">
-                  {isYearly ? '/ year' : '/ month'}
+                  {enterprisePayable ? isYearly ? '/ year' : '/ month' : ''}
                 </span>
               </div>
               <p className="mt-1.5 text-[11px] sm:text-xs leading-snug text-muted-foreground">
                 {isYearly
-                  ? `One payment for 12 months. Save ${formatPaymentAmount(DEFAULT_PRICING.enterprise.annualSavings, selected?.currency || 'LKR')}/yr.`
+                  ? `One payment for 12 months.${enterpriseSavings > 0 && enterpriseYearly ? ` Save ${formatPaymentAmount(enterpriseSavings, enterpriseYearly.currency)}/yr.` : ''}`
                   : 'Pay once for 1 month. Full platform capabilities.'}
               </p>
             </div>
@@ -268,6 +273,7 @@ export function SubscriptionPlanComparison({
             <Button
               className="h-10 sm:h-12 w-full gap-1.5 sm:gap-2 rounded-xl px-2 text-xs sm:text-sm bg-purple-600 hover:bg-purple-700 text-white"
               onClick={() => onUpgrade('enterprise')}
+              disabled={!ready || !enterprisePayable}
             >
               Choose Enterprise
               <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />

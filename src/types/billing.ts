@@ -7,6 +7,17 @@ export type BillingPeriod = {
   active: boolean;
 };
 
+export type PaidPlanSlug = 'plus' | 'enterprise';
+
+export type PlanPrice = {
+  plan_slug: PaidPlanSlug;
+  period_id: string;
+  amount: number;
+  currency: string;
+  updated_at: string;
+  updated_by: string | null;
+};
+
 export type BankTransferSettings = {
   id: boolean;
   bank_name: string;

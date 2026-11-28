@@ -8,10 +8,10 @@ import { useApp } from '@/store';
 import { BillingService } from '@/services/billing.service';
 import { SubscriptionService } from '@/services/subscription.service';
 import { PromoCodeService } from '@/services/promo-code.service';
-import { isPaidActive, PLAN_PRICING, getPlanLimits } from '@/lib/subscription';
-import { billingErrorMessage, discountedAmount, formatPaymentAmount, isCheckoutReady, paymentWhatsAppUrl, placeholderPeriods } from '@/lib/billing';
+import { isPaidActive, getPlanLimits } from '@/lib/subscription';
+import { billingErrorMessage, discountedAmount, formatPaymentAmount, isCheckoutReady, paymentWhatsAppUrl, periodsForPlan, placeholderPeriods } from '@/lib/billing';
 import { getTodayDateString } from '@/lib/timeUtils';
-import type { BankTransferSettings, BillingPeriod, PaymentRequest, ShopCustomUrl } from '@/types/billing';
+import type { BankTransferSettings, BillingPeriod, PaymentRequest, PlanPrice, ShopCustomUrl } from '@/types/billing';
 import type { PromoPreview } from '@/types/promo-codes';
 import { toast } from 'sonner';
 import { SubscriptionPlanComparison } from '@/components/subscription/SubscriptionPlanComparison';
@@ -25,6 +25,7 @@ export function SubscriptionPage() {
   const foodItems = state.foodItems || [];
   const categories = state.categories || [];
   const [periods, setPeriods] = useState<BillingPeriod[]>(placeholderPeriods);
+  const [prices, setPrices] = useState<PlanPrice[]>([]);
   const [bank, setBank] = useState<BankTransferSettings | null>(null);
   const [requests, setRequests] = useState<PaymentRequest[]>([]);
   const [customUrl, setCustomUrl] = useState<ShopCustomUrl | null>(null);
@@ -70,14 +71,15 @@ export function SubscriptionPage() {
   const currentCategories = categories.filter(c => c.id !== 'all');
 
   // Compute price for currently selected period & plan
+  // Prices come from plan_prices; the server re-checks the same row at submit time.
+  const plusPeriods = periodsForPlan(periods, prices, 'plus');
+  const enterprisePeriods = periodsForPlan(periods, prices, 'enterprise');
+  const pricedPeriod = (plan: 'plus' | 'enterprise', periodId: string): BillingPeriod | undefined => {
+    const period = (plan === 'enterprise' ? enterprisePeriods : plusPeriods).find(item => item.id === periodId);
+    return period ? { ...period, label: `${period.label} ${plan === 'enterprise' ? 'Enterprise' : 'Plus'}` } : undefined;
+  };
   const basePeriod = periods.find(period => period.id === selectedId);
-  const currentPeriod: BillingPeriod | undefined = basePeriod ? {
-    ...basePeriod,
-    amount: selectedPlan === 'enterprise'
-      ? (basePeriod.months === 12 ? PLAN_PRICING.enterprise.annual : PLAN_PRICING.enterprise.monthly)
-      : (basePeriod.amount ?? (basePeriod.months === 12 ? PLAN_PRICING.plus.annual : PLAN_PRICING.plus.monthly)),
-    label: `${basePeriod.label} ${selectedPlan === 'enterprise' ? 'Enterprise' : 'Plus'}`,
-  } : undefined;
+  const currentPeriod = pricedPeriod(selectedPlan, selectedId);
 
   const selected = step === 0 ? currentPeriod : checkoutPeriod || undefined;
   const activePromo = promo?.plan === selectedPlan ? promo : null;
@@ -96,12 +98,13 @@ export function SubscriptionPage() {
     if (!userId || !shop.id) return;
     const requestId = ++generation.current;
     try {
-      const [availablePeriods, details, history, alias, subscription] = await Promise.all([
-        BillingService.getPeriods(), BillingService.getBankDetails(), BillingService.getRequests(shop.id),
+      const [availablePeriods, planPrices, details, history, alias, subscription] = await Promise.all([
+        BillingService.getPeriods(), BillingService.getPlanPrices(), BillingService.getBankDetails(), BillingService.getRequests(shop.id),
         BillingService.getCustomUrl(shop.id), SubscriptionService.getSubscription(userId),
       ]);
       if (requestId !== generation.current || !pageActive.current) return;
       setPeriods(availablePeriods);
+      setPrices(planPrices);
       setBank(details);
       setRequests(history);
       setCustomUrl(alias);
@@ -235,7 +238,8 @@ export function SubscriptionPage() {
 
         {showComparison && (
           <SubscriptionPlanComparison
-            periods={periods}
+            periods={plusPeriods}
+            enterprisePeriods={enterprisePeriods}
             selectedId={selectedId}
             loading={loading}
             ready={ready && !!shop.id}
@@ -244,13 +248,8 @@ export function SubscriptionPage() {
             onUpgrade={(plan = 'plus') => {
               if (!ready || !currentPeriod || !shop.id) return;
               setSelectedPlan(plan);
-              const computedPeriod: BillingPeriod = {
-                ...currentPeriod,
-                amount: plan === 'enterprise'
-                  ? (currentPeriod.months === 12 ? PLAN_PRICING.enterprise.annual : PLAN_PRICING.enterprise.monthly)
-                  : (currentPeriod.amount ?? (currentPeriod.months === 12 ? PLAN_PRICING.plus.annual : PLAN_PRICING.plus.monthly)),
-                label: `${currentPeriod.label.replace(/ (Plus|Enterprise)/, '')} ${plan === 'enterprise' ? 'Enterprise' : 'Plus'}`,
-              };
+              const computedPeriod = pricedPeriod(plan, currentPeriod.id);
+              if (!computedPeriod || computedPeriod.amount === null) return;
               setCheckoutPeriod(computedPeriod);
               setTransferMade(false);
               setReceiptSent(false);
@@ -357,16 +356,15 @@ export function SubscriptionPage() {
                           <legend className="sr-only">Subscription period</legend>
                           <div className="grid sm:grid-cols-2 gap-3">
                             {periods.map(period => {
-                              const amount = selectedPlan === 'enterprise'
-                                ? (period.months === 12 ? PLAN_PRICING.enterprise.annual : PLAN_PRICING.enterprise.monthly)
-                                : (period.amount ?? (period.months === 12 ? PLAN_PRICING.plus.annual : PLAN_PRICING.plus.monthly));
+                              const priced = pricedPeriod(selectedPlan, period.id);
+                              const amount = priced?.amount ?? null;
 
                               return (
                                 <label key={period.id} className={`relative cursor-pointer rounded-xl border-2 p-5 flex items-start gap-3 transition-colors ${selectedId === period.id ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/40'}`}>
                                   <input className="mt-1 accent-primary" type="radio" name="period" value={period.id} checked={selectedId === period.id} onChange={() => { setSelectedId(period.id); setTransferMade(false); setReceiptSent(false); }} />
                                   <span>
                                     <span className="block font-semibold">{period.label} {planDisplayName}</span>
-                                    <span className="block text-xl font-bold mt-2">{formatPaymentAmount(amount, period.currency)}</span>
+                                    <span className="block text-xl font-bold mt-2">{formatPaymentAmount(amount, priced?.currency ?? period.currency)}</span>
                                     <span className="block text-xs text-muted-foreground mt-1">{period.months} {period.months === 1 ? 'month' : 'months'} of {planDisplayName}</span>
                                   </span>
                                 </label>

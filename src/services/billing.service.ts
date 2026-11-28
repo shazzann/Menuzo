@@ -3,6 +3,8 @@ import type {
   BankTransferSettings,
   BillingPeriod,
   PaymentRequest,
+  PaidPlanSlug,
+  PlanPrice,
   ShopCustomUrl,
   SubmitPaymentRequestInput,
 } from '@/types/billing';
@@ -17,6 +19,21 @@ export const BillingService = {
 
     if (error) throw error;
     return data || [];
+  },
+
+  async getPlanPrices(): Promise<PlanPrice[]> {
+    const { data, error } = await supabase.from('plan_prices').select('*');
+    if (error) throw error;
+    return data || [];
+  },
+
+  async setPlanPrice(plan: PaidPlanSlug, periodId: string, amount: number): Promise<PlanPrice> {
+    const { data, error } = await supabase.rpc('admin_set_plan_price', {
+      p_plan_slug: plan, p_period_id: periodId, p_amount: amount,
+    });
+    if (error) throw error;
+    if (!data) throw new Error('The price could not be saved. Please try again.');
+    return data;
   },
 
   async getBankDetails(): Promise<BankTransferSettings | null> {

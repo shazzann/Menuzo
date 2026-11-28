@@ -1,9 +1,17 @@
-import type { BankTransferSettings, BillingPeriod } from '@/types/billing';
+import type { BankTransferSettings, BillingPeriod, PaidPlanSlug, PlanPrice } from '@/types/billing';
 
 export const placeholderPeriods: BillingPeriod[] = [
   { id: 'monthly', label: 'Monthly', months: 1, amount: null, currency: 'USD', active: true },
   { id: 'yearly', label: 'Yearly', months: 12, amount: null, currency: 'USD', active: true },
 ];
+
+// A plan's periods carry that plan's database price; no price row means not payable yet.
+export function periodsForPlan(periods: BillingPeriod[], prices: PlanPrice[], plan: PaidPlanSlug): BillingPeriod[] {
+  return periods.map(period => {
+    const price = prices.find(p => p.plan_slug === plan && p.period_id === period.id);
+    return { ...period, amount: price ? Number(price.amount) : null, currency: price?.currency ?? period.currency };
+  });
+}
 
 export function formatPaymentAmount(amount: number | null, currency: string) {
   if (amount === null) return 'Price coming soon';

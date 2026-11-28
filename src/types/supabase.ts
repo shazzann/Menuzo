@@ -1,4 +1,4 @@
-import type { BankTransferSettings, BillingPeriod, PaymentRequest, ShopCustomUrl } from './billing';
+import type { BankTransferSettings, BillingPeriod, PaymentRequest, PlanPrice, ShopCustomUrl } from './billing';
 import type { AdminPaymentRequest, AdminShopSubscription, BillingPage, ShopBillingDetails } from './company-billing';
 import type { AdminPromoCode, PromoCode, PromoCodeUsage, PromoPlan, PromoPreview } from './promo-codes';
 
@@ -75,6 +75,12 @@ export interface Database {
         Row: BillingPeriod
         Insert: Omit<BillingPeriod, 'active'> & { active?: boolean }
         Update: Partial<BillingPeriod>
+        Relationships: []
+      }
+      plan_prices: {
+        Row: PlanPrice
+        Insert: Omit<PlanPrice, 'updated_at' | 'updated_by'> & Partial<Pick<PlanPrice, 'updated_at' | 'updated_by'>>
+        Update: Partial<PlanPrice>
         Relationships: []
       }
       bank_transfer_settings: {
@@ -383,6 +389,10 @@ export interface Database {
         Returns: ShopBillingDetails
       }
       is_company_billing_admin: { Args: Record<string, never>; Returns: boolean }
+      admin_set_plan_price: {
+        Args: { p_plan_slug: string; p_period_id: string; p_amount: number }
+        Returns: PlanPrice
+      }
       ensure_my_profile: { Args: Record<string, never>; Returns: undefined }
       plan_hidden_food_item_ids: { Args: { p_shop_id: string }; Returns: string[] }
       admin_shop_theme_usage: { Args: Record<string, never>; Returns: { theme_id: string; shop_count: number }[] }

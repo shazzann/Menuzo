@@ -4,9 +4,9 @@ import { motion } from 'framer-motion';
 import { useApp } from '@/store';
 import { useEffect, useState } from 'react';
 import { BillingService } from '@/services/billing.service';
-import type { BillingPeriod } from '@/types/billing';
+import type { PaidPlanSlug, PlanPrice } from '@/types/billing';
 import { PricingService } from '@/services/pricing.service';
-import { PLAN_PRICING, PLAN_LIMITS } from '@/lib/subscription';
+import { PLAN_LIMITS } from '@/lib/subscription';
 
 export function PricingSection() {
   const { state, dispatch } = useApp();
@@ -19,37 +19,49 @@ export function PricingSection() {
     return () => window.removeEventListener('pricing_updated', handleUpdate);
   }, []);
 
-  const [periods, setPeriods] = useState<BillingPeriod[]>([]);
+  // Prices come from plan_prices, the same rows checkout charges.
+  const [prices, setPrices] = useState<PlanPrice[] | null>(null);
+  const [pricesFailed, setPricesFailed] = useState(false);
   useEffect(() => {
     let cancelled = false;
-    void BillingService.getPeriods().then(data => {
-      if (!cancelled) setPeriods(data);
+    void BillingService.getPlanPrices().then(data => {
+      if (!cancelled) setPrices(data);
     }).catch(() => {
-      // Unpublished pricing stays unavailable; checkout uses same source.
+      if (!cancelled) setPricesFailed(true);
     });
     return () => { cancelled = true; };
   }, []);
 
   const isYearly = billingCycle === 'yearly';
   const currency = 'LKR';
+  const unpricedLabel = pricesFailed || prices ? 'Price coming soon' : 'Loading…';
 
-  // Plus pricing
-  const plusMonthly = periods.find(p => p.id === 'monthly' && p.active && p.amount)?.amount ?? PLAN_PRICING.plus.monthly;
-  const plusYearly = periods.find(p => p.id === 'yearly' && p.active && p.amount)?.amount ?? PLAN_PRICING.plus.annual;
-  const plusYearlyRegular = plusMonthly * 12;
-  const plusYearlySavings = plusYearlyRegular - plusYearly;
-  const plusSavingsPercent = Math.round((plusYearlySavings / plusYearlyRegular) * 1000) / 10;
-  const plusMonthlyEquiv = Math.round(plusYearly / 12);
-
-  // Enterprise pricing
-  const enterpriseMonthly = PLAN_PRICING.enterprise.monthly;
-  const enterpriseYearly = PLAN_PRICING.enterprise.annual;
-  const enterpriseYearlyRegular = PLAN_PRICING.enterprise.annualRegular; // 72,000
-  const enterpriseYearlySavings = PLAN_PRICING.enterprise.annualSavings; // 7,000
-  const enterpriseSavingsPercent = Math.round((enterpriseYearlySavings / enterpriseYearlyRegular) * 1000) / 10; // 9.7%
-  const enterpriseMonthlyEquiv = Math.round(enterpriseYearly / 12); // ~5,417
+  const planPricing = (plan: PaidPlanSlug) => {
+    const monthly = prices?.find(p => p.plan_slug === plan && p.period_id === 'monthly');
+    const yearly = prices?.find(p => p.plan_slug === plan && p.period_id === 'yearly');
+    if (!monthly || !yearly) return null;
+    const monthlyAmount = Number(monthly.amount);
+    const yearlyAmount = Number(yearly.amount);
+    const yearlyRegular = monthlyAmount * 12;
+    const yearlySavings = Math.max(0, yearlyRegular - yearlyAmount);
+    return {
+      monthly: monthlyAmount,
+      yearly: yearlyAmount,
+      yearlyRegular,
+      yearlySavings,
+      savingsPercent: Math.round((yearlySavings / yearlyRegular) * 1000) / 10,
+      monthlyEquiv: Math.round(yearlyAmount / 12),
+    };
+  };
+  const plus = planPricing('plus');
+  const enterprise = planPricing('enterprise');
 
   const formatPrice = (amount: number) => `${currency} ${amount.toLocaleString('en-US')}`;
+  const maxSavingsPercent = Math.max(plus?.savingsPercent ?? 0, enterprise?.savingsPercent ?? 0);
+  const annualSavingsText = [
+    plus && plus.yearlySavings > 0 ? `Save ${formatPrice(plus.yearlySavings)} on Plus` : '',
+    enterprise && enterprise.yearlySavings > 0 ? `Save ${formatPrice(enterprise.yearlySavings)} on Enterprise` : '',
+  ].filter(Boolean).join(' · ');
 
   const plans = basePlans.map(plan => {
     if (plan.id === 'free') {
@@ -67,12 +79,12 @@ export function PricingSection() {
         ...plan,
         id: 'plus',
         name: 'Plus',
-        price: isYearly ? formatPrice(plusMonthlyEquiv) : formatPrice(plusMonthly),
-        period: '/month',
-        badge: isYearly ? `Save ${plusSavingsPercent}%` : 'Popular',
-        billingNote: isYearly
-          ? `Billed ${formatPrice(plusYearly)} annually · Save ${formatPrice(plusYearlySavings)}/year (${plusSavingsPercent}%)`
-          : `Monthly plan: ${formatPrice(plusMonthly)} per month.`,
+        price: !plus ? unpricedLabel : isYearly ? formatPrice(plus.monthlyEquiv) : formatPrice(plus.monthly),
+        period: plus ? '/month' : undefined,
+        badge: isYearly && plus && plus.yearlySavings > 0 ? `Save ${plus.savingsPercent}%` : 'Popular',
+        billingNote: !plus ? undefined : isYearly
+          ? `Billed ${formatPrice(plus.yearly)} annually${plus.yearlySavings > 0 ? ` · Save ${formatPrice(plus.yearlySavings)}/year (${plus.savingsPercent}%)` : ''}`
+          : `Monthly plan: ${formatPrice(plus.monthly)} per month.`,
         cta: 'Choose Plus',
       };
     }
@@ -81,12 +93,12 @@ export function PricingSection() {
       return {
         ...plan,
         name: 'Enterprise',
-        price: isYearly ? formatPrice(enterpriseMonthlyEquiv) : formatPrice(enterpriseMonthly),
-        period: '/month',
-        badge: isYearly ? `Save ${formatPrice(enterpriseYearlySavings)}/yr` : 'Full Access',
-        billingNote: isYearly
-          ? `Billed ${formatPrice(enterpriseYearly)} annually (was ${formatPrice(enterpriseYearlyRegular)}) · Save ${enterpriseSavingsPercent}%`
-          : `Monthly plan: ${formatPrice(enterpriseMonthly)} per month.`,
+        price: !enterprise ? unpricedLabel : isYearly ? formatPrice(enterprise.monthlyEquiv) : formatPrice(enterprise.monthly),
+        period: enterprise ? '/month' : undefined,
+        badge: isYearly && enterprise && enterprise.yearlySavings > 0 ? `Save ${formatPrice(enterprise.yearlySavings)}/yr` : 'Full Access',
+        billingNote: !enterprise ? undefined : isYearly
+          ? `Billed ${formatPrice(enterprise.yearly)} annually${enterprise.yearlySavings > 0 ? ` (was ${formatPrice(enterprise.yearlyRegular)}) · Save ${enterprise.savingsPercent}%` : ''}`
+          : `Monthly plan: ${formatPrice(enterprise.monthly)} per month.`,
         cta: 'Choose Enterprise',
       };
     }
@@ -176,18 +188,18 @@ export function PricingSection() {
                     : 'bg-primary/10 text-primary dark:text-[#FB8500]'
                 }`}
               >
-                Up to 16.7% off
+                {maxSavingsPercent > 0 ? `Up to ${maxSavingsPercent}% off` : 'Billed yearly'}
               </span>
             </button>
           </div>
           <p className="mt-3 min-h-5 text-center text-xs sm:text-sm text-muted-foreground" aria-live="polite">
-            {isYearly ? (
+            {isYearly && annualSavingsText ? (
               <span className="inline-flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-medium">
                 <Sparkles className="h-3.5 w-3.5 shrink-0" />
-                Annual savings: Save {formatPrice(plusYearlySavings)} on Plus · Save {formatPrice(enterpriseYearlySavings)} on Enterprise
+                Annual savings: {annualSavingsText}
               </span>
             ) : (
-              'Switch to annual billing to save on paid plans.'
+              isYearly ? '' : 'Switch to annual billing to save on paid plans.'
             )}
           </p>
         </motion.div>

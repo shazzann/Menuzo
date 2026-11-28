@@ -124,14 +124,4 @@ export const PricingService = {
     return defaultPlans;
   },
 
-  updatePlanPrice: (id: string, newPrice: string): void => {
-    if (typeof window === 'undefined') return;
-    const targetId = id === 'pro' ? 'plus' : id;
-    const plans = PricingService.getPlans();
-    const updated = plans.map(p =>
-      p.id === targetId || (id === 'pro' && p.id === 'plus') ? { ...p, price: newPrice } : p
-    );
-    localStorage.setItem('menuzo_pricing_plans', JSON.stringify(updated));
-    window.dispatchEvent(new Event('pricing_updated'));
-  },
 };

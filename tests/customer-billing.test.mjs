@@ -424,6 +424,10 @@ function subscriptionPageHarness(options = {}) {
     }) },
     '@/services/billing.service': { BillingService: {
       getPeriods: async () => options.periods || billing.placeholderPeriods,
+      // Plus prices mirror each fixture period's amount; Enterprise prices are opt-in.
+      getPlanPrices: async () => options.prices || (options.periods || [])
+        .filter(period => period.amount != null)
+        .map(period => ({ plan_slug: 'plus', period_id: period.id, amount: period.amount, currency: period.currency, updated_at: '', updated_by: null })),
       getBankDetails: async () => options.bank || null,
       getRequests: async () => options.requests || [],
       getCustomUrl: async () => options.customUrl || null,
@@ -639,6 +643,34 @@ test('Free comparison uses live LKR prices and preserves the yearly choice into 
   cleanup();
 });
 
+test('plan periods take their amount from their own plan price row, or none', () => {
+  const periods = [configuredPeriod, yearlyPeriod];
+  const prices = [
+    { plan_slug: 'plus', period_id: 'monthly', amount: '3500.00', currency: 'LKR' },
+    { plan_slug: 'enterprise', period_id: 'monthly', amount: '6000.00', currency: 'LKR' },
+    { plan_slug: 'enterprise', period_id: 'yearly', amount: '65000.00', currency: 'LKR' },
+  ];
+  assert.deepEqual(plain(billing.periodsForPlan(periods, prices, 'enterprise').map(p => [p.id, p.amount, p.currency])),
+    [['monthly', 6000, 'LKR'], ['yearly', 65000, 'LKR']]);
+  assert.deepEqual(plain(billing.periodsForPlan(periods, prices, 'plus').map(p => [p.id, p.amount])),
+    [['monthly', 3500], ['yearly', null]]);
+});
+
+test('Enterprise checkout quotes and submits the Enterprise database price', async () => {
+  const lkr = [{ ...configuredPeriod, currency: 'LKR' }, { ...yearlyPeriod, currency: 'LKR' }];
+  const price = (plan_slug, period_id, amount) => ({ plan_slug, period_id, amount, currency: 'LKR', updated_at: '', updated_by: null });
+  const page = subscriptionPageHarness({
+    periods: lkr, bank: configuredBank, submit: async (input) => ({ ...savedPayment, amount: input.expectedAmount }),
+    prices: [price('plus', 'monthly', 3500), price('plus', 'yearly', 33600), price('enterprise', 'monthly', 7000), price('enterprise', 'yearly', 70000)],
+  });
+  const cleanup = await mountPage(page);
+  assert.match(page.render().html, /LKR.*7,000/);
+  buttonByText(page, 'Choose Enterprise').props.onClick();
+  assert.match(page.render().html, /Monthly Enterprise/);
+  assert.match(page.render().html, /LKR.*7,000/);
+  cleanup();
+});
+
 test('active Pro and pending payments retain their existing management screens', async () => {
   const pro = subscriptionPageHarness({ periods: [configuredPeriod,yearlyPeriod],bank:configuredBank,
     subscription: {plan:'pro',status:'active',expiresAt:new Date(Date.now()+86400000)} });
@@ -756,6 +788,10 @@ test('plan comparison features match the configured 10-feature matrix', () => {
     periods: [
       { id: 'monthly', label: 'Monthly', months: 1, amount: 3500, currency: 'LKR', active: true },
       { id: 'yearly', label: 'Yearly', months: 12, amount: 33600, currency: 'LKR', active: true },
+    ],
+    enterprisePeriods: [
+      { id: 'monthly', label: 'Monthly', months: 1, amount: 6000, currency: 'LKR', active: true },
+      { id: 'yearly', label: 'Yearly', months: 12, amount: 65000, currency: 'LKR', active: true },
     ],
     selectedId: 'monthly',
     loading: false,
