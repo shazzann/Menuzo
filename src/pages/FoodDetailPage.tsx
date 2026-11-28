@@ -5,7 +5,7 @@ import { ArrowLeft, EyeOff, Lock, Sparkles, Share2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useSEO } from '@/hooks/useSEO';
 import { useApp } from '@/store';
-import { isPaidActive } from '@/lib/subscription';
+import { hasPaidFeatures } from '@/lib/subscription';
 import { motion, AnimatePresence, useMotionValue, useTransform, type Variants } from 'framer-motion';
 import type { FoodItem } from '@/types';
 import { cn } from '@/lib/utils';
@@ -48,6 +48,8 @@ interface SwipeableFoodCardProps {
   };
   discountPercent: number;
   isFreePlan?: boolean;
+  // Over the plan's item limit: hidden from customers; its photo is greyed out and locked here.
+  isLocked?: boolean;
   onNext: () => void;
   onPrev: () => void;
 }
@@ -58,6 +60,7 @@ function SwipeableFoodCard({
   shop,
   discountPercent,
   isFreePlan,
+  isLocked,
   onNext,
   onPrev,
 }: SwipeableFoodCardProps) {
@@ -131,11 +134,18 @@ function SwipeableFoodCard({
             alt={item.name}
             loading="eager"
             decoding="async"
-            className="w-full h-full object-cover pointer-events-none select-none"
+            className={cn('w-full h-full object-cover pointer-events-none select-none', isLocked && 'grayscale brightness-[0.55]')}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-muted">
             <span className="text-muted-foreground text-sm">No photo available</span>
+          </div>
+        )}
+        {isLocked && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none" aria-hidden="true">
+            <span className="flex h-16 w-16 items-center justify-center rounded-full bg-black/55 ring-1 ring-white/25 backdrop-blur-sm">
+              <Lock className="h-7 w-7 text-white" />
+            </span>
           </div>
         )}
         {/* Subtle top vignette for crystal clear floating button readability */}
@@ -159,6 +169,12 @@ function SwipeableFoodCard({
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary/15 text-primary text-xs font-semibold">
                 <Sparkles className="w-3 h-3" />
                 Special Offer
+              </span>
+            )}
+            {isLocked && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-foreground/10 text-foreground/80 text-xs font-semibold" title="Hidden from customers on your current plan">
+                <Lock className="w-3 h-3" />
+                Locked
               </span>
             )}
             {!item.isAvailable && (
@@ -527,12 +543,6 @@ export function FoodDetailPage() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col overflow-x-hidden touch-pan-y">
-      {!isCustomerView && state.planHiddenItemIds.includes(item.id) && (
-        <div className="sticky top-0 z-50 flex items-center gap-2 px-4 py-2.5 bg-amber-500/15 border-b border-amber-500/30 text-xs font-medium text-amber-600 dark:text-amber-400" role="status">
-          <Lock className="w-3.5 h-3.5 shrink-0" />
-          Hidden from customers on the Free plan. Upgrade to Pro or reorder categories to show it.
-        </div>
-      )}
 
       {/* Floating Top Controls with Safe Area Support */}
       <div className="fixed top-0 inset-x-0 z-50 pointer-events-none p-4 pt-[max(env(safe-area-inset-top),16px)]">
@@ -577,7 +587,8 @@ export function FoodDetailPage() {
               categoryName={categoryName}
               shop={shop}
               discountPercent={discountPercent}
-              isFreePlan={!isPaidActive(state.user?.subscription)}
+              isFreePlan={!hasPaidFeatures(state.user?.subscription)}
+              isLocked={!isCustomerView && state.planHiddenItemIds.includes(item.id)}
               onNext={goToNext}
               onPrev={goToPrev}
             />
