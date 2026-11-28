@@ -1,4 +1,4 @@
-import type { ManagedShop, ActivityItem, SubscriptionPlan, SupportTicket } from '@/types';
+import type { ManagedShop, SubscriptionPlan, SupportTicket } from '@/types';
 
 export const mockManagedShops: ManagedShop[] = [
   {
@@ -191,17 +191,6 @@ export const mockManagedShops: ManagedShop[] = [
     qrScans: 870,
     visitors: 2300,
   },
-];
-
-export const mockActivities: ActivityItem[] = [
-  { id: 'a1', type: 'registration', message: 'New shop registered', shopName: 'Colombo Spice Garden', timestamp: '2 min ago', icon: 'UserPlus' },
-  { id: 'a2', type: 'payment', message: 'Payment received — Pro Plan', shopName: 'Kandy Royal Kitchen', timestamp: '8 min ago', icon: 'CreditCard' },
-  { id: 'a3', type: 'renewal', message: 'Subscription renewed', shopName: 'Ella Mountain Café', timestamp: '15 min ago', icon: 'RefreshCw' },
-  { id: 'a4', type: 'theme', message: 'Theme purchased — "Sunset"', shopName: 'Beach Bites Galle', timestamp: '32 min ago', icon: 'Palette' },
-  { id: 'a5', type: 'menu-update', message: 'Menu updated — 12 items added', shopName: 'Negombo Fresh Catch', timestamp: '1h ago', icon: 'UtensilsCrossed' },
-  { id: 'a6', type: 'suspension', message: 'Account suspended — Payment overdue', shopName: 'Matara Hoppers Corner', timestamp: '2h ago', icon: 'Ban' },
-  { id: 'a7', type: 'registration', message: 'New shop registered', shopName: 'Dambulla Veggie Bowl', timestamp: '3h ago', icon: 'UserPlus' },
-  { id: 'a8', type: 'payment', message: 'Payment received — Enterprise Plan', shopName: 'Anuradhapura Heritage Meals', timestamp: '4h ago', icon: 'CreditCard' },
 ];
 
 export const mockPlans: SubscriptionPlan[] = [

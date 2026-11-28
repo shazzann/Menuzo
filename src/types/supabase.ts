@@ -412,6 +412,8 @@ export interface Database {
         Returns: PlanPrice
       }
       admin_dashboard_stats: { Args: Record<string, never>; Returns: Json }
+      admin_dashboard_revenue: { Args: { p_range: string }; Returns: Json }
+      admin_dashboard_overview: { Args: Record<string, never>; Returns: Json }
       ensure_my_profile: { Args: Record<string, never>; Returns: undefined }
       plan_hidden_food_item_ids: { Args: { p_shop_id: string }; Returns: string[] }
       admin_shop_theme_usage: { Args: Record<string, never>; Returns: { theme_id: string; shop_count: number }[] }

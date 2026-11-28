@@ -52,3 +52,59 @@ test('money formatting', () => {
   assert.equal(dash.percentChange(5, 0), null);
   assert.equal(dash.percentChange(80, 100), -20);
 });
+
+const overview = {
+  currency: 'LKR',
+  plan_distribution: [
+    { slug: 'free', name: 'Free', value: 10 },
+    { slug: 'plus', name: 'Plus', value: 4 },
+    { slug: 'enterprise', name: 'Enterprise', value: 1 },
+    { slug: 'gold', name: 'Gold', value: 2 },
+  ],
+  growth: [], activity: [], top_shops: [],
+  expiring_soon: 2,
+  top_city: { city: 'Colombo', shops: 7 },
+};
+
+test('insights only describe what the live numbers show', () => {
+  const texts = dash.buildInsights(stats, overview).map((i) => i.text);
+  assert.equal(JSON.stringify(texts), JSON.stringify([
+    'Revenue is up 14.8% compared with the same point last month',
+    '3 payments waiting for your review',
+    '10 shops have their menu closed to customers',
+    '2 paid plans expiring in the next 7 days',
+    'Plus is the most used paid plan (4 shops)',
+    'Colombo has the most shops (7)',
+  ]));
+});
+
+test('insights stay quiet when there is nothing to report', () => {
+  const quiet = { ...stats, revenue_month: '0', revenue_prev_month: '0', pending_payments: '0', closed_shops: '0' };
+  const texts = dash.buildInsights(quiet, { ...overview, plan_distribution: [{ slug: 'free', name: 'Free', value: 3 }], expiring_soon: 0, top_city: null });
+  assert.equal(texts.length, 0);
+});
+
+test('plan colors are fixed for built-in plans and rotate for custom ones', () => {
+  const colored = dash.withPlanColors(overview.plan_distribution);
+  assert.equal(JSON.stringify(colored.map((p) => p.fill)), JSON.stringify(['#64748b', '#f97316', '#8b5cf6', '#3b82f6']));
+});
+
+test('time ago', () => {
+  const now = new Date('2026-11-28T12:00:00Z');
+  assert.equal(dash.timeAgo('2026-11-28T11:59:30Z', now), 'just now');
+  assert.equal(dash.timeAgo('2026-11-28T11:52:00Z', now), '8 min ago');
+  assert.equal(dash.timeAgo('2026-11-28T08:00:00Z', now), '4h ago');
+  assert.equal(dash.timeAgo('2026-11-25T12:00:00Z', now), '3d ago');
+});
+
+test('top shop maps to the shop detail shape', () => {
+  const shop = dash.topShopToManaged({
+    id: 's1', name: 'Cafe', owner: 'nimal@example.test', location: null, revenue: '65000', plan: 'enterprise', items: '12',
+    phone: null, logo: null, banner: null, theme: null, status: 'active', createdAt: '2026-01-02T00:00:00Z', expiresAt: null,
+  });
+  assert.equal(shop.owner, 'nimal');
+  assert.equal(shop.location, 'No location');
+  assert.equal(shop.revenue, 65000);
+  assert.equal(shop.menuItems, 12);
+  assert.equal(shop.expiresAt, 'Never');
+});

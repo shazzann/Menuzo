@@ -7,15 +7,14 @@ import {
 } from 'lucide-react';
 import { useApp } from '@/store';
 import {
-  mockActivities, mockRevenueData, mockGrowthData,
-  mockPlanDistribution, mockManagedShops,
-} from '@/data/companyAdminData';
-import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   BarChart, Bar, PieChart, Pie, Cell,
 } from 'recharts';
 import { CompanyBillingService, companyBillingError } from '@/services/company-billing.service';
-import { buildDashboardKpis } from '@/lib/admin-dashboard';
+import {
+  buildDashboardKpis, buildInsights, formatMoney, timeAgo, topShopToManaged, withPlanColors,
+  type AdminDashboardOverview, type AdminDashboardRevenue, type AdminDashboardStats, type DashboardActivity, type RevenueRange,
+} from '@/lib/admin-dashboard';
 import type { KPICard } from '@/types';
 
 const iconMap: Record<string, React.ReactNode> = {
@@ -38,17 +37,48 @@ const iconMap: Record<string, React.ReactNode> = {
 
 export function CompanyDashboard() {
   const { dispatch } = useApp();
-  const [revenueRange, setRevenueRange] = useState<'daily' | 'weekly' | 'monthly' | 'yearly'>('monthly');
-  const [kpis, setKpis] = useState<KPICard[] | null>(null);
-  const [kpiError, setKpiError] = useState<string | null>(null);
+  const [revenueRange, setRevenueRange] = useState<RevenueRange>('monthly');
+  const [stats, setStats] = useState<AdminDashboardStats | null>(null);
+  const [overview, setOverview] = useState<AdminDashboardOverview | null>(null);
+  const [revenueResult, setRevenueResult] = useState<{ range: RevenueRange; data: AdminDashboardRevenue } | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
-    CompanyBillingService.dashboardStats()
-      .then((stats) => { if (!cancelled) setKpis(buildDashboardKpis(stats)); })
-      .catch((error) => { if (!cancelled) setKpiError(companyBillingError(error)); });
+    const fail = (error: unknown) => { if (!cancelled) setLoadError(companyBillingError(error)); };
+    CompanyBillingService.dashboardStats().then((data) => { if (!cancelled) setStats(data); }).catch(fail);
+    CompanyBillingService.dashboardOverview().then((data) => { if (!cancelled) setOverview(data); }).catch(fail);
     return () => { cancelled = true; };
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    CompanyBillingService.dashboardRevenue(revenueRange)
+      .then((data) => { if (!cancelled) setRevenueResult({ range: revenueRange, data }); })
+      .catch((error) => { if (!cancelled) setLoadError(companyBillingError(error)); });
+    return () => { cancelled = true; };
+  }, [revenueRange]);
+
+  // Only show the series for the range that is selected; a switch shows the loader until it arrives.
+  const revenue = revenueResult?.range === revenueRange ? revenueResult.data : null;
+  const kpis: KPICard[] | null = stats ? buildDashboardKpis(stats) : null;
+  const currency = overview?.currency || stats?.currency || 'LKR';
+  const planDistribution = overview ? withPlanColors(overview.plan_distribution) : [];
+  const insights = buildInsights(stats, overview);
+  const topShops = overview?.top_shops ?? [];
+  const activityIcon: Record<DashboardActivity['type'], string> = {
+    registration: 'UserPlus', 'payment-submitted': 'CreditCard', payment: 'CreditCard', rejected: 'Ban',
+  };
+  const rangeHint: Record<RevenueRange, string> = {
+    daily: 'Approved payments, last 14 days',
+    weekly: 'Approved payments, last 12 weeks',
+    monthly: 'Approved payments, last 12 months',
+    yearly: 'Approved payments, last 5 years',
+  };
+  const empty = (text: string) => (
+    <div className="flex h-full min-h-[160px] items-center justify-center text-sm text-muted-foreground">{text}</div>
+  );
+  const loading = <div className="h-full min-h-[160px] rounded-xl bg-muted/30 animate-pulse" />;
 
   const quickActions = [
     { label: 'Add Shop', icon: <Store className="w-4 h-4" />, color: 'from-blue-500 to-blue-600' },
@@ -58,18 +88,6 @@ export function CompanyDashboard() {
     { label: 'View Reports', icon: <BarChart3 className="w-4 h-4" />, color: 'from-amber-500 to-amber-600' },
   ];
 
-  const insights = [
-    { text: 'Revenue increased 14.5% compared to last month', type: 'positive' as const },
-    { text: '20 subscriptions expiring in the next 7 days', type: 'warning' as const },
-    { text: '5 businesses inactive for over 30 days', type: 'negative' as const },
-    { text: 'Pro Plan is the most popular plan this quarter', type: 'info' as const },
-    { text: 'Colombo is the highest performing city', type: 'positive' as const },
-  ];
-
-  const topShops = mockManagedShops
-    .filter((s) => s.status === 'active')
-    .sort((a, b) => b.revenue - a.revenue)
-    .slice(0, 5);
 
   return (
     <div className="space-y-6 animate-fade-in-up">
@@ -93,13 +111,13 @@ export function CompanyDashboard() {
       </div>
 
       {/* KPI Cards */}
-      {kpiError && (
+      {loadError && (
         <div className="rounded-2xl border border-red-500/30 bg-red-500/5 px-4 py-3 text-sm text-red-500">
-          Couldn't load dashboard numbers. {kpiError}
+          Couldn't load dashboard data. {loadError}
         </div>
       )}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 lg:gap-4">
-        {!kpis && !kpiError && Array.from({ length: 8 }, (_, i) => (
+        {!kpis && !loadError && Array.from({ length: 8 }, (_, i) => (
           <div key={i} className="h-[132px] rounded-2xl border border-border/50 bg-card/80 animate-pulse" />
         ))}
         {kpis?.map((kpi, index) => (
@@ -141,7 +159,7 @@ export function CompanyDashboard() {
           <div className="flex items-center justify-between mb-5">
             <div>
               <h3 className="text-lg font-semibold">Revenue Analytics</h3>
-              <p className="text-xs text-muted-foreground mt-0.5">Monthly revenue breakdown</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{rangeHint[revenueRange]} ({currency})</p>
             </div>
             <div className="flex items-center gap-1 bg-muted/30 rounded-xl p-1">
               {(['daily', 'weekly', 'monthly', 'yearly'] as const).map((range) => (
@@ -159,8 +177,11 @@ export function CompanyDashboard() {
               ))}
             </div>
           </div>
+          {!revenue ? <div className="h-[280px]">{loading}</div>
+            : revenue.points.every((p) => !Number(p.revenue)) ? <div className="h-[280px]">{empty('No approved payments in this period yet.')}</div>
+            : (
           <ResponsiveContainer width="100%" height={280}>
-            <AreaChart data={mockRevenueData}>
+            <AreaChart data={revenue.points}>
               <defs>
                 <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="hsl(31.8, 100%, 49.2%)" stopOpacity={0.3} />
@@ -172,8 +193,8 @@ export function CompanyDashboard() {
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.3} />
-              <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
-              <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(v) => `$${v / 1000}K`} />
+              <XAxis dataKey="label" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
+              <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} width={80} tickFormatter={(v: number) => formatMoney(v, currency)} />
               <Tooltip
                 contentStyle={{
                   background: 'hsl(var(--card))',
@@ -182,13 +203,14 @@ export function CompanyDashboard() {
                   fontSize: '12px',
                   boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
                 }}
-                formatter={(value: number) => [`$${value.toLocaleString()}`, '']}
+                formatter={(value: number, name: string) => [formatMoney(value, currency), name === 'newPlans' ? 'New plans' : name === 'renewals' ? 'Renewals' : 'Revenue']}
               />
               <Area type="monotone" dataKey="revenue" stroke="hsl(31.8, 100%, 49.2%)" fill="url(#revenueGrad)" strokeWidth={2.5} />
               <Area type="monotone" dataKey="renewals" stroke="#22c55e" fill="url(#renewGrad)" strokeWidth={2} />
               <Area type="monotone" dataKey="newPlans" stroke="#8b5cf6" fill="transparent" strokeWidth={2} strokeDasharray="5 5" />
             </AreaChart>
           </ResponsiveContainer>
+          )}
           <div className="flex items-center justify-center gap-6 mt-3 text-xs text-muted-foreground">
             <div className="flex items-center gap-2">
               <div className="w-3 h-0.5 rounded-full bg-orange-500" />
@@ -208,20 +230,24 @@ export function CompanyDashboard() {
         {/* Plan Distribution */}
         <div className="bg-card/80 backdrop-blur-sm border border-border/50 rounded-2xl p-5">
           <h3 className="text-lg font-semibold mb-1">Plan Distribution</h3>
-          <p className="text-xs text-muted-foreground mb-4">Active subscriber breakdown</p>
+          <p className="text-xs text-muted-foreground mb-4">Shops on each plan right now</p>
+          {!overview ? <div className="h-[200px]">{loading}</div>
+            : planDistribution.length === 0 ? <div className="h-[200px]">{empty('No shops yet.')}</div>
+            : (<>
           <ResponsiveContainer width="100%" height={200}>
             <PieChart>
               <Pie
-                data={mockPlanDistribution}
+                data={planDistribution}
                 cx="50%"
                 cy="50%"
                 innerRadius={55}
                 outerRadius={80}
                 dataKey="value"
+                nameKey="name"
                 paddingAngle={3}
                 stroke="none"
               >
-                {mockPlanDistribution.map((entry, index) => (
+                {planDistribution.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={entry.fill} />
                 ))}
               </Pie>
@@ -236,7 +262,7 @@ export function CompanyDashboard() {
             </PieChart>
           </ResponsiveContainer>
           <div className="space-y-2 mt-2">
-            {mockPlanDistribution.map((plan) => (
+            {planDistribution.map((plan) => (
               <div key={plan.name} className="flex items-center justify-between text-sm">
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 rounded-full" style={{ background: plan.fill }} />
@@ -246,6 +272,7 @@ export function CompanyDashboard() {
               </div>
             ))}
           </div>
+          </>)}
         </div>
       </div>
 
@@ -254,12 +281,13 @@ export function CompanyDashboard() {
         {/* Growth Chart */}
         <div className="bg-card/80 backdrop-blur-sm border border-border/50 rounded-2xl p-5">
           <h3 className="text-lg font-semibold mb-1">Shop Growth</h3>
-          <p className="text-xs text-muted-foreground mb-4">Registration & active shop trends</p>
+          <p className="text-xs text-muted-foreground mb-4">New shops and paid plans that ended, last 7 months</p>
+          {!overview ? <div className="h-[220px]">{loading}</div> : (<>
           <ResponsiveContainer width="100%" height={220}>
-            <BarChart data={mockGrowthData}>
+            <BarChart data={overview.growth}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.3} />
               <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" fontSize={11} tickLine={false} axisLine={false} />
-              <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} tickLine={false} axisLine={false} />
+              <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} tickLine={false} axisLine={false} allowDecimals={false} />
               <Tooltip
                 contentStyle={{
                   background: 'hsl(var(--card))',
@@ -268,10 +296,15 @@ export function CompanyDashboard() {
                   fontSize: '12px',
                 }}
               />
-              <Bar dataKey="registrations" fill="hsl(31.8, 100%, 49.2%)" radius={[6, 6, 0, 0]} />
-              <Bar dataKey="churn" fill="#ef4444" radius={[6, 6, 0, 0]} />
+              <Bar dataKey="registrations" name="New shops" fill="hsl(31.8, 100%, 49.2%)" radius={[6, 6, 0, 0]} />
+              <Bar dataKey="churn" name="Paid plans ended" fill="#ef4444" radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
+          <div className="flex items-center justify-center gap-6 mt-3 text-xs text-muted-foreground">
+            <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-sm bg-orange-500" />New shops</div>
+            <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-sm bg-red-500" />Paid plans ended</div>
+          </div>
+          </>)}
         </div>
 
         {/* Activity Timeline */}
@@ -279,31 +312,27 @@ export function CompanyDashboard() {
           <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="text-lg font-semibold">Activity</h3>
-              <p className="text-xs text-muted-foreground mt-0.5">Real-time feed</p>
-            </div>
-            <div className="flex items-center gap-1.5 text-[11px] text-emerald-500 font-medium">
-              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              Live
+              <p className="text-xs text-muted-foreground mt-0.5">Latest registrations and payments</p>
             </div>
           </div>
           <div className="space-y-3 max-h-[280px] overflow-y-auto scrollbar-hide pr-1">
-            {mockActivities.map((activity) => (
-              <div key={activity.id} className="flex items-start gap-3 group">
+            {!overview && loading}
+            {overview && overview.activity.length === 0 && empty('No activity yet.')}
+            {overview?.activity.map((activity, index) => (
+              <div key={`${activity.type}-${activity.at}-${index}`} className="flex items-start gap-3 group">
                 <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
                   activity.type === 'registration' ? 'bg-blue-500/10 text-blue-500' :
                   activity.type === 'payment' ? 'bg-emerald-500/10 text-emerald-500' :
-                  activity.type === 'renewal' ? 'bg-violet-500/10 text-violet-500' :
-                  activity.type === 'theme' ? 'bg-pink-500/10 text-pink-500' :
-                  activity.type === 'menu-update' ? 'bg-amber-500/10 text-amber-500' :
+                  activity.type === 'payment-submitted' ? 'bg-amber-500/10 text-amber-500' :
                   'bg-red-500/10 text-red-500'
                 }`}>
-                  {iconMap[activity.icon] || <Bell className="w-4 h-4" />}
+                  {iconMap[activityIcon[activity.type]] || <Bell className="w-4 h-4" />}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium leading-tight">{activity.message}</p>
                   <p className="text-xs text-muted-foreground mt-0.5">{activity.shopName}</p>
                 </div>
-                <span className="text-[11px] text-muted-foreground shrink-0">{activity.timestamp}</span>
+                <span className="text-[11px] text-muted-foreground shrink-0">{timeAgo(activity.at)}</span>
               </div>
             ))}
           </div>
@@ -317,10 +346,12 @@ export function CompanyDashboard() {
             </div>
             <div>
               <h3 className="text-lg font-semibold">Quick Insights</h3>
-              <p className="text-xs text-muted-foreground">AI-powered analysis</p>
+              <p className="text-xs text-muted-foreground">From today's numbers</p>
             </div>
           </div>
           <div className="space-y-3">
+            {!stats && !overview && loading}
+            {(stats || overview) && insights.length === 0 && empty('Nothing to flag right now.')}
             {insights.map((insight, index) => (
               <div
                 key={index}
@@ -349,7 +380,7 @@ export function CompanyDashboard() {
         <div className="flex items-center justify-between mb-4">
           <div>
             <h3 className="text-lg font-semibold">Top Revenue Shops</h3>
-            <p className="text-xs text-muted-foreground mt-0.5">Highest performing businesses</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Most approved payments, all time ({currency})</p>
           </div>
           <button
             onClick={() => dispatch({ type: 'SET_COMPANY_ADMIN_SECTION', payload: 'shops' })}
@@ -358,7 +389,9 @@ export function CompanyDashboard() {
             View All <ChevronRight className="w-3 h-3" />
           </button>
         </div>
-        <div className="overflow-x-auto">
+        {!overview && <div className="h-[200px]">{loading}</div>}
+        {overview && topShops.length === 0 && empty('No approved payments yet.')}
+        {topShops.length > 0 && <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="border-b border-border/50">
@@ -368,7 +401,6 @@ export function CompanyDashboard() {
                 <th className="text-left text-xs font-semibold text-muted-foreground py-3 pr-4">Location</th>
                 <th className="text-left text-xs font-semibold text-muted-foreground py-3 pr-4">Revenue</th>
                 <th className="text-left text-xs font-semibold text-muted-foreground py-3 pr-4">Plan</th>
-                <th className="text-left text-xs font-semibold text-muted-foreground py-3 pr-4">Rating</th>
                 <th className="text-right text-xs font-semibold text-muted-foreground py-3">Action</th>
               </tr>
             </thead>
@@ -387,32 +419,27 @@ export function CompanyDashboard() {
                       </div>
                       <div>
                         <p className="text-sm font-medium">{shop.name}</p>
-                        <p className="text-[11px] text-muted-foreground">{shop.menuItems} items</p>
+                        <p className="text-[11px] text-muted-foreground">{shop.items} items</p>
                       </div>
                     </div>
                   </td>
-                  <td className="py-3 pr-4 text-sm text-muted-foreground">{shop.owner}</td>
-                  <td className="py-3 pr-4 text-sm text-muted-foreground">{shop.location}</td>
+                  <td className="py-3 pr-4 text-sm text-muted-foreground">{shop.owner || '—'}</td>
+                  <td className="py-3 pr-4 text-sm text-muted-foreground">{shop.location || '—'}</td>
                   <td className="py-3 pr-4">
-                    <span className="text-sm font-semibold text-emerald-500">${shop.revenue.toLocaleString()}</span>
+                    <span className="text-sm font-semibold text-emerald-500">{formatMoney(Number(shop.revenue), currency)}</span>
                   </td>
                   <td className="py-3 pr-4">
                     <span className={`px-2 py-0.5 rounded-full text-[11px] font-medium ${
                       shop.plan === 'enterprise' ? 'bg-violet-500/10 text-violet-500' :
-                      shop.plan === 'pro' ? 'bg-orange-500/10 text-orange-500' :
+                      shop.plan === 'plus' ? 'bg-orange-500/10 text-orange-500' :
+                      shop.plan === 'free' ? 'bg-slate-500/10 text-slate-500' :
                       'bg-blue-500/10 text-blue-500'
                     }`}>{shop.plan}</span>
-                  </td>
-                  <td className="py-3 pr-4">
-                    <div className="flex items-center gap-1 text-sm">
-                      <span className="text-amber-500">★</span>
-                      {shop.rating}
-                    </div>
                   </td>
                   <td className="py-3 text-right">
                     <button
                       onClick={() => {
-                        dispatch({ type: 'SELECT_MANAGED_SHOP', payload: shop });
+                        dispatch({ type: 'SELECT_MANAGED_SHOP', payload: topShopToManaged(shop) });
                         dispatch({ type: 'SET_COMPANY_ADMIN_SECTION', payload: 'shop-detail' });
                       }}
                       className="p-1.5 rounded-lg hover:bg-muted/50 transition-colors"
@@ -424,7 +451,7 @@ export function CompanyDashboard() {
               ))}
             </tbody>
           </table>
-        </div>
+        </div>}
       </div>
     </div>
   );
