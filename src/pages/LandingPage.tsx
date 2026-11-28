@@ -8,7 +8,6 @@ import { ProductShowcaseSection } from '@/components/landing/ProductShowcaseSect
 import { FeaturesSection } from '@/components/landing/FeaturesSection';
 import { AudienceSection } from '@/components/landing/AudienceSection';
 import { PricingSection } from '@/components/landing/PricingSection';
-import { PartnersSection } from '@/components/landing/PartnersSection';
 import { FAQSection } from '@/components/landing/FAQSection';
 import { Footer } from '@/components/landing/Footer';
 
@@ -25,7 +24,6 @@ export function LandingPage() {
         <FeaturesSection />
         <AudienceSection />
         <PricingSection />
-        <PartnersSection />
         <FAQSection />
       </main>
       <Footer />

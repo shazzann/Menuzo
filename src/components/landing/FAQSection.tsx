@@ -29,8 +29,8 @@ const faqs = [
     a: 'Yes. Free accounts receive basic view counts, and Plus adds 7-day and 30-day charts separating total menu views from QR scans.',
   },
   {
-    q: 'How can agencies or hospitality consultants partner with Menuzo?',
-    a: 'Select Become a partner above or Contact sales in Pricing to message our team directly via WhatsApp or email (menuzoapp@gmail.com).',
+    q: 'How can I contact Menuzo?',
+    a: 'Select Contact sales in Pricing or Support in the footer to reach our team via WhatsApp or email (menuzoapp@gmail.com).',
   },
 ];
 

@@ -6,9 +6,9 @@ import { getPublicEmailUrl, getPublicWhatsAppUrl } from '@/lib/contact';
 export function Footer() {
   const { dispatch } = useApp();
 
-  const partnerHref =
+  const supportHref =
     getPublicWhatsAppUrl('Hello Menuzo, I would like to get in touch regarding Menuzo.') ||
-    getPublicEmailUrl('Menuzo Support / Partnership Enquiry');
+    getPublicEmailUrl('Menuzo Support Enquiry');
 
   const handleNavigate = (view: View) => {
     dispatch({ type: 'SET_VIEW', payload: view });
@@ -82,13 +82,6 @@ export function Footer() {
               Pricing
             </a>
             <a
-              href="#partners"
-              onClick={(e) => handleSectionLink(e, '#partners')}
-              className="inline-flex items-center min-h-[44px] sm:min-h-0 hover:text-primary transition-colors"
-            >
-              For Partners
-            </a>
-            <a
               href="#faq"
               onClick={(e) => handleSectionLink(e, '#faq')}
               className="inline-flex items-center min-h-[44px] sm:min-h-0 hover:text-primary transition-colors"
@@ -96,9 +89,9 @@ export function Footer() {
               FAQ
             </a>
             <a
-              href={partnerHref}
-              target={partnerHref.startsWith('http') ? '_blank' : undefined}
-              rel={partnerHref.startsWith('http') ? 'noopener noreferrer' : undefined}
+              href={supportHref}
+              target={supportHref.startsWith('http') ? '_blank' : undefined}
+              rel={supportHref.startsWith('http') ? 'noopener noreferrer' : undefined}
               className="inline-flex items-center min-h-[44px] sm:min-h-0 hover:text-primary transition-colors text-left"
             >
               Support
