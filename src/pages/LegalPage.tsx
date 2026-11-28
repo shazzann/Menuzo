@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { 
   ArrowLeft, 
   Shield, 
-  FileText, 
   AlertCircle, 
   Scale, 
   Sparkles,
@@ -36,7 +35,7 @@ export function LegalPage({ type }: { type: 'privacy' | 'terms' }) {
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
       {/* Sticky Top Header */}
-      <header className="h-16 bg-background/95 backdrop-blur-md border-b border-border/80 px-4 sm:px-6 flex items-center justify-between sticky top-0 z-50">
+      <header className="h-16 bg-background/95 backdrop-blur-md border-b border-border px-4 sm:px-6 flex items-center justify-between sticky top-0 z-50">
         <Button 
           variant="ghost" 
           size="sm"
@@ -65,45 +64,41 @@ export function LegalPage({ type }: { type: 'privacy' | 'terms' }) {
       </header>
 
       {/* Main Container */}
-      <main className="flex-1 max-w-4xl w-full mx-auto py-10 sm:py-16 px-4 sm:px-6">
+      <main className="flex-1 max-w-3xl w-full mx-auto py-10 sm:py-16 px-4 sm:px-6">
         
         {/* Document Navigation Tabs */}
-        <div className="flex justify-center mb-8">
-          <div className="inline-flex items-center p-1.5 rounded-full bg-muted/60 border border-border shadow-xs backdrop-blur-sm">
+        <div className="mb-8">
+          <div className="inline-flex items-center p-1 rounded-xl bg-muted/40 border border-border">
             <button
               type="button"
               onClick={() => handleTabChange('terms')}
-              className={`flex items-center gap-2 px-5 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all duration-200 ${
+              className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
                 isTerms
-                  ? 'bg-primary text-primary-foreground shadow-xs'
-                  : 'text-muted-foreground hover:text-foreground'
+                  ? 'bg-card text-foreground border border-border'
+                  : 'text-muted-foreground hover:text-foreground border border-transparent'
               }`}
             >
-              <Scale className="w-3.5 h-3.5" />
+              <Scale className="w-3.5 h-3.5" strokeWidth={1.5} />
               Terms & Conditions
             </button>
             <button
               type="button"
               onClick={() => handleTabChange('privacy')}
-              className={`flex items-center gap-2 px-5 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all duration-200 ${
+              className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
                 !isTerms
-                  ? 'bg-primary text-primary-foreground shadow-xs'
-                  : 'text-muted-foreground hover:text-foreground'
+                  ? 'bg-card text-foreground border border-border'
+                  : 'text-muted-foreground hover:text-foreground border border-transparent'
               }`}
             >
-              <Shield className="w-3.5 h-3.5" />
+              <Shield className="w-3.5 h-3.5" strokeWidth={1.5} />
               Privacy Policy
             </button>
           </div>
         </div>
 
         {/* Header Title & Date */}
-        <div className="text-center mb-10 pb-8 border-b border-border/70">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold tracking-wide uppercase mb-3">
-            {isTerms ? <FileText className="w-3.5 h-3.5" /> : <Shield className="w-3.5 h-3.5" />}
-            {isTerms ? 'Legal Agreement' : 'Data Protection Policy'}
-          </span>
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight mb-3">
+        <div className="mb-8 pb-6 border-b border-border">
+          <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight text-foreground mb-2">
             {isTerms ? 'Terms & Conditions' : 'Privacy Policy'}
           </h1>
           <p className="text-sm text-muted-foreground">
@@ -112,13 +107,13 @@ export function LegalPage({ type }: { type: 'privacy' | 'terms' }) {
         </div>
 
         {/* Legal Status Notice Alert */}
-        <div className="mb-10 p-4 sm:p-5 rounded-2xl border border-amber-500/30 bg-amber-500/10 text-amber-200/90 text-xs sm:text-sm leading-relaxed flex items-start gap-3.5">
-          <AlertCircle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+        <div className="mb-10 p-4 sm:p-5 rounded-xl border border-border bg-muted/40 text-foreground text-xs sm:text-sm leading-relaxed flex items-start gap-3">
+          <AlertCircle className="w-4 h-4 text-[#C2530A] dark:text-primary shrink-0 mt-0.5" strokeWidth={1.5} />
           <div className="space-y-1.5">
-            <p className="font-semibold text-amber-300">
+            <p className="font-semibold text-foreground">
               Draft Policy · Pending Professional Legal Review
             </p>
-            <p className="text-muted-foreground dark:text-neutral-300 text-xs leading-relaxed">
+            <p className="text-muted-foreground text-xs leading-relaxed">
               Menuzo is an independent digital restaurant menu software platform developed in Sri Lanka by Hasni Zihar and Shazan. Menuzo is currently operating as an unincorporated proprietary software project and is not yet registered as an incorporated legal entity under the Companies Act of Sri Lanka. This Privacy Policy outlines our real technical data collection practices, database architecture, third-party cloud services, and user privacy rights. It is provided as a working draft subject to final review by a qualified Sri Lankan Attorney-at-Law.
             </p>
           </div>
@@ -128,12 +123,12 @@ export function LegalPage({ type }: { type: 'privacy' | 'terms' }) {
           /* ========================================================================= */
           /* TERMS & CONDITIONS CONTENT                                                */
           /* ========================================================================= */
-          <div className="space-y-10 text-sm sm:text-base leading-relaxed text-muted-foreground">
+          <div className="space-y-8 text-sm sm:text-base leading-relaxed text-muted-foreground">
             
             {/* 1. Introduction & Acceptance */}
-            <section className="bg-card border border-border/70 rounded-2xl p-6 sm:p-8 space-y-3">
-              <h2 className="text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2">
-                <span className="text-primary font-mono text-lg">01.</span> Introduction & Acceptance of Terms
+            <section className="border-t border-border pt-8 space-y-3">
+              <h2 className="text-lg sm:text-xl font-semibold tracking-tight text-foreground">
+                Introduction & Acceptance of Terms
               </h2>
               <p>
                 Welcome to <strong className="text-foreground">Menuzo</strong> (<span className="text-primary font-mono text-xs">menuzo.app</span>), a digital restaurant menu SaaS platform designed and operated in Sri Lanka. These Terms and Conditions (&ldquo;Terms&rdquo;) govern your access to and use of the Menuzo platform, mobile menu viewer, QR code features, and related administrative dashboards (collectively, the &ldquo;Service&rdquo;).
@@ -144,9 +139,9 @@ export function LegalPage({ type }: { type: 'privacy' | 'terms' }) {
             </section>
 
             {/* 2. Eligibility & User Roles */}
-            <section className="bg-card border border-border/70 rounded-2xl p-6 sm:p-8 space-y-4">
-              <h2 className="text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2">
-                <span className="text-primary font-mono text-lg">02.</span> Eligibility & User Roles
+            <section className="border-t border-border pt-8 space-y-4">
+              <h2 className="text-lg sm:text-xl font-semibold tracking-tight text-foreground">
+                Eligibility & User Roles
               </h2>
               <p>
                 The Service accommodates four distinct user roles, each subject to specific rights and responsibilities:
@@ -168,9 +163,9 @@ export function LegalPage({ type }: { type: 'privacy' | 'terms' }) {
             </section>
 
             {/* 3. Account Registration & Security */}
-            <section className="bg-card border border-border/70 rounded-2xl p-6 sm:p-8 space-y-3">
-              <h2 className="text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2">
-                <span className="text-primary font-mono text-lg">03.</span> Account Registration & Security
+            <section className="border-t border-border pt-8 space-y-3">
+              <h2 className="text-lg sm:text-xl font-semibold tracking-tight text-foreground">
+                Account Registration & Security
               </h2>
               <p>
                 To access the restaurant management dashboard, you must authenticate using a verified Google account. Menuzo enforces a policy of <strong className="text-foreground">one restaurant profile per Google account</strong>.
@@ -181,14 +176,14 @@ export function LegalPage({ type }: { type: 'privacy' | 'terms' }) {
             </section>
 
             {/* 4. Nature of the Service (Display Only) */}
-            <section className="bg-card border border-border/70 rounded-2xl p-6 sm:p-8 space-y-3">
-              <h2 className="text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2">
-                <span className="text-primary font-mono text-lg">04.</span> Nature of Service (Menu Display Only)
+            <section className="border-t border-border pt-8 space-y-3">
+              <h2 className="text-lg sm:text-xl font-semibold tracking-tight text-foreground">
+                Nature of Service (Menu Display Only)
               </h2>
               <p>
                 Menuzo provides interactive digital menu hosting, QR code generation, theme styling, and basic aggregate visit analytics.
               </p>
-              <div className="p-4 rounded-xl bg-muted/60 border border-border/60 text-xs sm:text-sm text-foreground space-y-1">
+              <div className="p-4 rounded-xl bg-muted/60 border border-border text-xs sm:text-sm text-foreground space-y-1">
                 <p className="font-semibold text-primary">Important Clarification on Food & Orders:</p>
                 <p className="text-muted-foreground leading-relaxed">
                   Menuzo is exclusively a menu display and presentation software. Menuzo does <strong>NOT</strong> process food orders, table bookings, customer payments for meals, food preparation, or delivery logistics. Any transaction, dining arrangement, or food order is contracted solely and directly between the customer and the restaurant.
@@ -197,22 +192,22 @@ export function LegalPage({ type }: { type: 'privacy' | 'terms' }) {
             </section>
 
             {/* 5. Subscription Plans & Limitations */}
-            <section className="bg-card border border-border/70 rounded-2xl p-6 sm:p-8 space-y-4">
-              <h2 className="text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2">
-                <span className="text-primary font-mono text-lg">05.</span> Subscription Plans & Feature Matrix
+            <section className="border-t border-border pt-8 space-y-4">
+              <h2 className="text-lg sm:text-xl font-semibold tracking-tight text-foreground">
+                Subscription Plans & Feature Matrix
               </h2>
               <p>
                 Menuzo offers two subscription tiers: <strong className="text-foreground">Free</strong> and <strong className="text-foreground">Pro</strong>. Feature access is programmatically enforced based on your active subscription status:
               </p>
 
               {/* Feature Matrix Table */}
-              <div className="overflow-x-auto rounded-xl border border-border/80 my-4">
+              <div className="overflow-x-auto rounded-xl border border-border my-4">
                 <table className="w-full text-left text-xs sm:text-sm">
-                  <thead className="bg-muted/80 text-foreground font-semibold border-b border-border/80">
+                  <thead className="bg-muted/80 text-foreground font-semibold border-b border-border">
                     <tr>
                       <th className="py-3 px-4">Feature</th>
                       <th className="py-3 px-4">Free Plan</th>
-                      <th className="py-3 px-4 text-primary font-bold">Pro Plan</th>
+                      <th className="py-3 px-4 text-primary font-semibold">Pro Plan</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border/60 font-normal">
@@ -228,8 +223,8 @@ export function LegalPage({ type }: { type: 'privacy' | 'terms' }) {
                     </tr>
                     <tr>
                       <td className="py-2.5 px-4 font-medium text-foreground">QR Menu Generation</td>
-                      <td className="py-2.5 px-4 text-emerald-400">Included</td>
-                      <td className="py-2.5 px-4 text-emerald-400 font-semibold">Included</td>
+                      <td className="py-2.5 px-4 text-muted-foreground">Included</td>
+                      <td className="py-2.5 px-4 text-muted-foreground font-semibold">Included</td>
                     </tr>
                     <tr>
                       <td className="py-2.5 px-4 font-medium text-foreground">Custom Themes</td>
@@ -244,17 +239,17 @@ export function LegalPage({ type }: { type: 'privacy' | 'terms' }) {
                     <tr>
                       <td className="py-2.5 px-4 font-medium text-foreground">Analytics Dashboard</td>
                       <td className="py-2.5 px-4 text-neutral-500">Not Included</td>
-                      <td className="py-2.5 px-4 text-emerald-400 font-semibold">Included (Views & Scans)</td>
+                      <td className="py-2.5 px-4 text-muted-foreground font-semibold">Included (Views & Scans)</td>
                     </tr>
                     <tr>
                       <td className="py-2.5 px-4 font-medium text-foreground">Restaurant Profile</td>
-                      <td className="py-2.5 px-4 text-emerald-400">Included</td>
-                      <td className="py-2.5 px-4 text-emerald-400 font-semibold">Included</td>
+                      <td className="py-2.5 px-4 text-muted-foreground">Included</td>
+                      <td className="py-2.5 px-4 text-muted-foreground font-semibold">Included</td>
                     </tr>
                     <tr>
                       <td className="py-2.5 px-4 font-medium text-foreground">Shareable Menu Link</td>
-                      <td className="py-2.5 px-4 text-emerald-400">Included</td>
-                      <td className="py-2.5 px-4 text-emerald-400 font-semibold">Included</td>
+                      <td className="py-2.5 px-4 text-muted-foreground">Included</td>
+                      <td className="py-2.5 px-4 text-muted-foreground font-semibold">Included</td>
                     </tr>
                     <tr>
                       <td className="py-2.5 px-4 font-medium text-foreground">Custom Menu URL</td>
@@ -285,9 +280,9 @@ export function LegalPage({ type }: { type: 'privacy' | 'terms' }) {
             </section>
 
             {/* 6. Payments & Activation */}
-            <section className="bg-card border border-border/70 rounded-2xl p-6 sm:p-8 space-y-3">
-              <h2 className="text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2">
-                <span className="text-primary font-mono text-lg">06.</span> Payments & Subscription Activation
+            <section className="border-t border-border pt-8 space-y-3">
+              <h2 className="text-lg sm:text-xl font-semibold tracking-tight text-foreground">
+                Payments & Subscription Activation
               </h2>
               <p>
                 Menuzo supports manual bank transfer payments for all subscription purchases:
@@ -309,9 +304,9 @@ export function LegalPage({ type }: { type: 'privacy' | 'terms' }) {
             </section>
 
             {/* 7. Expiry, Grace Period & Downgrades */}
-            <section className="bg-card border border-border/70 rounded-2xl p-6 sm:p-8 space-y-3">
-              <h2 className="text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2">
-                <span className="text-primary font-mono text-lg">07.</span> Expiry, Grace Period & Excess Item Policy
+            <section className="border-t border-border pt-8 space-y-3">
+              <h2 className="text-lg sm:text-xl font-semibold tracking-tight text-foreground">
+                Expiry, Grace Period & Excess Item Policy
               </h2>
               <p>
                 Our subscription lifecycle is governed by automated verification rules:
@@ -319,7 +314,7 @@ export function LegalPage({ type }: { type: 'privacy' | 'terms' }) {
               <div className="space-y-3 text-xs sm:text-sm">
                 <div className="p-3.5 rounded-xl bg-muted/40 border border-border/50">
                   <p className="font-semibold text-foreground flex items-center gap-1.5">
-                    <Clock className="w-4 h-4 text-amber-400" /> 7-Day Expiry Notice:
+                    <Clock className="w-4 h-4 text-muted-foreground" strokeWidth={1.5} /> 7-Day Expiry Notice:
                   </p>
                   <p className="text-muted-foreground mt-0.5">
                     Starting {PRO_ENDING_SOON_DAYS} days before your Pro subscription concludes, a renewal alert appears on your dashboard indicating the upcoming expiry date.
@@ -337,7 +332,7 @@ export function LegalPage({ type }: { type: 'privacy' | 'terms' }) {
 
                 <div className="p-3.5 rounded-xl bg-muted/40 border border-border/50">
                   <p className="font-semibold text-foreground flex items-center gap-1.5">
-                    <Lock className="w-4 h-4 text-neutral-400" /> Downgrade & Excess Items Handling:
+                    <Lock className="w-4 h-4 text-muted-foreground" strokeWidth={1.5} /> Downgrade & Excess Items Handling:
                   </p>
                   <p className="text-muted-foreground mt-0.5">
                     If renewal is not completed before the {PRO_GRACE_DAYS}-day grace period concludes, the restaurant automatically reverts to the Free plan. Public digital menus will immediately display only your first <strong>{FREE_PLAN_LIMITS.categories} categories</strong> and up to <strong>{FREE_PLAN_LIMITS.items} food items</strong>. Any menu items exceeding Free tier allowances are hidden from public view.
@@ -350,9 +345,9 @@ export function LegalPage({ type }: { type: 'privacy' | 'terms' }) {
             </section>
 
             {/* 8. Refunds & Cancellations */}
-            <section className="bg-card border border-border/70 rounded-2xl p-6 sm:p-8 space-y-3">
-              <h2 className="text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2">
-                <span className="text-primary font-mono text-lg">08.</span> Refunds & Cancellations
+            <section className="border-t border-border pt-8 space-y-3">
+              <h2 className="text-lg sm:text-xl font-semibold tracking-tight text-foreground">
+                Refunds & Cancellations
               </h2>
               <p>
                 You may cancel your subscription or decide not to renew at any time. Because Menuzo subscriptions are activated manually following administrative verification of digital access, fees paid are generally non-refundable once an activation is complete.
@@ -363,9 +358,9 @@ export function LegalPage({ type }: { type: 'privacy' | 'terms' }) {
             </section>
 
             {/* 9. Restaurant Responsibilities */}
-            <section className="bg-card border border-border/70 rounded-2xl p-6 sm:p-8 space-y-3">
-              <h2 className="text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2">
-                <span className="text-primary font-mono text-lg">09.</span> Restaurant Responsibilities & Disclaimers
+            <section className="border-t border-border pt-8 space-y-3">
+              <h2 className="text-lg sm:text-xl font-semibold tracking-tight text-foreground">
+                Restaurant Responsibilities & Disclaimers
               </h2>
               <p>
                 Restaurants retain exclusive and complete responsibility for:
@@ -383,9 +378,9 @@ export function LegalPage({ type }: { type: 'privacy' | 'terms' }) {
             </section>
 
             {/* 10. Acceptable Use & Prohibited Content */}
-            <section className="bg-card border border-border/70 rounded-2xl p-6 sm:p-8 space-y-3">
-              <h2 className="text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2">
-                <span className="text-primary font-mono text-lg">10.</span> Acceptable Use & Prohibited Content
+            <section className="border-t border-border pt-8 space-y-3">
+              <h2 className="text-lg sm:text-xl font-semibold tracking-tight text-foreground">
+                Acceptable Use & Prohibited Content
               </h2>
               <p>
                 You agree not to upload, publish, or transmit any content that:
@@ -400,9 +395,9 @@ export function LegalPage({ type }: { type: 'privacy' | 'terms' }) {
             </section>
 
             {/* 11. Content Ownership & License */}
-            <section className="bg-card border border-border/70 rounded-2xl p-6 sm:p-8 space-y-3">
-              <h2 className="text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2">
-                <span className="text-primary font-mono text-lg">11.</span> Content Ownership & Licensing
+            <section className="border-t border-border pt-8 space-y-3">
+              <h2 className="text-lg sm:text-xl font-semibold tracking-tight text-foreground">
+                Content Ownership & Licensing
               </h2>
               <p>
                 <strong className="text-foreground">Your Content:</strong> The restaurant retains 100% intellectual property ownership of all logos, photographs, brand assets, and menu descriptions submitted to Menuzo.
@@ -416,9 +411,9 @@ export function LegalPage({ type }: { type: 'privacy' | 'terms' }) {
             </section>
 
             {/* 12. Intellectual Property */}
-            <section className="bg-card border border-border/70 rounded-2xl p-6 sm:p-8 space-y-3">
-              <h2 className="text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2">
-                <span className="text-primary font-mono text-lg">12.</span> Platform Intellectual Property
+            <section className="border-t border-border pt-8 space-y-3">
+              <h2 className="text-lg sm:text-xl font-semibold tracking-tight text-foreground">
+                Platform Intellectual Property
               </h2>
               <p>
                 All software code, database architecture, algorithms, interface designs, logos, themes, and branding associated with Menuzo are the exclusive intellectual property of the creators and developers of Menuzo, <strong className="text-foreground">Hasni Zihar</strong> and <strong className="text-foreground">Shazan</strong>.
@@ -429,9 +424,9 @@ export function LegalPage({ type }: { type: 'privacy' | 'terms' }) {
             </section>
 
             {/* 13. Analytics & Privacy */}
-            <section className="bg-card border border-border/70 rounded-2xl p-6 sm:p-8 space-y-3">
-              <h2 className="text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2">
-                <span className="text-primary font-mono text-lg">13.</span> Analytics & Privacy Overview
+            <section className="border-t border-border pt-8 space-y-3">
+              <h2 className="text-lg sm:text-xl font-semibold tracking-tight text-foreground">
+                Analytics & Privacy Overview
               </h2>
               <p>
                 Menuzo records basic aggregate metrics (such as daily menu visits and QR scans) to provide performance statistics to restaurant owners. Customers browse digital menus without signing in, and Menuzo does not track, store, or profile individual diner identities.
@@ -442,9 +437,9 @@ export function LegalPage({ type }: { type: 'privacy' | 'terms' }) {
             </section>
 
             {/* 14. Suspension & Termination */}
-            <section className="bg-card border border-border/70 rounded-2xl p-6 sm:p-8 space-y-3">
-              <h2 className="text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2">
-                <span className="text-primary font-mono text-lg">14.</span> Account Suspension & Termination
+            <section className="border-t border-border pt-8 space-y-3">
+              <h2 className="text-lg sm:text-xl font-semibold tracking-tight text-foreground">
+                Account Suspension & Termination
               </h2>
               <p>
                 Menuzo reserves the right to suspend or terminate accounts that breach these Terms, upload prohibited material, or engage in fraudulent activities.
@@ -455,9 +450,9 @@ export function LegalPage({ type }: { type: 'privacy' | 'terms' }) {
             </section>
 
             {/* 15. Account Transfers */}
-            <section className="bg-card border border-border/70 rounded-2xl p-6 sm:p-8 space-y-3">
-              <h2 className="text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2">
-                <span className="text-primary font-mono text-lg">15.</span> Account Transfers
+            <section className="border-t border-border pt-8 space-y-3">
+              <h2 className="text-lg sm:text-xl font-semibold tracking-tight text-foreground">
+                Account Transfers
               </h2>
               <p>
                 If a restaurant changes ownership, management, or administrative personnel, the restaurant account may be transferred to a new verified Google account upon receipt of a written authorization request sent from the registered owner to <a href="mailto:menuzoapp@gmail.com" className="text-primary hover:underline font-medium">menuzoapp@gmail.com</a>.
@@ -465,9 +460,9 @@ export function LegalPage({ type }: { type: 'privacy' | 'terms' }) {
             </section>
 
             {/* 16. Service Availability & Modifications */}
-            <section className="bg-card border border-border/70 rounded-2xl p-6 sm:p-8 space-y-3">
-              <h2 className="text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2">
-                <span className="text-primary font-mono text-lg">16.</span> Service Availability & Modifications
+            <section className="border-t border-border pt-8 space-y-3">
+              <h2 className="text-lg sm:text-xl font-semibold tracking-tight text-foreground">
+                Service Availability & Modifications
               </h2>
               <p>
                 While Menuzo strives to maintain maximum uptime and high operational reliability, the Service is provided on an &ldquo;as is&rdquo; and &ldquo;as available&rdquo; basis. Periodic scheduled maintenance, server updates, or telecommunications disruptions may occasionally cause brief downtime.
@@ -478,9 +473,9 @@ export function LegalPage({ type }: { type: 'privacy' | 'terms' }) {
             </section>
 
             {/* 17. Limitation of Liability */}
-            <section className="bg-card border border-border/70 rounded-2xl p-6 sm:p-8 space-y-3">
-              <h2 className="text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2">
-                <span className="text-primary font-mono text-lg">17.</span> Limitation of Liability
+            <section className="border-t border-border pt-8 space-y-3">
+              <h2 className="text-lg sm:text-xl font-semibold tracking-tight text-foreground">
+                Limitation of Liability
               </h2>
               <p>
                 To the maximum extent permissible under applicable Sri Lankan law:
@@ -494,9 +489,9 @@ export function LegalPage({ type }: { type: 'privacy' | 'terms' }) {
             </section>
 
             {/* 18. Changes to These Terms */}
-            <section className="bg-card border border-border/70 rounded-2xl p-6 sm:p-8 space-y-3">
-              <h2 className="text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2">
-                <span className="text-primary font-mono text-lg">18.</span> Changes to These Terms
+            <section className="border-t border-border pt-8 space-y-3">
+              <h2 className="text-lg sm:text-xl font-semibold tracking-tight text-foreground">
+                Changes to These Terms
               </h2>
               <p>
                 We may revise these Terms from time to time. When material amendments occur, we will update the &ldquo;Last Updated&rdquo; date at the top of this document and post an alert inside the restaurant dashboard. Continued access or use of Menuzo after such modifications constitutes your agreement to the revised Terms.
@@ -504,9 +499,9 @@ export function LegalPage({ type }: { type: 'privacy' | 'terms' }) {
             </section>
 
             {/* 19. Governing Law & Jurisdiction */}
-            <section className="bg-card border border-border/70 rounded-2xl p-6 sm:p-8 space-y-3">
-              <h2 className="text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2">
-                <span className="text-primary font-mono text-lg">19.</span> Governing Law & Jurisdiction
+            <section className="border-t border-border pt-8 space-y-3">
+              <h2 className="text-lg sm:text-xl font-semibold tracking-tight text-foreground">
+                Governing Law & Jurisdiction
               </h2>
               <p>
                 These Terms and all matters arising out of your relationship with Menuzo shall be governed by, interpreted, and construed exclusively in accordance with the substantive laws of the <strong className="text-foreground">Democratic Socialist Republic of Sri Lanka</strong>.
@@ -517,9 +512,9 @@ export function LegalPage({ type }: { type: 'privacy' | 'terms' }) {
             </section>
 
             {/* 20. Contact Information */}
-            <section className="bg-card border border-border/70 rounded-2xl p-6 sm:p-8 space-y-3">
-              <h2 className="text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2">
-                <span className="text-primary font-mono text-lg">20.</span> Contact Information
+            <section className="border-t border-border pt-8 space-y-3">
+              <h2 className="text-lg sm:text-xl font-semibold tracking-tight text-foreground">
+                Contact Information
               </h2>
               <p>
                 If you have questions, feedback, refund requests, or notices regarding these Terms & Conditions, please contact us at:
@@ -535,12 +530,12 @@ export function LegalPage({ type }: { type: 'privacy' | 'terms' }) {
           /* ========================================================================= */
           /* PRIVACY POLICY CONTENT                                                    */
           /* ========================================================================= */
-          <div className="space-y-10 text-sm sm:text-base leading-relaxed text-muted-foreground">
+          <div className="space-y-8 text-sm sm:text-base leading-relaxed text-muted-foreground">
             
             {/* 1. Introduction & Scope */}
-            <section className="bg-card border border-border/70 rounded-2xl p-6 sm:p-8 space-y-3">
-              <h2 className="text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2">
-                <span className="text-primary font-mono text-lg">01.</span> Introduction & Scope
+            <section className="border-t border-border pt-8 space-y-3">
+              <h2 className="text-lg sm:text-xl font-semibold tracking-tight text-foreground">
+                Introduction & Scope
               </h2>
               <p>
                 This Privacy Policy outlines how <strong className="text-foreground">Menuzo</strong> collects, processes, stores, and protects personal and technical data across our digital menu SaaS platform in Sri Lanka. Menuzo operates in adherence to core data protection principles including purpose limitation, data minimization, and accuracy, taking into consideration the Personal Data Protection Act No. 9 of 2022 of Sri Lanka (PDPA).
@@ -551,9 +546,9 @@ export function LegalPage({ type }: { type: 'privacy' | 'terms' }) {
             </section>
 
             {/* 2. Roles: Data Controller vs. Data Processor */}
-            <section className="bg-card border border-border/70 rounded-2xl p-6 sm:p-8 space-y-3">
-              <h2 className="text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2">
-                <span className="text-primary font-mono text-lg">02.</span> Roles: Data Controller vs. Data Processor
+            <section className="border-t border-border pt-8 space-y-3">
+              <h2 className="text-lg sm:text-xl font-semibold tracking-tight text-foreground">
+                Roles: Data Controller vs. Data Processor
               </h2>
               <p>
                 Under modern data protection frameworks:
@@ -569,9 +564,9 @@ export function LegalPage({ type }: { type: 'privacy' | 'terms' }) {
             </section>
 
             {/* 3. Information We Collect */}
-            <section className="bg-card border border-border/70 rounded-2xl p-6 sm:p-8 space-y-4">
-              <h2 className="text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2">
-                <span className="text-primary font-mono text-lg">03.</span> Information We Collect
+            <section className="border-t border-border pt-8 space-y-4">
+              <h2 className="text-lg sm:text-xl font-semibold tracking-tight text-foreground">
+                Information We Collect
               </h2>
               
               <div className="space-y-4 text-xs sm:text-sm">
@@ -592,7 +587,7 @@ export function LegalPage({ type }: { type: 'privacy' | 'terms' }) {
                 {/* Customers & Diners */}
                 <div className="p-4 rounded-xl bg-muted/40 border border-border/50 space-y-2">
                   <p className="font-semibold text-foreground flex items-center gap-1.5">
-                    <Globe2 className="w-4 h-4 text-emerald-400" /> From Customers & Diners (Menu Viewers):
+                    <Globe2 className="w-4 h-4 text-muted-foreground" strokeWidth={1.5} /> From Customers & Diners (Menu Viewers):
                   </p>
                   <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
                     <li><strong className="text-foreground">Zero Account Requirement:</strong> Diners browse public menus without logging in, without registering, and without submitting personal names, phone numbers, or emails.</li>
@@ -604,9 +599,9 @@ export function LegalPage({ type }: { type: 'privacy' | 'terms' }) {
             </section>
 
             {/* 4. Customer Browsing & Technical Identifiers */}
-            <section className="bg-card border border-border/70 rounded-2xl p-6 sm:p-8 space-y-3">
-              <h2 className="text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2">
-                <span className="text-primary font-mono text-lg">04.</span> Customer Browsing & Technical Tracking
+            <section className="border-t border-border pt-8 space-y-3">
+              <h2 className="text-lg sm:text-xl font-semibold tracking-tight text-foreground">
+                Customer Browsing & Technical Tracking
               </h2>
               <p>
                 When a diner scans a Menuzo QR code or loads a public menu link:
@@ -625,43 +620,43 @@ export function LegalPage({ type }: { type: 'privacy' | 'terms' }) {
             </section>
 
             {/* 5. Cloud Service Providers & Data Processors */}
-            <section className="bg-card border border-border/70 rounded-2xl p-6 sm:p-8 space-y-3">
-              <h2 className="text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2">
-                <span className="text-primary font-mono text-lg">05.</span> Cloud Service Providers & Sub-Processors
+            <section className="border-t border-border pt-8 space-y-3">
+              <h2 className="text-lg sm:text-xl font-semibold tracking-tight text-foreground">
+                Cloud Service Providers & Sub-Processors
               </h2>
               <p>
                 Menuzo engages industry-standard cloud providers to host and secure the Service. The actual providers and their verified roles are:
               </p>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 my-3 text-xs sm:text-sm">
-                <div className="p-3.5 rounded-xl border border-border/60 bg-muted/30 space-y-1">
+                <div className="p-3.5 rounded-xl border border-border bg-muted/30 space-y-1">
                   <div className="flex items-center gap-1.5 font-semibold text-foreground">
-                    <Database className="w-4 h-4 text-emerald-400" /> Supabase
+                    <Database className="w-4 h-4 text-muted-foreground" strokeWidth={1.5} /> Supabase
                   </div>
                   <p className="text-muted-foreground text-xs leading-relaxed">
                     Provides PostgreSQL database hosting, Row-Level Security (RLS), edge procedures, and user authentication infrastructure. Stores restaurant profiles, menu items, and payment requests.
                   </p>
                 </div>
 
-                <div className="p-3.5 rounded-xl border border-border/60 bg-muted/30 space-y-1">
+                <div className="p-3.5 rounded-xl border border-border bg-muted/30 space-y-1">
                   <div className="flex items-center gap-1.5 font-semibold text-foreground">
-                    <Cloud className="w-4 h-4 text-blue-400" /> Cloudinary
+                    <Cloud className="w-4 h-4 text-muted-foreground" strokeWidth={1.5} /> Cloudinary
                   </div>
                   <p className="text-muted-foreground text-xs leading-relaxed">
                     Provides cloud media storage and a global content delivery network (CDN) for uploaded restaurant logos, banner graphics, and food item photographs.
                   </p>
                 </div>
 
-                <div className="p-3.5 rounded-xl border border-border/60 bg-muted/30 space-y-1">
+                <div className="p-3.5 rounded-xl border border-border bg-muted/30 space-y-1">
                   <div className="flex items-center gap-1.5 font-semibold text-foreground">
-                    <Lock className="w-4 h-4 text-red-400" /> Google Authentication (OAuth)
+                    <Lock className="w-4 h-4 text-muted-foreground" strokeWidth={1.5} /> Google Authentication (OAuth)
                   </div>
                   <p className="text-muted-foreground text-xs leading-relaxed">
                     Authenticates restaurant owners securely. Google confirms owner identity and transmits the owner&apos;s email and name without exposing user passwords to Menuzo.
                   </p>
                 </div>
 
-                <div className="p-3.5 rounded-xl border border-border/60 bg-muted/30 space-y-1">
+                <div className="p-3.5 rounded-xl border border-border bg-muted/30 space-y-1">
                   <div className="flex items-center gap-1.5 font-semibold text-foreground">
                     <Server className="w-4 h-4 text-primary" /> WhatsApp (Meta Platforms)
                   </div>
@@ -673,17 +668,17 @@ export function LegalPage({ type }: { type: 'privacy' | 'terms' }) {
             </section>
 
             {/* 6. Cookies & Client-Side Storage */}
-            <section className="bg-card border border-border/70 rounded-2xl p-6 sm:p-8 space-y-3">
-              <h2 className="text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2">
-                <span className="text-primary font-mono text-lg">06.</span> Cookies & Local Storage Technologies
+            <section className="border-t border-border pt-8 space-y-3">
+              <h2 className="text-lg sm:text-xl font-semibold tracking-tight text-foreground">
+                Cookies & Local Storage Technologies
               </h2>
               <p>
                 Menuzo avoids invasive advertising or cross-site tracking cookies. The client-side storage technologies actually employed by the application are strictly functional:
               </p>
 
-              <div className="overflow-x-auto rounded-xl border border-border/80 my-3 text-xs sm:text-sm">
+              <div className="overflow-x-auto rounded-xl border border-border my-3 text-xs sm:text-sm">
                 <table className="w-full text-left">
-                  <thead className="bg-muted/80 text-foreground font-semibold border-b border-border/80">
+                  <thead className="bg-muted/80 text-foreground font-semibold border-b border-border">
                     <tr>
                       <th className="py-2.5 px-3">Storage Key</th>
                       <th className="py-2.5 px-3">Type</th>
@@ -722,9 +717,9 @@ export function LegalPage({ type }: { type: 'privacy' | 'terms' }) {
             </section>
 
             {/* 7. How Information is Used */}
-            <section className="bg-card border border-border/70 rounded-2xl p-6 sm:p-8 space-y-3">
-              <h2 className="text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2">
-                <span className="text-primary font-mono text-lg">07.</span> How We Use Your Information
+            <section className="border-t border-border pt-8 space-y-3">
+              <h2 className="text-lg sm:text-xl font-semibold tracking-tight text-foreground">
+                How We Use Your Information
               </h2>
               <p>We process information strictly for legitimate operational purposes:</p>
               <ul className="list-disc pl-5 space-y-1.5 text-xs sm:text-sm">
@@ -740,9 +735,9 @@ export function LegalPage({ type }: { type: 'privacy' | 'terms' }) {
             </section>
 
             {/* 8. Payments & Financial Data */}
-            <section className="bg-card border border-border/70 rounded-2xl p-6 sm:p-8 space-y-3">
-              <h2 className="text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2">
-                <span className="text-primary font-mono text-lg">08.</span> Payments & Financial Data Handling
+            <section className="border-t border-border pt-8 space-y-3">
+              <h2 className="text-lg sm:text-xl font-semibold tracking-tight text-foreground">
+                Payments & Financial Data Handling
               </h2>
               <p>
                 Menuzo processes subscriptions via <strong className="text-foreground">manual bank transfer</strong>. Menuzo does <strong>NOT</strong> collect, process, or store credit card numbers, debit card details, CVVs, or online banking passwords.
@@ -753,9 +748,9 @@ export function LegalPage({ type }: { type: 'privacy' | 'terms' }) {
             </section>
 
             {/* 9. Data Retention & Deletion */}
-            <section className="bg-card border border-border/70 rounded-2xl p-6 sm:p-8 space-y-3">
-              <h2 className="text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2">
-                <span className="text-primary font-mono text-lg">09.</span> Data Retention & Account Deletion
+            <section className="border-t border-border pt-8 space-y-3">
+              <h2 className="text-lg sm:text-xl font-semibold tracking-tight text-foreground">
+                Data Retention & Account Deletion
               </h2>
               <p>
                 Restaurant owners retain full autonomy over their menu data and may edit or delete food items, categories, and photographs at any time directly through the dashboard.
@@ -769,9 +764,9 @@ export function LegalPage({ type }: { type: 'privacy' | 'terms' }) {
             </section>
 
             {/* 10. Security Practices */}
-            <section className="bg-card border border-border/70 rounded-2xl p-6 sm:p-8 space-y-3">
-              <h2 className="text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2">
-                <span className="text-primary font-mono text-lg">10.</span> Security Practices
+            <section className="border-t border-border pt-8 space-y-3">
+              <h2 className="text-lg sm:text-xl font-semibold tracking-tight text-foreground">
+                Security Practices
               </h2>
               <p>
                 Menuzo implements reasonable administrative, organizational, and technical safeguards to protect data:
@@ -788,9 +783,9 @@ export function LegalPage({ type }: { type: 'privacy' | 'terms' }) {
             </section>
 
             {/* 11. User Rights & Choices */}
-            <section className="bg-card border border-border/70 rounded-2xl p-6 sm:p-8 space-y-3">
-              <h2 className="text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2">
-                <span className="text-primary font-mono text-lg">11.</span> User Rights & Choices
+            <section className="border-t border-border pt-8 space-y-3">
+              <h2 className="text-lg sm:text-xl font-semibold tracking-tight text-foreground">
+                User Rights & Choices
               </h2>
               <p>
                 In accordance with applicable privacy standards and Part II of the Sri Lankan Personal Data Protection Act No. 9 of 2022:
@@ -807,9 +802,9 @@ export function LegalPage({ type }: { type: 'privacy' | 'terms' }) {
             </section>
 
             {/* 12. Children's Privacy */}
-            <section className="bg-card border border-border/70 rounded-2xl p-6 sm:p-8 space-y-3">
-              <h2 className="text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2">
-                <span className="text-primary font-mono text-lg">12.</span> Children&apos;s Privacy
+            <section className="border-t border-border pt-8 space-y-3">
+              <h2 className="text-lg sm:text-xl font-semibold tracking-tight text-foreground">
+                Children&apos;s Privacy
               </h2>
               <p>
                 Menuzo is a business software service designed for restaurant managers and commercial food establishments. It is not intended for or directed toward children under 13 years of age. We do not knowingly collect personal information from minors.
@@ -817,9 +812,9 @@ export function LegalPage({ type }: { type: 'privacy' | 'terms' }) {
             </section>
 
             {/* 13. International Data Transfers */}
-            <section className="bg-card border border-border/70 rounded-2xl p-6 sm:p-8 space-y-3">
-              <h2 className="text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2">
-                <span className="text-primary font-mono text-lg">13.</span> International Data Transfers
+            <section className="border-t border-border pt-8 space-y-3">
+              <h2 className="text-lg sm:text-xl font-semibold tracking-tight text-foreground">
+                International Data Transfers
               </h2>
               <p>
                 Menuzo operates out of Sri Lanka. However, our technical cloud service providers—including Supabase (database), Cloudinary (CDN), and Google (authentication)—maintain secure server infrastructure in regions outside Sri Lanka (such as the United States, Europe, and Singapore).
@@ -830,9 +825,9 @@ export function LegalPage({ type }: { type: 'privacy' | 'terms' }) {
             </section>
 
             {/* 14. Changes to This Privacy Policy */}
-            <section className="bg-card border border-border/70 rounded-2xl p-6 sm:p-8 space-y-3">
-              <h2 className="text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2">
-                <span className="text-primary font-mono text-lg">14.</span> Changes to This Privacy Policy
+            <section className="border-t border-border pt-8 space-y-3">
+              <h2 className="text-lg sm:text-xl font-semibold tracking-tight text-foreground">
+                Changes to This Privacy Policy
               </h2>
               <p>
                 We may periodically update this Privacy Policy to reflect technical enhancements, cloud provider updates, or statutory adjustments under Sri Lankan law. Material changes will be accompanied by an updated effective date and a notice posted within the restaurant dashboard. Continued use of Menuzo after the publication of an updated policy signifies your acceptance of the changes.
@@ -840,9 +835,9 @@ export function LegalPage({ type }: { type: 'privacy' | 'terms' }) {
             </section>
 
             {/* 15. Privacy Contact */}
-            <section className="bg-card border border-border/70 rounded-2xl p-6 sm:p-8 space-y-3">
-              <h2 className="text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2">
-                <span className="text-primary font-mono text-lg">15.</span> Contact Privacy Officer
+            <section className="border-t border-border pt-8 space-y-3">
+              <h2 className="text-lg sm:text-xl font-semibold tracking-tight text-foreground">
+                Contact Privacy Officer
               </h2>
               <p>
                 For questions, concerns, data access requests, or privacy inquiries under this Privacy Policy, please email our administrative team at:
@@ -857,16 +852,16 @@ export function LegalPage({ type }: { type: 'privacy' | 'terms' }) {
         )}
 
         {/* Bottom Back Button */}
-        <div className="mt-14 pt-8 border-t border-border/60 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="mt-14 pt-8 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
           <Button 
             variant="outline" 
             onClick={() => dispatch({ type: 'SET_VIEW', payload: 'landing' })}
             className="gap-2"
           >
-            <ArrowLeft className="w-4 h-4" /> Return to Home
+            <ArrowLeft className="w-4 h-4" strokeWidth={1.5} /> Return to Home
           </Button>
           <p className="text-xs text-muted-foreground text-center sm:text-right">
-            Questions regarding our policies? Email <a href="mailto:menuzoapp@gmail.com" className="text-primary hover:underline">menuzoapp@gmail.com</a>
+            Questions regarding our policies? Email <a href="mailto:menuzoapp@gmail.com" className="text-[#C2530A] dark:text-primary hover:underline">menuzoapp@gmail.com</a>
           </p>
         </div>
 
